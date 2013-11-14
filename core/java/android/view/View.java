@@ -2479,6 +2479,11 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     public static final int SYSTEM_UI_FLAG_HIDE_NAVIGATION = 0x00000002;
 
     /**
+     * @hide
+     */
+    public static final int SYSTEM_UI_FLAG_SHOW_FULLSCREEN = 0x00000008;
+
+    /**
      * Flag for {@link #setSystemUiVisibility(int)}: View has requested to go
      * into the normal fullscreen mode so that its content can take over the screen
      * while still allowing the user to interact with the application.

@@ -3016,6 +3016,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             // decided that it can't be hidden (because of the screen aspect ratio),
             // then take that into account.
             navVisible |= !canHideNavigationBar();
+            if((mLastSystemUiFlags & View.SYSTEM_UI_FLAG_SHOW_FULLSCREEN) != 0){
+                navVisible = false;
+            }
 
             boolean updateSysUiVisibility = false;
             if (mNavigationBar != null) {
