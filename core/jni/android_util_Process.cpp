@@ -1013,6 +1013,28 @@ void android_os_Process_removeAllProcessGroups(JNIEnv* env, jobject clazz)
     return removeAllProcessGroups();
 }
 
+jboolean android_os_Process_startCpuAffinity(JNIEnv* env, jobject clazz)
+{
+    int tid = gettid();
+
+    if (sched_start_affinity(tid) == -1) {
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
+jboolean android_os_Process_endCpuAffinity(JNIEnv* env, jobject clazz)
+{
+    int tid = gettid();
+
+    if (sched_end_affinity(tid) == -1) {
+        return JNI_FALSE;
+    }
+
+    return JNI_TRUE;
+}
+
 static const JNINativeMethod methods[] = {
     {"getUidForName",       "(Ljava/lang/String;)I", (void*)android_os_Process_getUidForName},
     {"getGidForName",       "(Ljava/lang/String;)I", (void*)android_os_Process_getGidForName},
@@ -1042,6 +1064,8 @@ static const JNINativeMethod methods[] = {
     //{"setApplicationObject", "(Landroid/os/IBinder;)V", (void*)android_os_Process_setApplicationObject},
     {"killProcessGroup", "(II)I", (void*)android_os_Process_killProcessGroup},
     {"removeAllProcessGroups", "()V", (void*)android_os_Process_removeAllProcessGroups},
+    {"startCpuAffinity", "()Z", (void*)android_os_Process_startCpuAffinity},
+    {"endCpuAffinity", "()Z", (void*)android_os_Process_endCpuAffinity},
 };
 
 const char* const kProcessPathName = "android/os/Process";
