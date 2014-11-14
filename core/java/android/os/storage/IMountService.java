@@ -21,7 +21,8 @@ import android.os.IBinder;
 import android.os.IInterface;
 import android.os.Parcel;
 import android.os.RemoteException;
-
+import android.os.Parcelable;
+import android.os.storage.StorageVolume;
 /**
  * WARNING! Update IMountService.h and IMountService.cpp if you change this
  * file. In particular, the ordering of the methods below must match the
@@ -48,6 +49,21 @@ public interface IMountService extends IInterface {
                 return DESCRIPTOR;
             }
 
+           public boolean getUmsRecoverying()  throws RemoteException {
+                Parcel _data = Parcel.obtain();
+                Parcel _reply = Parcel.obtain();
+                boolean _result;
+                try {
+                    _data.writeInterfaceToken(DESCRIPTOR);
+                    mRemote.transact(Stub.TRANSACTION_getUmsRecoverying, _data, _reply, 0);
+                    _reply.readException();
+                    _result = 0 != _reply.readInt();
+                } finally {
+                    _reply.recycle();
+                    _data.recycle();
+                }
+                return _result;
+            }
             /**
              * Registers an IMountServiceListener for receiving async
              * notifications.
@@ -941,7 +957,8 @@ public interface IMountService extends IInterface {
         static final int TRANSACTION_getField = IBinder.FIRST_CALL_TRANSACTION + 39;
 
         static final int TRANSACTION_resizeSecureContainer = IBinder.FIRST_CALL_TRANSACTION + 40;
-
+ 
+        static final int TRANSACTION_getUmsRecoverying = IBinder.FIRST_CALL_TRANSACTION + 41;
         /**
          * Cast an IBinder object into an IMountService interface, generating a
          * proxy if needed.
@@ -1347,6 +1364,13 @@ public interface IMountService extends IInterface {
                     reply.writeInt(resultCode);
                     return true;
                 }
+                 case TRANSACTION_getUmsRecoverying: {
+                    data.enforceInterface(DESCRIPTOR);
+                    boolean result = getUmsRecoverying();
+                    reply.writeNoException();
+                    reply.writeInt(result ? 1 : 0);
+                    return true;
+                }
             }
             return super.onTransact(code, data, reply, flags);
         }
@@ -1585,6 +1609,7 @@ public interface IMountService extends IInterface {
      */
     public int mkdirs(String callingPkg, String path) throws RemoteException;
 
+    public boolean getUmsRecoverying() throws RemoteException;
     /**
      * Determines the type of the encryption password
      * @return PasswordType

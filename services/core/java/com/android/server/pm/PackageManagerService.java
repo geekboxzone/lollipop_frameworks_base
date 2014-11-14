@@ -9460,6 +9460,8 @@ public class PackageManagerService extends IPackageManager.Stub {
 
     private boolean isAsecExternal(String cid) {
         final String asecPath = PackageHelper.getSdFilesystem(cid);
+        if(asecPath == null)
+           return false;
         return !asecPath.startsWith(mAsecInternalPath);
     }
 

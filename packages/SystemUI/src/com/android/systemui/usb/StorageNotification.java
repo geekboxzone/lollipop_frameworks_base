@@ -32,6 +32,8 @@ import android.provider.Settings;
 import android.util.Log;
 
 import com.android.systemui.SystemUI;
+import android.os.storage.StorageVolume;
+import android.os.SystemProperties;
 
 public class StorageNotification extends SystemUI {
     private static final String TAG = "StorageNotification";
@@ -100,6 +102,7 @@ public class StorageNotification extends SystemUI {
     }
 
     private void onUsbMassStorageConnectionChangedAsync(boolean connected) {
+         connected = "true".equals(SystemProperties.get("sys.usb.umsavailible", "false"));
         mUmsAvailable = connected;
         /*
          * Even though we may have a UMS host connected, we the SD card
@@ -198,6 +201,20 @@ public class StorageNotification extends SystemUI {
              */
             Intent intent = new Intent();
             intent.setClass(mContext, com.android.internal.app.ExternalMediaFormatActivity.class);
+            
+            StorageManager storageManager = (StorageManager)
+                                       mContext.getSystemService(Context.STORAGE_SERVICE);
+             StorageVolume[] volumes = storageManager.getVolumeList();
+                       if (volumes.length > 0) {
+                               for(int i=0;i<volumes.length;i++)
+                               {
+                                       if(volumes[i].getPath().equals(path))
+                                       {
+                                               intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volumes[i]);
+                                       }
+                                               
+                               }
+                       }
             PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
 
             setMediaStorageNotification(
@@ -212,6 +229,20 @@ public class StorageNotification extends SystemUI {
              */
             Intent intent = new Intent();
             intent.setClass(mContext, com.android.internal.app.ExternalMediaFormatActivity.class);
+            
+             StorageManager storageManager = (StorageManager)
+                       mContext.getSystemService(Context.STORAGE_SERVICE);
+                       StorageVolume[] volumes = storageManager.getVolumeList();
+                       if (volumes.length > 0) {
+                               for(int i=0;i<volumes.length;i++)
+                               {
+                                       if(volumes[i].getPath().equals(path))
+                                       {
+                                               intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volumes[i]);
+                                       }
+                                               
+                               }
+                       }
             PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
 
             setMediaStorageNotification(

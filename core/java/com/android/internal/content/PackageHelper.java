@@ -183,10 +183,14 @@ public class PackageHelper {
    public static String getSdFilesystem(String cid) {
        try {
             return getMountService().getSecureContainerFilesystemPath(cid);
-        } catch (RemoteException e) {
+        } 
+        catch(IllegalStateException e){
+             Log.e(TAG, "Failed to get container path for " + cid +
+                 " with exception " + e);
+         }catch (RemoteException e) {
             Log.e(TAG, "Failed to get container path for " + cid +
-                " with exception " + e);
-        }
+                 " with exception " + e);
+         }
         return null;
    }
 

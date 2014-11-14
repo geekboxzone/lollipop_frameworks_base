@@ -99,7 +99,7 @@ public class UsbDeviceManager {
     // Delay for debouncing USB disconnects.
     // We often get rapid connect/disconnect events when enabling USB functions,
     // which need debouncing.
-    private static final int UPDATE_DELAY = 1000;
+    private static final int UPDATE_DELAY = 50;
 
     // Time we received a request to enter USB accessory mode
     private long mAccessoryModeRequestTime = 0;
@@ -578,6 +578,13 @@ public class UsbDeviceManager {
                 }
             }
 
+           boolean isMassStorage = containsFunction(mCurrentFunctions,
+                    UsbManager.USB_FUNCTION_MASS_STORAGE);
+            Slog.d(TAG, "Usb state is " + mConnected + " " + mConfigured + " " + isMassStorage);
+            if (mConnected && isMassStorage)
+                SystemProperties.set("sys.usb.umsavailible", "true");
+            else
+                SystemProperties.set("sys.usb.umsavailible", "false");
             if (DEBUG) Slog.d(TAG, "broadcasting " + intent + " connected: " + mConnected
                                     + " configured: " + mConfigured);
             mContext.sendStickyBroadcastAsUser(intent, UserHandle.ALL);
