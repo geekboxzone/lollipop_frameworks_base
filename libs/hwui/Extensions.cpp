@@ -56,7 +56,7 @@ Extensions::Extensions(): Singleton<Extensions>() {
     mHasNPot = hasGlExtension("GL_OES_texture_npot");
     mHasFramebufferFetch = hasGlExtension("GL_NV_shader_framebuffer_fetch");
     mHasDiscardFramebuffer = hasGlExtension("GL_EXT_discard_framebuffer");
-    mHasDebugMarker = false;//hasGlExtension("GL_EXT_debug_marker");
+    mHasDebugMarker = hasGlExtension("GL_EXT_debug_marker");
     mHasDebugLabel = hasGlExtension("GL_EXT_debug_label");
     mHasTiledRendering = hasGlExtension("GL_QCOM_tiled_rendering");
     mHas1BitStencil = hasGlExtension("GL_OES_stencil1");
