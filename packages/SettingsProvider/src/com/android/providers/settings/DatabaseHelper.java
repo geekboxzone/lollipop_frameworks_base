@@ -2249,6 +2249,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             // Set default tty mode
             loadSetting(stmt, Settings.System.TTY_MODE, 0);
 
+            String enableUms= SystemProperties.get("ro.factory.hasUMS","false");
+            if("true".equals(enableUms))//if has UMS function,flash is primary storage
+            {
+               loadSetting(stmt,Settings.System.SCREENSHOT_LOCATION,"/mnt/internal_sd");
+            }else{
+                  loadSetting(stmt,Settings.System.SCREENSHOT_LOCATION,"/storage/emulated");
+            }
             loadIntegerSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
                     R.integer.def_screen_brightness);
 

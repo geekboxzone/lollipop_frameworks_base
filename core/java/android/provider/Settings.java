@@ -1774,6 +1774,18 @@ public final class Settings {
          * @hide
          */
         public static final int ADVANCED_SETTINGS_DEFAULT = 0;
+           
+        /**
+          *Screenshot store location  add by dzy
+          * @hide
+          */
+        public static final String SCREENSHOT_LOCATION="screenshot_location";
+ 
+        /**
+          *scrrenshot button wether display
+          * @hide
+          */
+        public static final String SCREENSHOT_BUTTON_SHOW="screenshot_button_show";
 
         /**
          * @deprecated Use {@link android.provider.Settings.Global#AIRPLANE_MODE_ON} instead
