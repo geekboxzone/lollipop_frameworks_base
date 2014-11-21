@@ -206,4 +206,6 @@
     <!-- Default for Settings.Global.GUEST_USER_ENABLED -->
     <bool name="def_guest_user_enabled">true</bool>
 
+    <!--Default for HDMI_LCD_TIMEOUT-->
+        <integer name="def_hdmi_lcd_timeout">-1</integer>
 </resources>

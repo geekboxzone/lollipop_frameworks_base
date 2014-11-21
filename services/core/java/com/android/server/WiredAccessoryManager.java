@@ -89,10 +89,16 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
 
     private final boolean mUseDevInputEventForAudioJack;
 
+    private WakeLock mHdmiWakeLock;
+    private Context mContext;
+
     public WiredAccessoryManager(Context context, InputManagerService inputManager) {
         PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "WiredAccessoryManager");
         mWakeLock.setReferenceCounted(false);
+        mContext= context;
+        mHdmiWakeLock=pm.newWakeLock(PowerManager.SCREEN_BRIGHT_WAKE_LOCK|PowerManager.ON_AFTER_RELEASE, "HdmiWakeLock");
+        mHdmiWakeLock.setReferenceCounted(false); 
         mAudioManager = (AudioManager)context.getSystemService(Context.AUDIO_SERVICE);
         mInputManager = inputManager;
 
@@ -295,6 +301,21 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
             if (inDevice != 0) {
               mAudioManager.setWiredDeviceConnectionState(inDevice, state, headsetName);
             }
+	    if(headsetName.equals("hdmi")&&state==1){
+		    Intent intent=new Intent("android.intent.action.HDMI_PLUG");
+		    intent.putExtra("state", 1);
+		    intent.putExtra("name", "hdmi");
+		    mContext.sendBroadcast(intent);
+		    mHdmiWakeLock.acquire();
+		    Log.d(TAG,"--- hdmi connect ");
+	    }else if(headsetName.equals("hdmi")&&state==0){
+		    Log.d(TAG,"--- hdmi disconnect ");
+		    Intent intent=new Intent("android.intent.action.HDMI_PLUG");
+		    intent.putExtra("state", 0);
+		    intent.putExtra("name", "hdmi");
+		    mContext.sendBroadcast(intent);
+		    mHdmiWakeLock.release();
+	    }
         }
     }
 

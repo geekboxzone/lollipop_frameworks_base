@@ -72,6 +72,16 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 
 import libcore.util.Objects;
+//--------add for hdmi timeout--------------
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.RandomAccessFile;
+//--------end----------------
+
 
 /**
  * The power manager service is responsible for coordinating power management
@@ -568,6 +578,11 @@ public final class PowerManagerService extends SystemService
             resolver.registerContentObserver(Settings.Global.getUriFor(
                     Settings.Global.LOW_POWER_MODE_TRIGGER_LEVEL),
                     false, mSettingsObserver, UserHandle.USER_ALL);
+            //--------------for hdmi timeout 
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.HDMI_LCD_TIMEOUT),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
+            //-----------------end------------------
             // Go.
             readConfigurationLocked();
             updateSettingsLocked();
@@ -670,6 +685,16 @@ public final class PowerManagerService extends SystemService
         }
 
         mDirty |= DIRTY_SETTINGS;
+
+	//----------hdmi timeout -------------------
+	lcd_delay_timeout = Settings.System.getIntForUser(resolver,
+			Settings.System.HDMI_LCD_TIMEOUT, 10,
+			UserHandle.USER_CURRENT);
+
+	if(isAbleChangeHDMIMode()){
+		TurnonScreen();
+	}
+        //----------end--------------- 
     }
 
     void updateLowPowerModeLocked() {
@@ -928,8 +953,105 @@ public final class PowerManagerService extends SystemService
         }
     }
 
+    //-------for hdmi timeout 
+    private void TurnonScreen(){
+
+	    ContentResolver resolver = mContext.getContentResolver();
+	    final long currentTimeout = Settings.System.getLong(resolver, Settings.System.HDMI_LCD_TIMEOUT,
+			    -1);
+	    mHandler1.removeCallbacks(mScreenTimeout);
+	    if(lcd_delay_timeout != -1){
+		    //File HdmiFile = new File("/sys/class/graphics/fb0/blank");
+		    if(mTimeout){
+			    try {
+				    //RandomAccessFile rdf = null;
+				    //rdf = new RandomAccessFile(HdmiFile, "rw");
+				    //rdf.writeBytes(sighDisplay);
+				    //setTemporaryScreenBrightnessSettingOverride(mScreenBrightnessSetting);
+                                    setTemporaryScreenBrightnessSettingOverrideInternal(mScreenBrightnessSetting);
+				    //setBacklightBrightness(mScreenBrightnessSetting);
+			    } catch (Exception e) {
+				    Log.e(TAG, "Exception"+e);
+			    }
+		    }
+		    mTimeout=false;
+		    LockScreenOff();
+	    }
+
+	    return;
+    }
+
+    private boolean isAbleChangeHDMIMode(){
+	    return (lcd_delay_timeout != -1)&&HdmiState.exists() && isHdmiConnected(HdmiState);
+    }
+
+    Runnable mScreenTimeout = new Runnable() {
+	    public void run() {
+		    synchronized (this) {
+			    Log.d(TAG,"screen time out");
+			    if(isAbleChangeHDMIMode()){
+				    //File HdmiFile = new File("/sys/class/graphics/fb0/blank");
+				    try {
+					    //RandomAccessFile rdf = null;
+					    //rdf = new RandomAccessFile(HdmiFile, "rw");
+					    //rdf.writeBytes("1");
+					    //setTemporaryScreenBrightnessSettingOverride(1);
+                                            setTemporaryScreenBrightnessSettingOverrideInternal(1);
+					    //setBacklightBrightness(20);                     
+					    mTimeout=true;
+				    } catch (Exception e) {
+					    e.printStackTrace();
+					    mTimeout=true;
+				    }
+			    }
+		    }
+	    }
+    };
+    private void LockScreenOff() {
+	    Log.d(TAG,"LockScreenOff"+String.valueOf(lcd_delay_timeout));
+	    mHandler1.postAtTime(mScreenTimeout, SystemClock.uptimeMillis() + 1000 * lcd_delay_timeout);
+    }
+
+    private final File HdmiState = new File("sys/class/display/HDMI/connect");
+    private long lcd_delay_timeout = 10;
+    private Handler mHandler1 = new Handler();
+    private boolean mTimeout=false;
+    protected  boolean isHdmiConnected(File file){
+	    boolean isConnected = false;
+	    if (file.exists()){
+		    try {
+			    FileReader fread = new FileReader(file);
+			    BufferedReader   buffer = new BufferedReader(fread);
+			    String           strPlug = "plug=1";
+			    String           str = null;
+			    while ((str = buffer.readLine()) != null){
+				    int length = str.length();
+				    //if((length == 6) && (str.equals(strPlug))){
+				    if(str.equals("1")){
+					    isConnected = true;
+					    break;
+				    }
+				    else{
+					    isConnected = false;
+				    }
+			    }
+			    } catch (IOException e){
+				    Log.e(TAG, "IO Exception");
+			    }
+		    }
+		    return isConnected;
+	    }
+    //------------------------------------  end  -------------------------------------------------------------------------------------------------------
+
     // Called from native code.
     private void userActivityFromNative(long eventTime, int event, int flags) {
+	    //-----------------------------for hdmi timeout 
+	    synchronized (mLock) {
+		    if(isAbleChangeHDMIMode()){
+			    TurnonScreen();
+		    }
+	    }
+	    //--------------------end-------------------------
         userActivityInternal(eventTime, event, flags, Process.SYSTEM_UID);
     }
 
