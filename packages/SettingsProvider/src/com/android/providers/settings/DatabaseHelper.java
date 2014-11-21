@@ -2299,6 +2299,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private void loadSystemSettings(SQLiteDatabase db) {
         SQLiteStatement stmt = null;
+        PackageManager packageManager = mContext.getPackageManager();
         try {
             stmt = db.compileStatement("INSERT OR IGNORE INTO system(name,value)"
                     + " VALUES(?,?);");
@@ -2337,8 +2338,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	    loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
 		    SystemProperties.getInt("ro.rk.def_brightness", mContext.getResources().getInteger(R.integer.def_screen_brightness)));
 
-            loadBooleanSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE,
-                    R.bool.def_screen_brightness_automatic_mode);
+            if (packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_LIGHT)) {
+                loadBooleanSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE,
+                        R.bool.def_screen_brightness_automatic_mode);
+            } else {
+                loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE, "0");
+            }
 
             loadDefaultAnimationSettings(stmt);
 
