@@ -472,7 +472,9 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
                 } else {
                     state = IccCardConstants.State.ABSENT;
                 }
-            } else if (IccCardConstants.INTENT_VALUE_ICC_READY.equals(stateExtra)) {
+            }else if (IccCardConstants.INTENT_VALUE_ICC_NOT_READY.equals(stateExtra)){
+		state = IccCardConstants.State.NOT_READY;
+	    }else if (IccCardConstants.INTENT_VALUE_ICC_READY.equals(stateExtra)) {
                 state = IccCardConstants.State.READY;
             } else if (IccCardConstants.INTENT_VALUE_ICC_LOCKED.equals(stateExtra)) {
                 final String lockedReason = intent

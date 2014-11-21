@@ -159,6 +159,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
     private boolean mHasMobileDataFeature;
 
+    private boolean mLastHasMobileDataFeature = false;
     boolean mDataAndWifiStacked = false;
 
     public interface SignalCluster {
@@ -181,8 +182,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
         ConnectivityManager cm = (ConnectivityManager)mContext.getSystemService(
                 Context.CONNECTIVITY_SERVICE);
-        mHasMobileDataFeature = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
-
+        //mHasMobileDataFeature = cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE);
+        mLastHasMobileDataFeature = false;
         mShowPhoneRSSIForData = res.getBoolean(R.bool.config_showPhoneRSSIForData);
         mShowAtLeastThreeGees = res.getBoolean(R.bool.config_showMin3G);
         mAlwaysShowCdmaRssi = res.getBoolean(
@@ -505,6 +506,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                         + " dataState=" + state.getDataRegState());
             }
             mServiceState = state;
+	    mHasMobileDataFeature = (mServiceState.getState()!=ServiceState.STATE_OUT_OF_SERVICE);
             updateTelephonySignalStrength();
             updateDataNetType();
             updateDataIcon();
@@ -1274,6 +1276,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
         if (mLastPhoneSignalIconId          != mPhoneSignalIconId
          || mLastWifiIconId                 != mWifiIconId
+	 || mLastHasMobileDataFeature       != mHasMobileDataFeature
          || mLastInetCondition              != mInetCondition
          || mLastWimaxIconId                != mWimaxIconId
          || mLastDataTypeIconId             != mDataTypeIconId
@@ -1365,7 +1368,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 v.setVisibility(View.VISIBLE);
             }
         }
-
+         if (mLastHasMobileDataFeature != mHasMobileDataFeature){
+	      mLastHasMobileDataFeature = mHasMobileDataFeature;
+            }
         // e-call label
         N = mEmergencyViews.size();
         for (int i=0; i<N; i++) {

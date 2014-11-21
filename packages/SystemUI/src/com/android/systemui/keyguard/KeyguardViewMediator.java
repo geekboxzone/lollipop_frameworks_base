@@ -374,6 +374,13 @@ public class KeyguardViewMediator extends SystemUI {
                                 resetStateLocked();
                             }
                         }
+			else{
+			
+			  if(isShowing()){
+			       resetStateLocked();
+			  }
+				
+			}
                     }
                     break;
                 case PIN_REQUIRED:
