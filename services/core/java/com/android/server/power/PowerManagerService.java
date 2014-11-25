@@ -429,7 +429,10 @@ public final class PowerManagerService extends SystemService
 
     // True if the battery level is currently considered low.
     private boolean mBatteryLevelLow;
-
+    
+    // True if hdmi is connect.
+    private boolean mHdmiConnect;
+    
     private final ArrayList<PowerManagerInternal.LowPowerModeListener> mLowPowerModeListeners
             = new ArrayList<PowerManagerInternal.LowPowerModeListener>();
 
@@ -542,6 +545,10 @@ public final class PowerManagerService extends SystemService
             filter = new IntentFilter();
             filter.addAction(Intent.ACTION_DOCK_EVENT);
             mContext.registerReceiver(new DockReceiver(), filter, null, mHandler);
+            
+            filter=new IntentFilter();
+            filter.addAction("android.intent.action.HDMI_PLUG");
+            mContext.registerReceiver(new HdmiReceiver(), filter,null,mHandler);
 
             // Register for settings changes.
             final ContentResolver resolver = mContext.getContentResolver();
@@ -692,7 +699,7 @@ public final class PowerManagerService extends SystemService
 			UserHandle.USER_CURRENT);
 
 	if(isAbleChangeHDMIMode()){
-		TurnonScreen();
+		turnonScreen();
 	}
         //----------end--------------- 
     }
@@ -954,35 +961,29 @@ public final class PowerManagerService extends SystemService
     }
 
     //-------for hdmi timeout 
-    private void TurnonScreen(){
+    private void turnonScreen(){
 
 	    ContentResolver resolver = mContext.getContentResolver();
 	    final long currentTimeout = Settings.System.getLong(resolver, Settings.System.HDMI_LCD_TIMEOUT,
 			    -1);
 	    mHandler1.removeCallbacks(mScreenTimeout);
 	    if(lcd_delay_timeout != -1){
-		    //File HdmiFile = new File("/sys/class/graphics/fb0/blank");
 		    if(mTimeout){
 			    try {
-				    //RandomAccessFile rdf = null;
-				    //rdf = new RandomAccessFile(HdmiFile, "rw");
-				    //rdf.writeBytes(sighDisplay);
-				    //setTemporaryScreenBrightnessSettingOverride(mScreenBrightnessSetting);
-                                    setTemporaryScreenBrightnessSettingOverrideInternal(mScreenBrightnessSetting);
-				    //setBacklightBrightness(mScreenBrightnessSetting);
+                    setTemporaryScreenBrightnessSettingOverrideInternal(mScreenBrightnessSetting);
 			    } catch (Exception e) {
 				    Log.e(TAG, "Exception"+e);
 			    }
 		    }
 		    mTimeout=false;
-		    LockScreenOff();
+		    lockScreenOff();
 	    }
 
 	    return;
     }
 
     private boolean isAbleChangeHDMIMode(){
-	    return (lcd_delay_timeout != -1)&&HdmiState.exists() && isHdmiConnected(HdmiState);
+	    return (lcd_delay_timeout != -1)&&mHdmiConnect;
     }
 
     Runnable mScreenTimeout = new Runnable() {
@@ -990,57 +991,25 @@ public final class PowerManagerService extends SystemService
 		    synchronized (this) {
 			    Log.d(TAG,"screen time out");
 			    if(isAbleChangeHDMIMode()){
-				    //File HdmiFile = new File("/sys/class/graphics/fb0/blank");
 				    try {
-					    //RandomAccessFile rdf = null;
-					    //rdf = new RandomAccessFile(HdmiFile, "rw");
-					    //rdf.writeBytes("1");
-					    //setTemporaryScreenBrightnessSettingOverride(1);
-                                            setTemporaryScreenBrightnessSettingOverrideInternal(1);
-					    //setBacklightBrightness(20);                     
-					    mTimeout=true;
+                        setTemporaryScreenBrightnessSettingOverrideInternal(1);
 				    } catch (Exception e) {
 					    e.printStackTrace();
-					    mTimeout=true;
+				    }finally{
+				    	 mTimeout=true;
 				    }
 			    }
 		    }
 	    }
     };
-    private void LockScreenOff() {
+    private void lockScreenOff() {
 	    Log.d(TAG,"LockScreenOff"+String.valueOf(lcd_delay_timeout));
 	    mHandler1.postAtTime(mScreenTimeout, SystemClock.uptimeMillis() + 1000 * lcd_delay_timeout);
     }
 
-    private final File HdmiState = new File("sys/class/display/HDMI/connect");
     private long lcd_delay_timeout = 10;
     private Handler mHandler1 = new Handler();
     private boolean mTimeout=false;
-    protected  boolean isHdmiConnected(File file){
-	    boolean isConnected = false;
-	    if (file.exists()){
-		    try {
-			    FileReader fread = new FileReader(file);
-			    BufferedReader   buffer = new BufferedReader(fread);
-			    String           strPlug = "plug=1";
-			    String           str = null;
-			    while ((str = buffer.readLine()) != null){
-				    int length = str.length();
-				    //if((length == 6) && (str.equals(strPlug))){
-				    if(str.equals("1")){
-					    isConnected = true;
-					    break;
-				    }
-				    else{
-					    isConnected = false;
-				    }
-			    }
-			    } catch (IOException e){
-				    Log.e(TAG, "IO Exception");
-			    }
-		    }
-		    return isConnected;
-	    }
     //------------------------------------  end  -------------------------------------------------------------------------------------------------------
 
     // Called from native code.
@@ -1048,7 +1017,7 @@ public final class PowerManagerService extends SystemService
 	    //-----------------------------for hdmi timeout 
 	    synchronized (mLock) {
 		    if(isAbleChangeHDMIMode()){
-			    TurnonScreen();
+			    turnonScreen();
 		    }
 	    }
 	    //--------------------end-------------------------
@@ -2632,6 +2601,23 @@ public final class PowerManagerService extends SystemService
         }
     }
 
+    private final class HdmiReceiver extends BroadcastReceiver{
+    	@Override
+    	public void onReceive(Context context, Intent intent) {
+    		// TODO Auto-generated method stub
+    		synchronized (mLock) {
+    			int state = intent.getIntExtra("state", 1);
+                        Log.d(TAG,"----------------------HdmiReceiver  state= "+state);
+    			if(state==1){
+    				mHdmiConnect=true;
+    			}else{
+    				mHdmiConnect=false;
+    				setTemporaryScreenBrightnessSettingOverrideInternal(mScreenBrightnessSetting);
+    			}
+            }
+    	}
+    }
+    
     private final class SettingsObserver extends ContentObserver {
         public SettingsObserver(Handler handler) {
             super(handler);
