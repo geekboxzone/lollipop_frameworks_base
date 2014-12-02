@@ -46,6 +46,7 @@ import com.android.systemui.statusbar.BaseStatusBar;
 import com.android.systemui.statusbar.DelegateViewHelper;
 import com.android.systemui.statusbar.policy.DeadZone;
 import com.android.systemui.statusbar.policy.KeyButtonView;
+import android.os.SystemProperties;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -65,6 +66,8 @@ public class NavigationBarView extends LinearLayout {
     int mBarSize;
     boolean mVertical;
     boolean mScreenOn;
+
+    private String isEnableShowVoiceIcon = SystemProperties.get("ro.rk.systembar.voiceicon","false");
 
     boolean mShowMenu;
     int mDisabledFlags = 0;
@@ -266,6 +269,14 @@ public class NavigationBarView extends LinearLayout {
         return mCurrentView.findViewById(R.id.ime_switcher);
     }
 
+    public View getSubButton() {
+        return mCurrentView.findViewById(R.id.sub);
+    }
+
+    public View getAddButton() {
+        return mCurrentView.findViewById(R.id.add);
+    }
+
     private void getIcons(Resources res) {
         mBackIcon = res.getDrawable(R.drawable.ic_sysbar_back);
         mBackLandIcon = res.getDrawable(R.drawable.ic_sysbar_back_land);
@@ -359,6 +370,13 @@ public class NavigationBarView extends LinearLayout {
         getBackButton()   .setVisibility(disableBack       ? View.INVISIBLE : View.VISIBLE);
         getHomeButton()   .setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
         getRecentsButton().setVisibility(disableRecent     ? View.INVISIBLE : View.VISIBLE);
+        if ("true".equals(isEnableShowVoiceIcon)) {
+            getSubButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
+            getAddButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
+        } else {
+            getSubButton().setVisibility(View.GONE);
+            getAddButton().setVisibility(View.GONE);
+        }
 
         mBarTransitions.applyBackButtonQuiescentAlpha(mBarTransitions.getMode(), true /*animate*/);
     }
