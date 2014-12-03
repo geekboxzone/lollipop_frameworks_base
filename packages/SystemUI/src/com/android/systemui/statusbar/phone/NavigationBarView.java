@@ -371,11 +371,15 @@ public class NavigationBarView extends LinearLayout {
         getHomeButton()   .setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
         getRecentsButton().setVisibility(disableRecent     ? View.INVISIBLE : View.VISIBLE);
         if ("true".equals(isEnableShowVoiceIcon)) {
-            getSubButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
-            getAddButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
+            if(getSubButton()!=null) 
+				getSubButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
+            if(getSubButton()!=null) 
+				getAddButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
         } else {
-            getSubButton().setVisibility(View.GONE);
-            getAddButton().setVisibility(View.GONE);
+            if(getSubButton()!=null) 
+				getSubButton().setVisibility(View.GONE);
+            if(getSubButton()!=null) 
+				getAddButton().setVisibility(View.GONE);
         }
 
         mBarTransitions.applyBackButtonQuiescentAlpha(mBarTransitions.getMode(), true /*animate*/);
