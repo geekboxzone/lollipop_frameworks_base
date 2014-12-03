@@ -5790,6 +5790,10 @@ public final class ActivityManagerService extends ActivityManagerNative
 
         if (doit) {
             if (name != null) {
+		//add filter for xts or cts test to set "sys.cts_gts.status" = true when the test start
+		if(reason.contains("update pkg")&&(name.contains("com.android.cts")||name.contains("com.google.android.xts"))){
+			SystemProperties.set("sys.cts_gts.status","true");
+		}
                 Slog.i(TAG, "Force stopping " + name + " appid=" + appId
                         + " user=" + userId + ": " + reason);
             } else {
