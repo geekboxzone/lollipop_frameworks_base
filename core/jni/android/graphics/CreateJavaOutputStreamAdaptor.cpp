@@ -6,8 +6,11 @@
 #include "SkTypes.h"
 #include "Utils.h"
 
+#define RETURN_NULL_IF_NULL(value) \
+    do { if (!(value)) { SkASSERT(0); return NULL; } } while (false)
 static jmethodID    gInputStream_readMethodID;
 static jmethodID    gInputStream_skipMethodID;
+static jmethodID    gInputStream_markSupportMethodID;
 
 /**
  *  Wrapper for a Java InputStream.
@@ -127,6 +130,10 @@ private:
         return (size_t)skipped;
     }
 
+    virtual bool markSupport(){
+	JNIEnv * env = fEnv;		
+	return env->CallBooleanMethod(fJavaInputStream, gInputStream_markSupportMethodID) == JNI_TRUE;
+    }
     JNIEnv*     fEnv;
     jobject     fJavaInputStream;   // the caller owns this object
     jbyteArray  fJavaByteArray;     // the caller owns this object
@@ -137,6 +144,14 @@ private:
 
 SkStream* CreateJavaInputStreamAdaptor(JNIEnv* env, jobject stream,
                                        jbyteArray storage) {
+    static bool gInited;
+    if (!gInited) {
+	jclass inputStream_Clazz = env->FindClass("java/io/InputStream");
+        RETURN_NULL_IF_NULL(inputStream_Clazz);
+	gInputStream_markSupportMethodID = env->GetMethodID(inputStream_Clazz,"markSupported","()Z");
+	RETURN_NULL_IF_NULL(gInputStream_markSupportMethodID);
+        gInited = true;
+    }
     return new JavaInputStreamAdaptor(env, stream, storage);
 }
 
