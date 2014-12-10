@@ -359,6 +359,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     boolean mTranslucentDecorEnabled = true;
 
     int mPointerLocationMode = 0; // guarded by mLock
+    boolean mForceUseHwui = false;
+
+    String playformname = SystemProperties.get("ro.rk.soc");
 
     // The last window we were told about in focusChanged.
     WindowState mFocusedWindow;
@@ -496,7 +499,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     int mOverscanTop = 0;
     int mOverscanRight = 0;
     int mOverscanBottom = 0;
-
     // What we do when the user long presses on home
     private int mLongPressOnHomeBehavior;
 
@@ -1108,6 +1110,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         if (!mPowerManager.isInteractive()) {
             goingToSleep(WindowManagerPolicy.OFF_BECAUSE_OF_USER);
         }
+
+
+		if(playformname.contains("3288")){
+			mForceUseHwui = true;
+		}
     }
 
     /**
@@ -1346,6 +1353,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 lp.privateFlags |=
                         WindowManager.LayoutParams.PRIVATE_FLAG_FORCE_HARDWARE_ACCELERATED;
             }
+			if(mForceUseHwui){
+				lp.flags &= (~WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
+				lp.privateFlags &=
+				        (~WindowManager.LayoutParams.PRIVATE_FLAG_FORCE_HARDWARE_ACCELERATED);
+			}
             lp.format = PixelFormat.TRANSLUCENT;
             lp.setTitle("PointerLocation");
             WindowManager wm = (WindowManager)
@@ -1821,8 +1833,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     com.android.internal.R.styleable.Window_windowAnimationStyle, 0);
             params.privateFlags |=
                     WindowManager.LayoutParams.PRIVATE_FLAG_FAKE_HARDWARE_ACCELERATED;
-            params.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_SHOW_FOR_ALL_USERS;
+			params.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_SHOW_FOR_ALL_USERS;
 
+			if(mForceUseHwui)
+			{
+				params.privateFlags &=
+				    (~WindowManager.LayoutParams.PRIVATE_FLAG_FAKE_HARDWARE_ACCELERATED);
+				params.flags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+				params.privateFlags |=
+				    WindowManager.LayoutParams.PRIVATE_FLAG_FORCE_HARDWARE_ACCELERATED;
+			}
             if (!compatInfo.supportsScreen()) {
                 params.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_COMPATIBLE_WINDOW;
             }
