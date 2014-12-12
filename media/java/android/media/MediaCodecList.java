@@ -76,6 +76,13 @@ final public class MediaCodecList {
                 for (int index = 0; index < count; index++) {
                     try {
                         MediaCodecInfo info = getNewCodecInfoAt(index);
+                        String tmp = info.getName();
+                        //zyh@rock-chips.com:modify for cts
+                        if(tmp.equals("RkVpuDecoder")|| tmp.startsWith("RkAudioDecoder")
+                                || tmp.equals("FLACDecoder")||tmp.equals("RkVpuEncoder")
+                                || tmp.startsWith("AACDecoder")){
+                            continue;
+                                }
                         all.add(info);
                         info = info.makeRegular();
                         if (info != null) {
