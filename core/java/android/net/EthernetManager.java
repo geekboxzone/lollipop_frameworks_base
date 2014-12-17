@@ -35,6 +35,31 @@ public class EthernetManager {
     private final IEthernetManager mService;
 
     /**
+     * @hide
+     */
+    public static final String ETHERNET_STATE_CHANGED_ACTION = "android.net.ethernet.ETHERNET_STATE_CHANGED";
+
+    /**
+     * @hide
+     */
+    public static final String EXTRA_ETHERNET_STATE = "ethernet_state";
+
+    /**
+     * @hide
+     */
+    public static final int ETHER_STATE_DISCONNECTED = 0;
+
+    /**
+     * @hide
+     */
+    public static final int ETHER_STATE_CONNECTING = 1;
+
+    /**
+     * @hide
+     */
+    public static final int ETHER_STATE_CONNECTED = 2;  
+
+    /**
      * Create a new EthernetManager instance.
      * Applications will almost always want to use
      * {@link android.content.Context#getSystemService Context.getSystemService()} to retrieve

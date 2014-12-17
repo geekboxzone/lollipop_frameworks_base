@@ -34,6 +34,7 @@ public interface NetworkController {
                 boolean isDataTypeIconWide);
         void onAirplaneModeChanged(boolean enabled);
         void onMobileDataEnabled(boolean enabled);
+        //void onEthernetModeChanged(boolean enabled);
     }
 
     void addAccessPointCallback(AccessPointCallback callback);

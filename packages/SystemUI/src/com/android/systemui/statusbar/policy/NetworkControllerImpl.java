@@ -26,6 +26,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.net.EthernetManager;
 import android.net.wimax.WimaxManagerConstants;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -85,6 +86,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
     int mDataTypeIconId;
     int mQSDataTypeIconId;
     int mAirplaneIconId;
+    int mEthernetIconId;
     boolean mDataActive;
     boolean mNoSim;
     int mLastSignalLevel;
@@ -137,6 +139,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
     private boolean mAirplaneMode = false;
     private boolean mLastAirplaneMode = true;
 
+    private boolean mEthernetConnected = false;
+
     private Locale mLocale = null;
     private Locale mLastLocale = null;
 
@@ -155,6 +159,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
     int mLastWimaxIconId = -1;
     int mLastCombinedSignalIconId = -1;
     int mLastDataTypeIconId = -1;
+    int mLastEthernetIconId = -1;
     String mLastCombinedLabel = "";
 
     private boolean mHasMobileDataFeature;
@@ -168,6 +173,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 String contentDescription, String typeContentDescription, boolean roaming,
                 boolean isTypeIconWide);
         void setIsAirplaneMode(boolean is, int airplaneIcon);
+        void setEthernetIndicators(boolean visible, int ethernetIconId);
     }
 
     private final WifiAccessPointController mAccessPoints;
@@ -228,6 +234,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         filter.addAction(ConnectivityManager.INET_CONDITION_ACTION);
         filter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
         filter.addAction(Intent.ACTION_AIRPLANE_MODE_CHANGED);
+        filter.addAction(EthernetManager.ETHERNET_STATE_CHANGED_ACTION);
         mWimaxSupported = mContext.getResources().getBoolean(
                 com.android.internal.R.bool.config_wimaxEnabled);
         if(mWimaxSupported) {
@@ -401,6 +408,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     isTypeIconWide(mDataTypeIconId));
         }
         cluster.setIsAirplaneMode(mAirplaneMode, mAirplaneIconId);
+        cluster.setEthernetIndicators(mEthernetConnected, mEthernetIconId);
     }
 
     void notifySignalsChangedCallbacks(NetworkSignalChangedCallback cb) {
@@ -441,6 +449,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
             }
         }
         cb.onAirplaneModeChanged(mAirplaneMode);
+        //cb.onEthernetModeChanged(mEthernetConnected);
     }
 
     public void setStackedMode(boolean stacked) {
@@ -476,6 +485,10 @@ public class NetworkControllerImpl extends BroadcastReceiver
             refreshLocale();
             updateAirplaneMode();
             refreshViews();
+        } else if (action.equals(EthernetManager.ETHERNET_STATE_CHANGED_ACTION)) {
+            refreshLocale();
+            updateEthernetState(intent);
+            refreshViews();
         } else if (action.equals(WimaxManagerConstants.NET_4G_STATE_CHANGED_ACTION) ||
                 action.equals(WimaxManagerConstants.SIGNAL_LEVEL_CHANGED_ACTION) ||
                 action.equals(WimaxManagerConstants.WIMAX_NETWORK_STATE_CHANGED_ACTION)) {
@@ -484,6 +497,23 @@ public class NetworkControllerImpl extends BroadcastReceiver
         }
     }
 
+    private void updateEthernetState(Intent intent) {
+        final String action = intent.getAction();
+        if (action.equals(EthernetManager.ETHERNET_STATE_CHANGED_ACTION)) {
+            mEthernetConnected = intent.getIntExtra(EthernetManager.EXTRA_ETHERNET_STATE,
+                    EthernetManager.ETHER_STATE_DISCONNECTED) == EthernetManager.ETHER_STATE_CONNECTED;
+        }
+
+        updateEthernetIcons();
+    }
+
+    private void updateEthernetIcons() {
+        if (mEthernetConnected) {
+            mEthernetIconId = R.drawable.stat_sys_eth_connected;
+        } else {
+           mEthernetIconId = 0;
+        }
+    }
 
     // ===== Telephony ==============================================================
 
@@ -1281,6 +1311,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
          || mLastWimaxIconId                != mWimaxIconId
          || mLastDataTypeIconId             != mDataTypeIconId
          || mLastAirplaneMode               != mAirplaneMode
+         || mLastEthernetIconId             != mEthernetIconId
          || mLastLocale                     != mLocale
          || mLastConnectedNetworkType       != mConnectedNetworkType)
         {
@@ -1296,6 +1327,10 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
         if (mLastLocale != mLocale) {
             mLastLocale = mLocale;
+        }
+
+        if (mLastEthernetIconId != mEthernetIconId) {
+            mLastEthernetIconId = mEthernetIconId;
         }
 
         // the phone icon on phones
