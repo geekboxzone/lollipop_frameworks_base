@@ -178,6 +178,8 @@ class WindowStateAnimator {
 
     int mAttrType;
 
+    boolean mSurfaceHidden;
+
     public WindowStateAnimator(final WindowState win) {
         final WindowManagerService service = win.mService;
 
@@ -455,6 +457,9 @@ class WindowStateAnimator {
     }
 
     void hide() {
+	if(mSurfaceHidden){
+	    return;
+	}
         if (!mLastHidden) {
             //dump();
             mLastHidden = true;

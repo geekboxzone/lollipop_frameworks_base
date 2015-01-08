@@ -634,6 +634,44 @@ public class SurfaceView extends View {
     }
 
     /**
+     * add by zjy
+     * @hide
+     */
+    public void hideSurfaceView(boolean hide){
+	if (mSession != null && mWindow != null) {
+	    try {
+		mSurfaceLock.lock();
+		mSession.hideWindowLayer(mWindow,hide);
+		mSurfaceLock.unlock();
+	    } catch (RemoteException ex) {
+	    }
+	}
+    }
+
+    /**
+     * add by zjy
+     * @hide
+     */
+    public void updateLayoutParams(int resId){
+	mLayout.windowAnimations = resId;
+    }
+
+    /**
+     * add by zjy
+     * @hide
+     */
+    public void updatePositionAndSize(int x,int y,int width,int height){
+	if (mSession != null && mWindow != null) {
+	    try {
+		mSurfaceLock.lock();
+		mSession.updatePositionAndSize(mWindow,x,y,width,height);
+		mSurfaceLock.unlock();
+	    } catch (RemoteException ex) {
+	    }
+	}
+    }
+
+    /**
      * Check to see if the surface has fixed size dimensions or if the surface's
      * dimensions are dimensions are dependent on its current layout.
      *

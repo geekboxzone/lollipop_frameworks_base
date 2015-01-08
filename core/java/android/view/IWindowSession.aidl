@@ -196,4 +196,8 @@ interface IWindowSession {
     void onRectangleOnScreenRequested(IBinder token, in Rect rectangle);
 
     IWindowId getWindowId(IBinder window);
+
+    void hideWindowLayer(IWindow window, boolean visible);
+
+    void updatePositionAndSize(IWindow window,int x,int y,int widht,int height);
 }
