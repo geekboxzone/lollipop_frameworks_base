@@ -450,15 +450,19 @@ public class PackageHelper {
         for (String codePath : pkg.getAllCodePaths()) {
             final File codeFile = new File(codePath);
             sizeBytes += codeFile.length();
-
+ //add by huangjc :fix some large apk install fail
+        if(sizeBytes > 80*1024*1024)           
+            sizeBytes += 5*1024*1024;
             if (isForwardLocked) {
                 sizeBytes += PackageHelper.extractPublicFiles(codeFile, null);
             }
         }
 
         // Include all relevant native code
-        sizeBytes += NativeLibraryHelper.sumNativeBinariesWithOverride(handle, abiOverride);
-
+        long nativeSizeBytes = NativeLibraryHelper.sumNativeBinariesWithOverride(handle, abiOverride);
+        if(nativeSizeBytes > 5*1024*1024)
+           nativeSizeBytes += 1*1024*1024;
+           sizeBytes += nativeSizeBytes;
         return sizeBytes;
     }
 
