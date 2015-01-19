@@ -10506,6 +10506,17 @@ public class PackageManagerService extends IPackageManager.Stub {
 
         res.removedInfo.uid = oldPkg.applicationInfo.uid;
         res.removedInfo.removedPackage = packageName;
+
+        // Remove existing odex in /data
+        final List<String> allIsas = getAllInstructionSets();
+        final String[] dexCodeIsas = getDexCodeInstructionSets(
+            allIsas.toArray(new String[allIsas.size()]));
+
+        for (String dexCodeIsa : dexCodeIsas) {
+            mInstaller.rmdex(deletedPackage.applicationInfo.sourceDir,
+                             dexCodeIsa);
+        }
+
         // Remove existing system package
         removePackageLI(oldPkgSetting, true);
         // writer
