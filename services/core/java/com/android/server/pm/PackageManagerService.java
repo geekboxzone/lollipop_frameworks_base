@@ -4863,6 +4863,9 @@ public class PackageManagerService extends IPackageManager.Stub {
                         Log.i(TAG, "Running dexopt on: " + path + " pkg="
                                 + pkg.applicationInfo.packageName + " isa=" + dexCodeInstructionSet
                                 + " vmSafeMode=" + vmSafeMode);
+ 			 if(pkg.applicationInfo.packageName.contains("com.android.cts")||pkg.applicationInfo.packageName.contains("com.google.android.xts")){
+                            SystemProperties.set("sys.cts_gts.status","true");
+                        }
                         final int sharedGid = UserHandle.getSharedAppGid(pkg.applicationInfo.uid);
                         final int ret = mInstaller.dexopt(path, sharedGid, !isForwardLocked(pkg),
                                 pkg.packageName, dexCodeInstructionSet, vmSafeMode);
