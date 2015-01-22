@@ -94,7 +94,8 @@ public class UsbStorageActivity extends Activity
     private StorageEventListener mStorageListener = new StorageEventListener() {
         @Override
         public void onStorageStateChanged(String path, String oldState, String newState) {
-			boolean hasSdcard = !((Environment.MEDIA_REMOVED.equals(mStorageManager.getVolumeState("/mnt/external_sd")))||(Environment.MEDIA_BAD_REMOVAL.equals(mStorageManager.getVolumeState("/mnt/external_sd"))) || (Environment.MEDIA_UNMOUNTABLE.equals(mStorageManager.getVolumeState("/mnt/external_sd")))) ;
+			boolean hasSdcard = !((Environment.MEDIA_REMOVED.equals(mStorageManager.getVolumeState("/mnt/external_sd")))||(Environment.MEDIA_BAD_REMOVAL.equals(mStorageManager.getVolumeState("/mnt/external_sd"))) || (Environment.MEDIA_UNMOUNTABLE.equals(mStorageManager.getVolumeState("/mnt/external_sd"))) || 
+                             (Environment.MEDIA_UNMOUNTED.equals(mStorageManager.getVolumeState("/mnt/external_sd")))) ;
 			final boolean flashShared = Environment.MEDIA_SHARED.equals(mStorageManager.getVolumeState("/mnt/internal_sd"));
 	        final boolean sdcardShared = Environment.MEDIA_SHARED.equals(mStorageManager.getVolumeState("/mnt/external_sd"));
 			final boolean flashMounted = Environment.MEDIA_MOUNTED.equals(mStorageManager.getVolumeState("/mnt/internal_sd"));//(newState.equals(Environment.MEDIA_MOUNTED))&&(isFlash);//only switch to unshare state after flash has been remount
