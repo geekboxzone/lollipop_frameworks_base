@@ -41,13 +41,23 @@
             >
 
             <!-- navigation controls -->
-            <View
+            <!--View
                 android:layout_width="@dimen/navigation_extra_key_width"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:layout_marginStart="2dp"
                 android:visibility="invisible"
-                />
+                /-->
+             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
+                android:layout_width="84dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/capture"
+                android:layout_marginRight="0dp"
+                android:layout_marginStart="2dp"
+                   android:layout_weight="0"
+                android:visibility="invisible"
+                   android:contentDescription="@string/accessibility_recent"
+             />
 
             <Space 
                 android:layout_width="match_parent"
@@ -108,7 +118,7 @@
                 android:layout_weight="1"
                 />
             <FrameLayout
-                android:layout_width="@dimen/navigation_extra_key_width"
+                android:layout_width="84dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:layout_marginEnd="2dp" >
@@ -207,13 +217,23 @@
             >
 
             <!-- navigation controls -->
-            <View
+            <!--View
                 android:layout_width="@dimen/navigation_extra_key_width"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:layout_marginStart="2dp"
                 android:visibility="invisible"
-                />
+                /-->
+            <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
+                android:layout_width="84dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/capture"
+                android:layout_marginRight="0dp"
+                android:layout_marginStart="2dp"
+                   android:layout_weight="0"
+                android:visibility="invisible"
+                   android:contentDescription="@string/accessibility_recent"
+             />
             <Space 
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -273,7 +293,7 @@
                 android:layout_weight="1"
                 />
             <FrameLayout
-                android:layout_width="@dimen/navigation_extra_key_width"
+                android:layout_width="84dp"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="2dp"
                 android:layout_weight="0" >

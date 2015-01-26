@@ -1283,7 +1283,7 @@ final Object mScreenshotLock = new Object();
         if(show){
 		                     mNavigationBarView.getScreenshotButton().setVisibility(View.VISIBLE);
 		                }else{
-				                     mNavigationBarView.getScreenshotButton().setVisibility(View.GONE);
+				                     mNavigationBarView.getScreenshotButton().setVisibility(View.INVISIBLE);
 				                }								
 	    mNavigationBarView.getScreenshotButton().setOnTouchListener(mScreenshotPreloadOnTouchListener);     
         mNavigationBarView.getRecentsButton().setOnTouchListener(mRecentsPreloadOnTouchListener);

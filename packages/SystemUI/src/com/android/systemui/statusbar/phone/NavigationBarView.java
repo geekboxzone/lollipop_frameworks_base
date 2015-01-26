@@ -379,7 +379,13 @@ public class NavigationBarView extends LinearLayout {
 				getSubButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
             if(getSubButton()!=null) 
 				getAddButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
-        } else {
+            if((mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) && ((mContext.getResources().getConfiguration().screenHeightDp < 600)|| (mContext.getResources().getConfiguration().screenWidthDp < 600))) {
+                                        if(getSubButton()!=null)
+                                        getSubButton().setVisibility(View.GONE);
+                                        if(getAddButton()!=null)
+                                        getAddButton().setVisibility(View.GONE);
+            }
+         } else {
             if(getSubButton()!=null) 
 				getSubButton().setVisibility(View.GONE);
             if(getSubButton()!=null) 

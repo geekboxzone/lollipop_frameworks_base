@@ -1212,6 +1212,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Allow the navigation bar to move on small devices (phones).
         mNavigationBarCanMove = shortSizeDp < 600;
+        if(SystemProperties.get("ro.rk.small_screen","true").equals("true")){
+                mNavigationBarCanMove=false;           
+               }
 
         mHasNavigationBar = res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
         // Allow a system property to override this. Used by the emulator.
