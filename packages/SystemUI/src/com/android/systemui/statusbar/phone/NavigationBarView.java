@@ -277,6 +277,10 @@ public class NavigationBarView extends LinearLayout {
         return mCurrentView.findViewById(R.id.add);
     }
 
+    public View getScreenshotButton(){
+        return mCurrentView.findViewById(R.id.screenshot);
+    } 
+
     private void getIcons(Resources res) {
         mBackIcon = res.getDrawable(R.drawable.ic_sysbar_back);
         mBackLandIcon = res.getDrawable(R.drawable.ic_sysbar_back_land);

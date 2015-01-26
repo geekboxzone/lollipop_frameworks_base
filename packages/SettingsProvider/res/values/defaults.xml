@@ -17,6 +17,10 @@
  */
 -->
 <resources>
+    <!-- should show the screenshot button default -->
+    <bool name="def_screenshot_button_show">false</bool>
+    <!-- the store location of screen capture by default-->
+    <string name="def_screenshot_location">/mnt/sdcard</string>
     <bool name="def_dim_screen">true</bool>
     <integer name="def_screen_off_timeout">60000</integer>
     <integer name="def_sleep_timeout">-1</integer>
@@ -43,6 +47,7 @@
          user opt-in via Setup Wizard or Settings.
     -->
     <string name="def_location_providers_allowed" translatable="false">gps</string>
+    <string name="def_location_providers_allowed_network" translatable="false">network</string>
     <bool name="assisted_gps_enabled">true</bool>
     <bool name="def_netstats_enabled">true</bool>
     <bool name="def_usb_mass_storage_enabled">true</bool>

@@ -2237,8 +2237,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             loadBooleanSetting(stmt, Settings.System.DIM_SCREEN,
                     R.bool.def_dim_screen);
+	    //add for factory as ro.rk.screenoff_time
             loadIntegerSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
-                    R.integer.def_screen_off_timeout);
+                     SystemProperties.getInt("ro.rk.screenoff_time", mContext.getResources().getInteger(R.integer.def_screen_off_timeout)));
 
             // Set default cdma DTMF type
             loadSetting(stmt, Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, 0);
@@ -2248,6 +2249,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             // Set default tty mode
             loadSetting(stmt, Settings.System.TTY_MODE, 0);
+            loadBooleanSetting(stmt, Settings.System.SCREENSHOT_BUTTON_SHOW,
+                    R.bool.def_screenshot_button_show);
 
             String enableUms= SystemProperties.get("ro.factory.hasUMS","false");
             if("true".equals(enableUms))//if has UMS function,flash is primary storage
@@ -2256,8 +2259,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             }else{
                   loadSetting(stmt,Settings.System.SCREENSHOT_LOCATION,"/storage/emulated");
             }
-            loadIntegerSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
-                    R.integer.def_screen_brightness);
+	    //add for factory as ro.rk.def_brightness
+	    loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
+		    SystemProperties.getInt("ro.rk.def_brightness", mContext.getResources().getInteger(R.integer.def_screen_brightness)));
 
             loadBooleanSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE,
                     R.bool.def_screen_brightness_automatic_mode);
@@ -2311,8 +2315,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             stmt = db.compileStatement("INSERT OR IGNORE INTO secure(name,value)"
                     + " VALUES(?,?);");
 
-            loadStringSetting(stmt, Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
+	    String hasGPS = SystemProperties.get("ro.factory.hasGPS");
+	    if("true".equals(hasGPS))
+	    {
+            	loadStringSetting(stmt, Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
                     R.string.def_location_providers_allowed);
+	    }
+	    else
+	    {
+                loadStringSetting(stmt, Settings.Secure.LOCATION_PROVIDERS_ALLOWED,
+                    R.string.def_location_providers_allowed_network);
+	    }
 
             String wifiWatchList = SystemProperties.get("ro.com.android.wifi-watchlist");
             if (!TextUtils.isEmpty(wifiWatchList)) {
@@ -2504,6 +2517,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             loadBooleanSetting(stmt, Settings.Global.NETSTATS_ENABLED,
                     R.bool.def_netstats_enabled);
+
+	    //add for factory install_non_market_apps
+            loadSetting(stmt, Settings.Secure.INSTALL_NON_MARKET_APPS,
+			    "true".equalsIgnoreCase(
+				    SystemProperties.get("ro.rk.install_non_market_apps",
+					    "false")) ? 1 : 0);
 
             loadBooleanSetting(stmt, Settings.Global.USB_MASS_STORAGE_ENABLED,
                     R.bool.def_usb_mass_storage_enabled);
