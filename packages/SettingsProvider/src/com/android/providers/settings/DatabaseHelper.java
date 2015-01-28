@@ -2238,7 +2238,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             loadBooleanSetting(stmt, Settings.System.DIM_SCREEN,
                     R.bool.def_dim_screen);
 	    //add for factory as ro.rk.screenoff_time
-            loadIntegerSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
+            loadSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
                      SystemProperties.getInt("ro.rk.screenoff_time", mContext.getResources().getInteger(R.integer.def_screen_off_timeout)));
 
             // Set default cdma DTMF type
