@@ -60,6 +60,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import android.os.SystemProperties;
+
 /** Platform implementation of the quick settings tile host **/
 public class QSTileHost implements QSTile.Host {
     private static final String TAG = "QSTileHost";
@@ -265,6 +267,7 @@ public class QSTileHost implements QSTile.Host {
     private List<String> loadTileSpecs() {
         final Resources res = mContext.getResources();
         final String defaultTileList = res.getString(R.string.quick_settings_tiles_default);
+        final String defaultTileList_bt = res.getString(R.string.quick_settings_tiles_default_bt);
         String tileList = Secure.getStringForUser(mContext.getContentResolver(), TILES_SETTING,
                 mUserTracker.getCurrentUserId());
         if (tileList == null) {
@@ -280,7 +283,10 @@ public class QSTileHost implements QSTile.Host {
             if (tile.isEmpty()) continue;
             if (tile.equals("default")) {
                 if (!addedDefault) {
-                    tiles.addAll(Arrays.asList(defaultTileList.split(",")));
+                    if(SystemProperties.get("ro.rk.bt_enable", "true").equals("false"))
+                       tiles.addAll(Arrays.asList(defaultTileList.split(",")));
+                    else
+                       tiles.addAll(Arrays.asList(defaultTileList_bt.split(",")));
                     addedDefault = true;
                 }
             } else {
