@@ -225,7 +225,7 @@
                 android:visibility="invisible"
                 /-->
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
-                android:layout_width="84dp"
+                android:layout_width="78dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/capture"
                 android:layout_marginRight="0dp"
@@ -241,7 +241,7 @@
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView
                 android:id="@+id/sub"
-                android:layout_width="142dp"
+                android:layout_width="108dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
@@ -252,7 +252,7 @@
                 systemui:keyCode="25"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/back"
-                android:layout_width="142dp" android:paddingStart="32dp" android:paddingEnd="32dp"
+                android:layout_width="120dp" android:paddingStart="16dp" android:paddingEnd="16dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_back"
                 systemui:keyCode="4"
@@ -260,7 +260,7 @@
                 android:contentDescription="@string/accessibility_back"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/home"
-                android:layout_width="142dp" android:paddingStart="32dp" android:paddingEnd="32dp"
+                android:layout_width="120dp" android:paddingStart="16dp" android:paddingEnd="16dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_home"
                 systemui:keyCode="3"
@@ -269,7 +269,7 @@
                 android:contentDescription="@string/accessibility_home"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/recent_apps"
-                android:layout_width="142dp" android:paddingStart="32dp" android:paddingEnd="32dp"
+                android:layout_width="120dp" android:paddingStart="16dp" android:paddingEnd="16dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_recent"
                 android:layout_weight="0"
@@ -277,7 +277,7 @@
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView
                 android:id="@+id/add"
-                android:layout_width="142dp"
+                android:layout_width="108dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
@@ -293,7 +293,7 @@
                 android:layout_weight="1"
                 />
             <FrameLayout
-                android:layout_width="84dp"
+                android:layout_width="78dp"
                 android:layout_height="match_parent"
                 android:layout_marginEnd="2dp"
                 android:layout_weight="0" >
