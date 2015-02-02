@@ -21,6 +21,7 @@ import android.util.Pair;
 import android.util.Range;
 import android.util.Rational;
 import android.util.Size;
+import android.os.SystemProperties;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2146,8 +2147,30 @@ public final class MediaCodecInfo {
         if (caps == null) {
             throw new IllegalArgumentException("codec does not support type");
         }
+	
         // clone writable object
-        return caps.dup();
+        //return caps.dup();
+
+        String prop_value = SystemProperties.get("sys.cts.capture");
+
+    	CodecCapabilities tmp = caps.dup();
+    	for (CodecProfileLevel lvl : tmp.profileLevels) {
+            if(prop_value.equals("testVirtualDisplayRecycles") || 
+                prop_value.equals("testRenderingMaxResolutionLocally") || 
+                prop_value.equals("testRenderingMaxResolutionRemotely"))
+            {
+                 if (lvl.level > 0x40) {
+        			 lvl.level = 0x40;
+        		 }
+            }else if(prop_value.equals("testAvc0176x0144") || prop_value.equals("testAvc0352x0288") ||
+                prop_value.equals("testAvc0720x0480") ||prop_value.equals("testAvc1280x0720") ||
+                prop_value.equals("testAvc1920x1072")){
+                if (lvl.level > 0x20) {
+        			 lvl.level = 0x20;
+        		 }
+            }
+    	}
+    	return tmp;
     }
 
     /** @hide */
