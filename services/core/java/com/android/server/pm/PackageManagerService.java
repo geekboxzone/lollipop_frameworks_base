@@ -1550,6 +1550,30 @@ public class PackageManagerService extends IPackageManager.Stub {
             scanDirLI(systemAppDir, PackageParser.PARSE_IS_SYSTEM
                     | PackageParser.PARSE_IS_SYSTEM_DIR, scanFlags, 0);
 
+            //$_rockchip_$_modify_by huangjc Collect all preinstall packages.
+            File preinstallAppDir = new File(Environment.getRootDirectory(), "preinstall");
+            File preinstallAppDelDir = new File(Environment.getRootDirectory(),
+                    "preinstall_del");
+            if (!SystemProperties.getBoolean("persist.sys.preinstalled", false)) {
+                // mPreInstallObserver = new AppDirObserver(
+                // mPreinstallAppDir.getPath(), OBSERVER_EVENTS, false);
+                // mPreInstallObserver.startWatching();
+
+                if (preinstallAppDir.exists()) {
+                    // scanDirLI(mPreinstallAppDir, 0, scanMode, 0);
+                    copyPackagesToAppInstallDir(preinstallAppDir);
+                }
+
+                // mPreInstallDelObserver = new AppDirObserver(
+                // mPreinstallAppDelDir.getPath(), OBSERVER_EVENTS, false);
+                // mPreInstallDelObserver.startWatching();
+                if (preinstallAppDelDir.exists()) {
+                    copyPackagesToAppInstallDir(preinstallAppDelDir);
+                    deletePreinstallDir(preinstallAppDelDir);
+                }
+                SystemProperties.set("persist.sys.preinstalled", "1");
+            }//$_rockchip_$_modify_end
+
             // Collect all vendor packages.
             File vendorAppDir = new File("/vendor/app");
             try {
@@ -1793,6 +1817,41 @@ public class PackageManagerService extends IPackageManager.Stub {
         // tidy.
         Runtime.getRuntime().gc();
     }
+
+   //$_rockchip_$_modify_by huangjc add copyPackagesToAppInstallDir
+    private void copyPackagesToAppInstallDir(File srcDir) {
+        String[] files = srcDir.list();
+        if (files == null) {
+            Log.d(TAG, "No files in app dir " + srcDir);
+            return;
+        }
+
+        int i;
+        for (i = 0; i < files.length; i++) {
+            File srcFile = new File(srcDir, files[i]);
+            File destFile = new File(mAppInstallDir, files[i]);
+            Slog.d(TAG, "Copy " + srcFile.getPath() + " to " + destFile.getPath());
+            /*if (!isPackageFilename(files[i])) {
+                // Ignore entries which are not apk's
+                continue;
+            }*/
+            if (!FileUtils.copyFile(srcFile, destFile)) {
+                Slog.d(TAG, "Copy " + srcFile.getPath() + " to " + destFile.getPath() + " fail");
+                continue;
+            }
+            FileUtils.setPermissions(destFile.getAbsolutePath(), FileUtils.S_IRUSR
+                    | FileUtils.S_IWUSR | FileUtils.S_IRGRP | FileUtils.S_IROTH, -1, -1);
+        }
+    }
+
+    private void deletePreinstallDir(File dir) {
+        String[] files = dir.list();
+        if (files != null) {
+            Slog.d(TAG, "Ready to cleanup preinstall");
+            SystemProperties.set("ctl.start", "preinst_clr");
+        }
+    }
+
 
     @Override
     public boolean isFirstBoot() {
