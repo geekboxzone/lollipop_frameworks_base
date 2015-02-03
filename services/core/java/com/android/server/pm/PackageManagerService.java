@@ -1834,16 +1834,93 @@ public class PackageManagerService extends IPackageManager.Stub {
             /*if (!isPackageFilename(files[i])) {
                 // Ignore entries which are not apk's
                 continue;
-            }*/
-            if (!FileUtils.copyFile(srcFile, destFile)) {
-                Slog.d(TAG, "Copy " + srcFile.getPath() + " to " + destFile.getPath() + " fail");
-                continue;
             }
-            FileUtils.setPermissions(destFile.getAbsolutePath(), FileUtils.S_IRUSR
-                    | FileUtils.S_IWUSR | FileUtils.S_IRGRP | FileUtils.S_IROTH, -1, -1);
+            if (file.isDirectory()) {
+             File[] prefiles = srcfile.listFiles();
+            for (final File f : prefiles) {
+              if (f.isFile()) {
+                  if (f.getName().endsWith(".apk")) {
+                    
+                  if (!FileUtils.copyFile(f, destFile)) {
+                   Slog.d(TAG, "Copy " + f.getPath() + " to " + destFile.getPath() + " fail");
+                   continue;
+                  }
+                  }
+              }
+           }
+           }*/
+          if (copyDirectory(srcFile.getPath(),destFile.getPath()))
+          {
+                Slog.d(TAG,"Directory "+destFile.getPath()+" Copy Successfully!");
+          }
+          else
+          {
+                Slog.e(TAG,"Directory "+destFile.getPath()+" Copy fail!");
+            }
+            FileUtils.setPermissions(destFile.getAbsolutePath(), 0755, -1, -1);
         }
     }
 
+    public boolean copyDirectory(String SrcDirectoryPath,
+                               String DesDirectoryPath)
+  {
+    try
+    {
+      //創建不存在的目錄
+      File F0 = new File(DesDirectoryPath);
+      if (!F0.exists())
+      {
+        if (!F0.mkdir())
+        {
+          Slog.e(TAG,"mkdir fail!");
+        }
+      }
+      File F = new File(SrcDirectoryPath);
+      File[] allFile = F.listFiles(); //取得當前目錄下面的所有文件，將其放在文件數組中
+      int totalNum = allFile.length; //取得當前文件夾中有多少文件（包括文件夾）
+      String srcName = "";
+      String desName = "";
+      int currentFile = 0;
+      //一個一個的拷貝文件
+      for (currentFile = 0; currentFile < totalNum; currentFile++)
+      {
+        if (!allFile[currentFile].isDirectory())
+        {
+          //如果是文件是采用處理文件的方式
+          desName =DesDirectoryPath + "/" + allFile[currentFile].getName();
+           File FdesName = new File(desName);
+          if (!FileUtils.copyFile(allFile[currentFile], FdesName)) {
+                   Slog.d(TAG, "Copy " + allFile[currentFile].getPath() + " to " + FdesName.getPath() +
+" fail");
+                   continue;
+              }
+            FileUtils.setPermissions(FdesName.getAbsolutePath(), 0644, -1, -1);
+        }
+        //如果是文件夾就采用遞歸處理
+        else
+        {
+            FileUtils.setPermissions(allFile[currentFile].getAbsolutePath(), 0755, -1, -1);
+          //利用遞歸讀取文件夾中的子文件下的內容，再讀子文件夾下面的子文件夾下面的內容...
+          if (copyDirectory(allFile[currentFile].getPath().toString(),
+                            DesDirectoryPath + "/" +allFile[currentFile].getName().toString()))
+          {
+            //System.out.println("D Copy Successfully!");
+          }
+          else
+          {
+            System.out.println("SubDirectory Copy Error!");
+          }
+        }
+      }
+      return true;
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace();
+      return false;
+    }
+  }
+  //$_rockchip_$_modify_end
     private void deletePreinstallDir(File dir) {
         String[] files = dir.list();
         if (files != null) {
