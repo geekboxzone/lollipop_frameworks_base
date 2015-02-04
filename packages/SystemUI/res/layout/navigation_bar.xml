@@ -48,6 +48,15 @@
                 android:layout_weight="0"
                 android:visibility="invisible"
                 /-->
+            <!--$_rbox_$_modify_$_huangjc_begin-->
+               <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/hide_bar"
+               android:layout_width="30dp"
+                android:layout_height="0dp"
+                android:src="@drawable/ic_sysbar_hide"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                />
+               <!--$_rbox_$_modify_$_huangjc_end-->
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
                 android:layout_width="80dp"
                 android:layout_height="match_parent"
@@ -158,7 +167,12 @@
                     android:src="@drawable/ic_ime_switcher_default"
                     android:visibility="invisible" />
             </FrameLayout>
-
+            <View
+                android:layout_width="30dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:visibility="invisible"
+                />
         </LinearLayout>
 
         <!-- lights out layout to match exactly -->
@@ -244,6 +258,15 @@
                 android:layout_marginStart="2dp"
                 android:visibility="invisible"
                 /-->
+             <!--$_rbox_$_modify_$_huangjc_begin-->
+               <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/hide_bar"
+               android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:src="@drawable/ic_sysbar_hide"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                />
+               <!--$_rbox_$_modify_$_huangjc_end-->
              <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
                 android:layout_width="60dp"
                 android:layout_height="match_parent"

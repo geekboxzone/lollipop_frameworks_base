@@ -52,6 +52,9 @@ interface IStatusBarService
     void onNotificationExpansionChanged(in String key, in boolean userAction, in boolean expanded);
     void setSystemUiVisibility(int vis, int mask);
     void setWindowState(int window, int state);
+    //$_rbox_$_modify_$_huangjc begin, add bar interface
+    void addBar();
+    //$_rbox_$_modify_$_huangjc end
 
     void showRecentApps(boolean triggeredFromAltTab);
     void hideRecentApps(boolean triggeredFromAltTab, boolean triggeredFromHomeKey);

@@ -442,6 +442,15 @@ public class StatusBarManagerService extends IStatusBarService.Stub {
             } catch (RemoteException ex) {}
         }
     }
+   //$_rbox_$_modify_$_huangjc begin, add bar interface
+   @Override
+    public void addBar(){
+         if (mBar != null) {
+            try {
+                mBar.addBar();
+            } catch (RemoteException ex) {}
+        }
+    }
 
     private void enforceStatusBar() {
         mContext.enforceCallingOrSelfPermission(android.Manifest.permission.STATUS_BAR,

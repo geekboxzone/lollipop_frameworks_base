@@ -266,6 +266,9 @@
     <string name="external_sd_unmount">SD卡未挂载</string>
     <string name="usb_storage_unmount">USB存储未挂载</string>
 
+    <!-- $_rockchip_$_modify_$_huangjc,hide bar msg -->
+    <string name="hidebar_msg">"系统栏已经被隐藏\n您可以在屏幕下边缘拖拉再次显示它。" </string>
+
     <string name="quick_settings_inversion_label" msgid="8790919884718619648">"反色"</string>
     <string name="quick_settings_color_space_label" msgid="853443689745584770">"颜色校正模式"</string>
     <string name="quick_settings_more_settings" msgid="326112621462813682">"更多设置"</string>

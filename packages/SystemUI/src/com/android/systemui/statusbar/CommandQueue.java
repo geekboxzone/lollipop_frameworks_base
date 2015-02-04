@@ -57,6 +57,10 @@ public class CommandQueue extends IStatusBar.Stub {
     private static final int MSG_NOTIFICATION_LIGHT_OFF     = 16 << MSG_SHIFT;
     private static final int MSG_NOTIFICATION_LIGHT_PULSE   = 17 << MSG_SHIFT;
 
+    //$_rbox_$_modify_$_chenxiao begin, add bar interface 
+    private static final int MSG_ADD_BAR                    = 18 << MSG_SHIFT;
+    //$_rbox_$_modify_$_chenxiao end
+
     public static final int FLAG_EXCLUDE_NONE = 0;
     public static final int FLAG_EXCLUDE_SEARCH_PANEL = 1 << 0;
     public static final int FLAG_EXCLUDE_RECENTS_PANEL = 1 << 1;
@@ -97,6 +101,9 @@ public class CommandQueue extends IStatusBar.Stub {
         public void buzzBeepBlinked();
         public void notificationLightOff();
         public void notificationLightPulse(int argb, int onMillis, int offMillis);
+        //$_rockchip_$_modify_$_huangjc begin, add bar interface 
+        public void addBar();
+        //$_rockchip_$_modify_$_huangjc end
     }
 
     public CommandQueue(Callbacks callbacks, StatusBarIconList list) {
@@ -238,6 +245,15 @@ public class CommandQueue extends IStatusBar.Stub {
         }
     }
 
+    //$_rbox_$_modify_$_huangjc begin, add bar interface 
+    public void addBar() {
+       synchronized (mList) {
+               mHandler.removeMessages(MSG_ADD_BAR);
+            mHandler.obtainMessage(MSG_ADD_BAR, 0, 0, null).sendToTarget();
+               }
+    }
+    //$_rbox_$_modify_$_huangjc end
+
     private final class H extends Handler {
         public void handleMessage(Message msg) {
             final int what = msg.what & MSG_MASK;
@@ -317,6 +333,11 @@ public class CommandQueue extends IStatusBar.Stub {
                 case MSG_NOTIFICATION_LIGHT_PULSE:
                     mCallbacks.notificationLightPulse((Integer) msg.obj, msg.arg1, msg.arg2);
                     break;
+                //$_rbox_$_modify_$_huangjc begin, add bar interface
+                case MSG_ADD_BAR:
+                       mCallbacks.addBar();
+                       break;
+                //$_rbox_$_modify_$_huangjc end
             }
         }
     }

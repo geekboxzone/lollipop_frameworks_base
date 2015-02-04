@@ -510,6 +510,9 @@
            <string name="external_sd_unmount">sd card is unmount</string>
            <string name="usb_storage_unmount">usb storage is unmount</string> 
 
+       <!-- $_rbox_$_modify_$_chenxiao begin,hide bar msg -->
+        <string name="hidebar_msg">"System Bar has hidden\nyou can swipe from the bottom of screen to show it again. "</string>
+
     <!-- Text to display underneath the graphical signal strength meter when
          it is displaying Wi-Fi status and Wi-Fi is connected to a network
          whose SSID is not available.

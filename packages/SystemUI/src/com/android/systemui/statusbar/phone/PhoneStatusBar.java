@@ -733,6 +733,7 @@ final Object mScreenshotLock = new Object();
     // ================================================================================
     protected PhoneStatusBarView makeStatusBarView() {
         final Context context = mContext;
+        SystemProperties.set("sys.status.addbar","true");
         IntentFilter intentfilter=new IntentFilter();
         intentfilter.addAction("rk.android.screenshot.SHOW");
         intentfilter.addAction("rk.android.screenshot.ACTION");
@@ -1293,6 +1294,14 @@ final Object mScreenshotLock = new Object();
         mNavigationBarView.getBackButton().setOnLongClickListener(mLongPressBackRecentsListener);
         mNavigationBarView.getHomeButton().setOnTouchListener(mHomeActionListener);
         updateSearchPanel();
+        if("true".equals(SystemProperties.get("sys.status.hidebar_enable","false")))
+         {
+            mNavigationBarView.getHidebarButton().setVisibility(View.VISIBLE);
+         }else{
+           mNavigationBarView.getHidebarButton().setVisibility(View.INVISIBLE);
+         }
+        //$_rbox_$_modify_$_huangjc,add add/remove bar button
+        mNavigationBarView.getHidebarButton().setOnTouchListener(mHidebarPreloadOnTouchListener);
     }
     private View.OnTouchListener mScreenshotPreloadOnTouchListener = new View.OnTouchListener() {
 		        // additional optimization when we have software system buttons - start loading the recent
@@ -1312,7 +1321,62 @@ final Object mScreenshotLock = new Object();
              }
              return false;
          }
-     };														
+     };
+      //$_rbox_$_modify_$_huangjc,add add/remove bar button	
+      private View.OnTouchListener mHidebarPreloadOnTouchListener = new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                        // TODO Auto-generated method stub
+                     int action = event.getAction() & MotionEvent.ACTION_MASK;
+            if (action == MotionEvent.ACTION_DOWN) {
+
+            } else if (action == MotionEvent.ACTION_CANCEL) {
+
+            } else if (action == MotionEvent.ACTION_UP) {
+                removeBar();
+            }
+                        return false;
+                }
+        };
+
+        private boolean mBarIsAdd = true;
+        private void addBarInside(){
+                if (!mBarIsAdd){
+                        Log.d(TAG,"add Bar");
+                        addNavigationBar();
+                      /*  if (mNavigationBarView != null)
+                                mWindowManager.addView(mNavigationBarView,(WindowManager.LayoutParams) mNavigationBarView.getLayoutParams());
+                        if (mStatusBarWindow != null)
+                                mWindowManager.addView(mStatusBarWindow,
+                                      (WindowManager.LayoutParams) mStatusBarWindow.getLayoutParams());
+                     */
+                        mBarIsAdd = true;
+                        SystemProperties.set("sys.status.addbar","true");
+                }
+        }
+
+        private void removeBar(){
+                if (mBarIsAdd){
+                        Log.d(TAG,"remove Bar");
+                        if (mNavigationBarView != null)
+                                mWindowManager.removeView(mNavigationBarView);
+                       /* if (mStatusBarWindow != null)
+                                mWindowManager.removeView(mStatusBarWindow);
+                       */
+                        mBarIsAdd = false;
+                        SystemProperties.set("sys.status.addbar","false");
+                        
+                        Toast.makeText(mContext, mContext.getResources().getString(R.string.hidebar_msg)
+, 3000).show();
+                }
+        }
+
+        @Override // CommandQueue
+        public void addBar(){
+                addBarInside();
+        }
+        //$_rbox_$_modify_$_huangjc end
 
     // For small-screen devices (read: phones) that lack hardware navigation buttons
     private void addNavigationBar() {
@@ -1328,7 +1392,6 @@ final Object mScreenshotLock = new Object();
         if (mNavigationBarView == null || !mNavigationBarView.isAttachedToWindow()) return;
 
         prepareNavigationBarView();
-
         mWindowManager.updateViewLayout(mNavigationBarView, getNavigationBarLayoutParams());
     }
 
@@ -2119,7 +2182,6 @@ final Object mScreenshotLock = new Object();
         final int old = mDisabled;
         final int diff = state ^ old;
         mDisabled = state;
-
         if (DEBUG) {
             Log.d(TAG, String.format("disable: 0x%08x -> 0x%08x (diff: 0x%08x)",
                 old, state, diff));
@@ -2172,8 +2234,9 @@ final Object mScreenshotLock = new Object();
                         | StatusBarManager.DISABLE_BACK
                         | StatusBarManager.DISABLE_SEARCH)) != 0) {
             // the nav bar will take care of these
-            if (mNavigationBarView != null) mNavigationBarView.setDisabledFlags(state);
-
+            if (mNavigationBarView != null){
+                mNavigationBarView.setDisabledFlags(state);
+            }
             if ((state & StatusBarManager.DISABLE_RECENT) != 0) {
                 // close recents if it's visible
                 mHandler.removeMessages(MSG_HIDE_RECENT_APPS);
@@ -2187,7 +2250,7 @@ final Object mScreenshotLock = new Object();
                     haltTicker();
                 }
                 animateStatusBarHide(mNotificationIconArea, animate);
-            } else {
+             } else{
                 animateStatusBarShow(mNotificationIconArea, animate);
             }
         }
@@ -2373,7 +2436,8 @@ final Object mScreenshotLock = new Object();
         }
 
         mExpandedVisible = true;
-        if (mNavigationBarView != null)
+        //$_RBOX_$_modify_huangjc add hide button
+        if (mNavigationBarView != null && mBarIsAdd)
             mNavigationBarView.setSlippery(true);
 
         updateCarrierLabelVisibility(true);
@@ -2384,7 +2448,7 @@ final Object mScreenshotLock = new Object();
         // This is only possible to do atomically because the status bar is at the top of the screen!
         mStatusBarWindowManager.setStatusBarExpanded(true);
         mStatusBarView.setFocusable(false);
-
+        
         visibilityChanged(true);
         mWaitingForKeyguardExit = false;
         disable(mDisabledUnmodified, !force /* animate */);
@@ -2559,7 +2623,7 @@ final Object mScreenshotLock = new Object();
         // Shrink the window to the size of the status bar only
         mStatusBarWindowManager.setStatusBarExpanded(false);
         mStatusBarView.setFocusable(true);
-
+        
         // Close any "App info" popups that might have snuck on-screen
         dismissPopups();
 

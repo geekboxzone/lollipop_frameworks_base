@@ -280,6 +280,11 @@ public class NavigationBarView extends LinearLayout {
     public View getScreenshotButton(){
         return mCurrentView.findViewById(R.id.screenshot);
     } 
+     //$_rbox_$_modify_$_huangjc add bar/remove button
+     public View getHidebarButton(){
+               return mCurrentView.findViewById(R.id.hide_bar);
+       }
+       //$_rbox_$_modify_$_huangjc end
 
     private void getIcons(Resources res) {
         mBackIcon = res.getDrawable(R.drawable.ic_sysbar_back);

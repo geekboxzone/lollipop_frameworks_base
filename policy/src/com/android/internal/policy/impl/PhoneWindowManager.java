@@ -1066,12 +1066,18 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         if (mStatusBar != null) {
                             requestTransientBars(mStatusBar);
                         }
+                        //$_rbox_$_modify_$_huangjc begin, add bar interface
+                        //   addBar();
+                          //$_rbox_$_modify_$_huangjc end
                     }
                     @Override
                     public void onSwipeFromBottom() {
                         if (mNavigationBar != null && mNavigationBarOnBottom) {
                             requestTransientBars(mNavigationBar);
                         }
+                        //$_rbox_$_modify_$_huangjc begin, add bar interface
+                           addBar();
+                          //$_rbox_$_modify_$_huangjc end
                     }
                     @Override
                     public void onSwipeFromRight() {
@@ -2716,6 +2722,20 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             }
         }
     }
+    //$_rbox_$_modify_$_huangjc begin, add bar interface
+    public void addBar() {
+         try {
+            IStatusBarService statusbar = getStatusBarService();
+            if (statusbar != null) {
+                statusbar.addBar();
+            }
+        } catch (RemoteException e) {
+            Slog.e(TAG, "RemoteException when add Bar", e);
+            // re-acquire status bar service next time it is needed.
+            mStatusBarService = null;
+        }
+    }
+    //$_rbox_$_modify_$_huangjc end
 
     private void toggleRecentApps() {
         mPreloadedRecentApps = false; // preloading no longer needs to be canceled
