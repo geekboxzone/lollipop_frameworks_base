@@ -733,7 +733,6 @@ final Object mScreenshotLock = new Object();
     // ================================================================================
     protected PhoneStatusBarView makeStatusBarView() {
         final Context context = mContext;
-        SystemProperties.set("sys.status.addbar","true");
         IntentFilter intentfilter=new IntentFilter();
         intentfilter.addAction("rk.android.screenshot.SHOW");
         intentfilter.addAction("rk.android.screenshot.ACTION");
@@ -1352,7 +1351,6 @@ final Object mScreenshotLock = new Object();
                                       (WindowManager.LayoutParams) mStatusBarWindow.getLayoutParams());
                      */
                         mBarIsAdd = true;
-                        SystemProperties.set("sys.status.addbar","true");
                 }
         }
 
@@ -1365,7 +1363,6 @@ final Object mScreenshotLock = new Object();
                                 mWindowManager.removeView(mStatusBarWindow);
                        */
                         mBarIsAdd = false;
-                        SystemProperties.set("sys.status.addbar","false");
                         
                         Toast.makeText(mContext, mContext.getResources().getString(R.string.hidebar_msg)
 , 3000).show();
