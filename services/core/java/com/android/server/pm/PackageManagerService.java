@@ -1831,24 +1831,26 @@ public class PackageManagerService extends IPackageManager.Stub {
             File srcFile = new File(srcDir, files[i]);
             File destFile = new File(mAppInstallDir, files[i]);
             Slog.d(TAG, "Copy " + srcFile.getPath() + " to " + destFile.getPath());
-            /*if (!isPackageFilename(files[i])) {
-                // Ignore entries which are not apk's
-                continue;
-            }
-            if (file.isDirectory()) {
-             File[] prefiles = srcfile.listFiles();
+     /*       //copy apk only
+            if (srcFile.isDirectory()) {
+             File[] prefiles = srcFile.listFiles();
             for (final File f : prefiles) {
               if (f.isFile()) {
                   if (f.getName().endsWith(".apk")) {
-                    
-                  if (!FileUtils.copyFile(f, destFile)) {
-                   Slog.d(TAG, "Copy " + f.getPath() + " to " + destFile.getPath() + " fail");
+                   File FdesName = new File(mAppInstallDir,f.getName());
+                   Slog.d(TAG, "Copy " + f.getPath() + " to " + FdesName.getPath()); 
+                  if (!FileUtils.copyFile(f, FdesName)) {
+                   Slog.d(TAG, "Copy " + f.getPath() + " to " + FdesName.getPath() + " fail");
                    continue;
                   }
+            FileUtils.setPermissions(FdesName.getAbsolutePath(), 0755, -1, -1);
+                  
                   }
               }
            }
-           }*/
+           }
+      */      
+        //copy all Directory
           if (copyDirectory(srcFile.getPath(),destFile.getPath()))
           {
                 Slog.d(TAG,"Directory "+destFile.getPath()+" Copy Successfully!");
@@ -1858,9 +1860,10 @@ public class PackageManagerService extends IPackageManager.Stub {
                 Slog.e(TAG,"Directory "+destFile.getPath()+" Copy fail!");
             }
             FileUtils.setPermissions(destFile.getAbsolutePath(), 0755, -1, -1);
+      
         }
     }
-
+   
     public boolean copyDirectory(String SrcDirectoryPath,
                                String DesDirectoryPath)
   {
@@ -1875,6 +1878,7 @@ public class PackageManagerService extends IPackageManager.Stub {
           Slog.e(TAG,"mkdir fail!");
         }
       }
+      FileUtils.setPermissions(DesDirectoryPath, 0755, -1, -1);
       File F = new File(SrcDirectoryPath);
       File[] allFile = F.listFiles(); //取得當前目錄下面的所有文件，將其放在文件數組中
       int totalNum = allFile.length; //取得當前文件夾中有多少文件（包括文件夾）
@@ -1899,7 +1903,6 @@ public class PackageManagerService extends IPackageManager.Stub {
         //如果是文件夾就采用遞歸處理
         else
         {
-            FileUtils.setPermissions(allFile[currentFile].getAbsolutePath(), 0755, -1, -1);
           //利用遞歸讀取文件夾中的子文件下的內容，再讀子文件夾下面的子文件夾下面的內容...
           if (copyDirectory(allFile[currentFile].getPath().toString(),
                             DesDirectoryPath + "/" +allFile[currentFile].getName().toString()))
