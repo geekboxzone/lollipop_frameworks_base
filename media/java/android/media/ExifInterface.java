@@ -23,6 +23,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
+import android.util.Log;
+import android.os.SystemProperties;
 
 /**
  * This is a class for reading and writing Exif tags in a JPEG file.
@@ -261,6 +263,11 @@ public class ExifInterface {
                 continue;
             }
             String val = iter.getValue();
+            Log.d("cw", "key:" + key + " val:" + val);
+            if (val == null && key.equals("Make")) {
+                Log.d("cw", "got");
+                val = SystemProperties.get("ro.product.brand", "Rockchip");
+            }
             sb.append(key + "=");
             sb.append(val.length() + " ");
             sb.append(val);
