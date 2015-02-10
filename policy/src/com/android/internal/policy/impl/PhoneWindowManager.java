@@ -361,7 +361,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     int mPointerLocationMode = 0; // guarded by mLock
     boolean mForceUseHwui = false;
 
-    String playformname = SystemProperties.get("ro.rk.soc");
+    String platformRoName = SystemProperties.get("ro.rk.soc");
+    String platformSysName = SystemProperties.get("sys.rk.soc");
 
     // The last window we were told about in focusChanged.
     WindowState mFocusedWindow;
@@ -1123,7 +1124,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
 
 
-		if(playformname.contains("3288")){
+		if(platformRoName.contains("3288") || platformSysName.contains("rk3368")){
 			mForceUseHwui = true;
 		}
     }
