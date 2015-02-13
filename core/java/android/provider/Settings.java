@@ -1870,6 +1870,54 @@ public final class Settings {
         @Deprecated
         public static final String MODE_RINGER = Global.MODE_RINGER;
 
+//add by blb for ethernet 2015.1.13
+        /**
+         * Whether to use static IP and other static network attributes.
+         * @hide 
+         * Set to 1 for true and 0 for false.
+         *
+         */
+        public static final String ETHERNET_USE_STATIC_IP = "ethernet_use_static_ip";
+
+        /**
+         * The static IP address.
+         * Example: "192.168.1.51"
+         * @hide
+         */
+        public static final String ETHERNET_STATIC_IP = "ethernet_static_ip";
+
+        /**
+         * If using static IP, the gateway's IP address.
+         * Example: "192.168.1.1"
+         * @hide
+	 *
+         */
+
+        public static final String ETHERNET_STATIC_GATEWAY = "ethernet_static_gateway";
+
+        /**
+         * If using static IP, the net mask.
+         * Example: "192.168.1.1"
+         * @hide
+         */
+
+        public static final String ETHERNET_STATIC_NETMASK = "ethernet_static_netmask";
+
+        /**
+         * If using static IP, the dns1 
+         * Example: "192.168.1.1"
+         * @hide
+         */
+
+        public static final String ETHERNET_STATIC_DNS1 = "ethernet_static_dns1";
+
+        /**
+         * If using static IP, the dns2.
+         * @hide
+	 * Example: "192.168.1.1"
+         */
+        public static final String ETHERNET_STATIC_DNS2 = "ethernet_static_dns2";
+//end add
         /**
          * Whether to use static IP and other static network attributes.
          * <p>
@@ -1877,6 +1925,7 @@ public final class Settings {
          *
          * @deprecated Use {@link WifiManager} instead
          */
+
         @Deprecated
         public static final String WIFI_USE_STATIC_IP = "wifi_use_static_ip";
 
