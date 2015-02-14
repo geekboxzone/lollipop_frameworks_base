@@ -711,7 +711,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     R.string.accessibility_data_connection_4g);
         } else {
             inetCondition = inetConditionForNetwork(ConnectivityManager.TYPE_MOBILE);
-            final boolean showDataTypeIcon = (inetCondition > 0);
+            //final boolean showDataTypeIcon = (inetCondition > 0);
+            final boolean showDataTypeIcon = true;
             switch (mDataNetType) {
                 case TelephonyManager.NETWORK_TYPE_UNKNOWN:
                     if (!mShowAtLeastThreeGees) {
@@ -735,8 +736,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     }
                 case TelephonyManager.NETWORK_TYPE_UMTS:
                     mDataIconList = TelephonyIcons.DATA_3G[inetCondition];
-                    mDataTypeIconId = showDataTypeIcon ?
-                                R.drawable.stat_sys_data_fully_connected_3g : 0;
+                   // mDataTypeIconId = showDataTypeIcon ?
+                     //           R.drawable.stat_sys_data_fully_connected_3g : 0;
+                    mDataTypeIconId = R.drawable.stat_sys_data_fully_connected_3g;
                     mQSDataTypeIconId = TelephonyIcons.QS_DATA_3G[inetCondition];
                     mContentDescriptionDataType = mContext.getString(
                             R.string.accessibility_data_connection_3g);
