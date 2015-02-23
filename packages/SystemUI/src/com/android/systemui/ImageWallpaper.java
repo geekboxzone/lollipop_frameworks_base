@@ -70,6 +70,8 @@ public class ImageWallpaper extends WallpaperService {
     DrawableEngine mEngine;
 
     boolean mIsHwAccelerated;
+    //boolean mRotationChanged;
+	int force_ues_rgb565 = SystemProperties.getInt("sys.wallpaper.rgb565",0);
 
     @Override
     public void onCreate() {
@@ -729,29 +731,88 @@ public class ImageWallpaper extends WallpaperService {
 
         private EGLConfig chooseEglConfig() {
             int[] configsCount = new int[1];
-            EGLConfig[] configs = new EGLConfig[1];
             int[] configSpec = getConfig();
-            if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, 1, configsCount)) {
-                throw new IllegalArgumentException("eglChooseConfig failed " +
-                        GLUtils.getEGLErrorString(mEgl.eglGetError()));
-            } else if (configsCount[0] > 0) {
-                return configs[0];
+            if (force_ues_rgb565 == 1 ) {
+                int[] numConfigs = new int[1];
+                numConfigs[0] = 1;
+                configsCount[0] = 1;
+
+                mEgl.eglGetConfigs(mEglDisplay, null, 0, numConfigs);
+
+                if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, null, 0,
+                    numConfigs)) {
+                    throw new IllegalArgumentException("eglChooseConfig failed");
+                }
+
+                EGLConfig[] configs = new EGLConfig[numConfigs[0]];
+                if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, numConfigs[0],
+                    configsCount)) {
+                    throw new IllegalArgumentException("eglChooseConfig failed " +
+                            GLUtils.getEGLErrorString(mEgl.eglGetError()));
+                } else {
+                    int index = -1;
+                    for (int j=0; j<numConfigs[0]; j++) {
+                        if (findConfigAttrib(mEgl, mEglDisplay, configs[j], EGL_RED_SIZE, 0) == 5) {
+                            index = j;
+                            break;
+                        }
+                    }
+
+                    if (index == -1) {
+                        Log.w(TAG, "Did not find sane config, using first");
+                    }
+
+                    EGLConfig config = configs.length > 0 ? configs[index] : null;
+                    if (config == null) {
+                        throw new IllegalArgumentException("No config chosen");
+                    } else {
+                        return config;
+                    }
+                }
+            } else {
+                EGLConfig[] configs = new EGLConfig[1];
+                if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, 1, configsCount)) {
+                    throw new IllegalArgumentException("eglChooseConfig failed " +
+                            GLUtils.getEGLErrorString(mEgl.eglGetError()));
+                } else if (configsCount[0] > 0) {
+                    return configs[0];
+                }
+                return null;
             }
-            return null;
+
+        }
+
+        private int findConfigAttrib(EGL10 egl, EGLDisplay display,
+                EGLConfig config, int attribute, int defaultValue) {
+            int[] mValue = new int[1];
+            if (egl.eglGetConfigAttrib(display, config, attribute, mValue)) {
+                return mValue[0];
+            }
+            return 0;
         }
 
         private int[] getConfig() {
-            return new int[] {
-                    EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                    EGL_RED_SIZE, 8,
-                    EGL_GREEN_SIZE, 8,
-                    EGL_BLUE_SIZE, 8,
-                    EGL_ALPHA_SIZE, 0,
-                    EGL_DEPTH_SIZE, 0,
-                    EGL_STENCIL_SIZE, 0,
-                    EGL_CONFIG_CAVEAT, EGL_NONE,
-                    EGL_NONE
-            };
+            if ( force_ues_rgb565 == 1 ) {
+                return new int[] {
+                        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+                        EGL_RED_SIZE, 5,
+                        EGL_GREEN_SIZE, 6,
+                        EGL_BLUE_SIZE, 5,
+                        EGL_NONE
+                };
+            } else {
+                return new int[] {
+                        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+                        EGL_RED_SIZE, 8,
+                        EGL_GREEN_SIZE, 8,
+                        EGL_BLUE_SIZE, 8,
+                        EGL_ALPHA_SIZE, 0,
+                        EGL_DEPTH_SIZE, 0,
+                        EGL_STENCIL_SIZE, 0,
+                        EGL_CONFIG_CAVEAT, EGL_NONE,
+                        EGL_NONE
+                };
+            }
         }
     }
 }
