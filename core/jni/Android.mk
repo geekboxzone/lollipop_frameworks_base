@@ -253,6 +253,16 @@ ifeq ($(USE_OPENGL_RENDERER),true)
 	LOCAL_SHARED_LIBRARIES += libhwui
 endif
 
+ifeq ($(WITH_NATIVE_BRIDGE), true)
+	LOCAL_CFLAGS += -DWITH_HOUDINI
+
+	LOCAL_SRC_FILES += \
+		nativebridgehelper/ABIList.cpp \
+		nativebridgehelper/AppLibInfo.cpp
+
+	LOCAL_C_INCLUDES += $(LOCAL_PATH)/nativebridgehelper
+endif
+
 LOCAL_SHARED_LIBRARIES += \
 	libdl
 # we need to access the private Bionic header

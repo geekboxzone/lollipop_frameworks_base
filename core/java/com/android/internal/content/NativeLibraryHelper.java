@@ -74,6 +74,7 @@ public class NativeLibraryHelper {
 
         final long[] apkHandles;
         final boolean multiArch;
+        final String pkgName;
 
         public static Handle create(File packageFile) throws IOException {
             try {
@@ -86,14 +87,16 @@ public class NativeLibraryHelper {
 
         public static Handle create(Package pkg) throws IOException {
             return create(pkg.getAllCodePaths(),
-                    (pkg.applicationInfo.flags & ApplicationInfo.FLAG_MULTIARCH) != 0);
+                    (pkg.applicationInfo.flags & ApplicationInfo.FLAG_MULTIARCH) != 0,
+                    pkg.packageName);
         }
 
         public static Handle create(PackageLite lite) throws IOException {
-            return create(lite.getAllCodePaths(), lite.multiArch);
+            return create(lite.getAllCodePaths(), lite.multiArch, lite.packageName);
         }
 
-        private static Handle create(List<String> codePaths, boolean multiArch) throws IOException {
+        private static Handle create(List<String> codePaths, boolean multiArch,
+                String pkgName) throws IOException {
             final int size = codePaths.size();
             final long[] apkHandles = new long[size];
             for (int i = 0; i < size; i++) {
@@ -108,12 +111,13 @@ public class NativeLibraryHelper {
                 }
             }
 
-            return new Handle(apkHandles, multiArch);
+            return new Handle(apkHandles, multiArch, pkgName);
         }
 
-        Handle(long[] apkHandles, boolean multiArch) {
+        Handle(long[] apkHandles, boolean multiArch, String pkgName) {
             this.apkHandles = apkHandles;
             this.multiArch = multiArch;
+            this.pkgName = pkgName;
             mGuard.open("close");
         }
 
@@ -185,7 +189,8 @@ public class NativeLibraryHelper {
     public static int findSupportedAbi(Handle handle, String[] supportedAbis) {
         int finalRes = NO_NATIVE_LIBRARIES;
         for (long apkHandle : handle.apkHandles) {
-            final int res = nativeFindSupportedAbi(apkHandle, supportedAbis);
+            final int res = nativeFindSupportedAbi(apkHandle, supportedAbis,
+                    handle.pkgName);
             if (res == NO_NATIVE_LIBRARIES) {
                 // No native code, keep looking through all APKs.
             } else if (res == INSTALL_FAILED_NO_MATCHING_ABIS) {
@@ -207,7 +212,7 @@ public class NativeLibraryHelper {
         return finalRes;
     }
 
-    private native static int nativeFindSupportedAbi(long handle, String[] supportedAbis);
+    private native static int nativeFindSupportedAbi(long handle, String[] supportedAbis, String pkgName);
 
     // Convenience method to call removeNativeBinariesFromDirLI(File)
     public static void removeNativeBinariesLI(String nativeLibraryPath) {
