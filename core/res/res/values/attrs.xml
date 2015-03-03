@@ -1774,6 +1774,11 @@
         <enum name="KEYCODE_TV_MEDIA_CONTEXT_MENU" value="257" />
         <enum name="KEYCODE_TV_TIMER_PROGRAMMING" value="258" />
         <enum name="KEYCODE_HELP" value="259" />
+        <enum name="KEYCODE_TV_KEYMOUSE_LEFT" value="260" />
+        <enum name="KEYCODE_TV_KEYMOUSE_RIGHT" value="261" />
+        <enum name="KEYCODE_TV_KEYMOUSE_UP" value="262" />
+        <enum name="KEYCODE_TV_KEYMOUSE_DOWN" value="263" />
+        <enum name="KEYCODE_TV_KEYMOUSE_MODE_SWITCH" value="264" />
     </attr>
 
     <!-- ***************************************************************** -->

@@ -69,7 +69,11 @@ public class IWindowManagerImpl implements IWindowManager {
     }
 
     // ---- unused implementation of IWindowManager ----
+    public void dispatchMouse(float x, float y, int w, int h) {
+    }
 
+    public void dispatchMouseByCd(float x, float y) {
+    }
     @Override
     public void addAppToken(int arg0, IApplicationToken arg1, int arg2, int arg3, int arg4,
             boolean arg5, boolean arg6, int arg7, int arg8, boolean arg9, boolean arg10)

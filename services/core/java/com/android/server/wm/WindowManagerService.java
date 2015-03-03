@@ -253,6 +253,10 @@ public class WindowManagerService extends IWindowManager.Stub
      * this is 10 seconds.
      */
     static final int MAX_ANIMATION_DURATION = 10*1000;
+    /** The time for mouse input injection
+     *
+     */
+    static final int INJECTION_TIMEOUT_MILLIS = 30 * 1000;
 
     /** Amount of time (in milliseconds) to animate the fade-in-out transition for
      * compatible windows.
@@ -7424,6 +7428,54 @@ public class WindowManagerService extends IWindowManager.Stub
 
     final InputMonitor mInputMonitor = new InputMonitor(this);
     private boolean mEventDispatchingEnabled;
+
+    public void dispatchMouse(float x, float y, int w, int h) {
+	    mInputManager.dispatchMouse(x,y,w,h);
+    }
+
+    public void dispatchMouseByCd(float x, float y) {
+	    mInputManager.dispatchMousebyCd(x,y);
+    }
+
+    public boolean injectKeyEvent(KeyEvent ev, boolean sync) {
+	    int action = ev.getAction();
+	    int code = ev.getKeyCode();
+	    int repeatCount = ev.getRepeatCount();
+	    int metaState = ev.getMetaState();
+	    int deviceId = ev.getDeviceId();
+	    int scancode = ev.getScanCode();
+	    int source = ev.getSource();
+	    int flags = ev.getFlags();
+	    long downTime = ev.getDownTime();
+	    long eventTime = ev.getEventTime();
+
+	    if (source == InputDevice.SOURCE_UNKNOWN) {
+		    source = InputDevice.SOURCE_KEYBOARD;
+	    }
+
+	    if (eventTime == 0) {
+		eventTime = SystemClock.uptimeMillis();
+	    }
+
+	    if (downTime == 0) {
+		downTime = eventTime;
+	    }
+
+	    KeyEvent newEvent = new KeyEvent(downTime, eventTime, action, code, repeatCount, metaState,
+			    deviceId, scancode, flags | KeyEvent.FLAG_FROM_SYSTEM, source);
+
+	    final boolean result = mInputManager.injectInputEvent(newEvent,sync ? 2:1);
+	    return result;
+    }
+
+    public boolean injectPointerEvent(MotionEvent ev, boolean sync) {
+	    MotionEvent newEvent = MotionEvent.obtain(ev);
+	    if ((newEvent.getSource() & InputDevice.SOURCE_CLASS_POINTER) == 0) {
+		    newEvent.setSource(InputDevice.SOURCE_TOUCHSCREEN);
+	    }
+	    final boolean result = mInputManager.injectInputEvent(newEvent,sync ? 2:1);
+	    return result;
+    }
 
     @Override
     public void pauseKeyDispatching(IBinder _token) {

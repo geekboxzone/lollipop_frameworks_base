@@ -32732,6 +32732,11 @@ package android.view {
     field public static final int KEYCODE_TV_TIMER_PROGRAMMING = 258; // 0x102
     field public static final int KEYCODE_TV_ZOOM_MODE = 255; // 0xff
     field public static final int KEYCODE_U = 49; // 0x31
+    field public static final int KEYCODE_TV_KEYMOUSE_LEFT = 260; //0x104
+    field public static final int KEYCODE_TV_KEYMOUSE_RIGHT = 261; //0x105
+    field public static final int KEYCODE_TV_KEYMOUSE_UP = 262; //0x106
+    field public static final int KEYCODE_TV_KEYMOUSE_DOWN = 263; //0x107
+    field public static final int KEYCODE_TV_KEYMOUSE_MODE_SWITCH = 264; //0x108
     field public static final int KEYCODE_UNKNOWN = 0; // 0x0
     field public static final int KEYCODE_V = 50; // 0x32
     field public static final int KEYCODE_VOICE_ASSIST = 231; // 0xe7

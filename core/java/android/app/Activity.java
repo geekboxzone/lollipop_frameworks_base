@@ -23,6 +23,7 @@ import android.transition.TransitionManager;
 import android.util.ArrayMap;
 import android.util.SuperNotCalledException;
 import android.widget.Toolbar;
+import android.widget.Toast;
 
 import com.android.internal.app.IVoiceInteractor;
 import com.android.internal.app.WindowDecorActionBar;
@@ -32,6 +33,7 @@ import com.android.internal.policy.PolicyManager;
 import android.annotation.IntDef;
 import android.annotation.Nullable;
 import android.annotation.SystemApi;
+import android.os.SystemProperties;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentCallbacks2;
 import android.content.ComponentName;
@@ -2364,6 +2366,18 @@ public class Activity extends ContextThemeWrapper
      * @see android.view.KeyEvent
      */
     public boolean onKeyDown(int keyCode, KeyEvent event)  {
+	String mstate=null;
+	mstate = SystemProperties.get("sys.KeyMouse.mKeyMouseState");
+
+	if ((keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_MODE_SWITCH)) {
+		if ("on".equals(mstate)) {
+			Toast.makeText(Activity.this, "Enter into mouse mode, click again to quit", Toast.LENGTH_LONG).show();
+		} else if ("off".equals(mstate)) {
+			Toast.makeText(Activity.this, "Restore to default button mode", Toast.LENGTH_LONG).show();
+		}
+	}
+
+
         if (keyCode == KeyEvent.KEYCODE_BACK) {
             if (getApplicationInfo().targetSdkVersion
                     >= Build.VERSION_CODES.ECLAIR) {
@@ -2373,6 +2387,7 @@ public class Activity extends ContextThemeWrapper
             }
             return true;
         }
+
 
         if (mDefaultKeyMode == DEFAULT_KEYS_DISABLE) {
             return false;

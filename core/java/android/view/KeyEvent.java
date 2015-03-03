@@ -748,6 +748,16 @@ public class KeyEvent extends InputEvent implements Parcelable {
     public static final int KEYCODE_TV_TIMER_PROGRAMMING = 258;
     /** Key code constant: Help key. */
     public static final int KEYCODE_HELP = 259;
+    /** Key code constant: Tv controlloer left mouse key */
+    public static final int KEYCODE_TV_KEYMOUSE_LEFT = 260;
+    /** Key code constant: Tv controlloer right mouse key*/
+    public static final int KEYCODE_TV_KEYMOUSE_RIGHT = 261;
+    /** Key code constant: Tv controlloer up mouse key*/
+    public static final int KEYCODE_TV_KEYMOUSE_UP = 262;
+    /** Key code constant: Tv controlloer down mouse key*/
+    public static final int KEYCODE_TV_KEYMOUSE_DOWN = 263;
+    /** Key code constant: Tv controlloer switch mouse key*/
+    public static final int KEYCODE_TV_KEYMOUSE_MODE_SWITCH = 264;
 
     private static final int LAST_KEYCODE = KEYCODE_HELP;
 
