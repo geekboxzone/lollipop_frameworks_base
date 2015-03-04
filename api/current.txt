@@ -21609,6 +21609,43 @@ package android.os {
     field public int otherSharedDirty;
   }
 
+  public class DisplayOutputManager {
+    ctor public DisplayOutputManager() throws android.os.RemoteException;
+    method public int get3DModes(int, int);
+    method public int getCur3DMode(int, int);
+    method public int getCurrentInterface(int);
+    method public java.lang.String getCurrentMode(int, int);
+    method public int getDisplayNumber();
+    method public int[] getIfaceList(int);
+    method public java.lang.String[] getModeList(int, int);
+    method public android.graphics.Rect getOverScan(int);
+    method public boolean getUtils();
+    method public int saveConfig();
+    method public void set3DMode(int, int, int);
+    method public void setDisplaySize(int, int, int);
+    method public void setInterface(int, int, boolean);
+    method public void setMode(int, int, java.lang.String);
+    method public void setOverScan(int, int, int);
+    method public void switchNextDisplayInterface();
+    field public final int AUX_DISPLAY;
+    field public final int DISPLAY_3D_FRAME_PACKING;
+    field public final int DISPLAY_3D_NONE;
+    field public final int DISPLAY_3D_SIDE_BY_SIDE_HALT;
+    field public final int DISPLAY_3D_TOP_BOTTOM;
+    field public final int DISPLAY_IFACE_HDMI;
+    field public final int DISPLAY_IFACE_LCD;
+    field public final int DISPLAY_IFACE_TV;
+    field public final int DISPLAY_IFACE_VGA;
+    field public final int DISPLAY_IFACE_YPbPr;
+    field public final int DISPLAY_OVERSCAN_BOTTOM;
+    field public final int DISPLAY_OVERSCAN_LEFT;
+    field public final int DISPLAY_OVERSCAN_RIGHT;
+    field public final int DISPLAY_OVERSCAN_TOP;
+    field public final int DISPLAY_OVERSCAN_X;
+    field public final int DISPLAY_OVERSCAN_Y;
+    field public final int MAIN_DISPLAY;
+  }
+
   public class DropBoxManager {
     ctor protected DropBoxManager();
     method public void addData(java.lang.String, byte[], int);

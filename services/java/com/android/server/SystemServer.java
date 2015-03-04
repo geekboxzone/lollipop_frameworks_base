@@ -932,7 +932,17 @@ public final class SystemServer {
                 } catch (Throwable e) {
                     reportWtf("starting MediaRouterService", e);
                 }
-
+		
+		// $_rbox_$_modify_$_zhengyang: added 2012-02-20, for add DisplayDeviceManagementService
+            	try {
+               		Slog.i(TAG, "DisplayDeviceManagementService Service");
+                	ServiceManager.addService(
+                        "display_device_management",
+                        new DisplayDeviceManagementService(context));
+            	} catch (Throwable e) {
+                	Slog.e(TAG, "Failure starting DisplayDeviceManagementService Service", e);
+            	}
+                // $_rbox_$_modify_$ end
                 mSystemServiceManager.startService(TrustManagerService.class);
 
                 mSystemServiceManager.startService(FingerprintService.class);
