@@ -25,6 +25,8 @@ import android.content.Intent;
 import android.os.IDisplayDeviceManagementService;
 import android.os.SystemProperties;
 import android.util.Slog;
+import android.util.Log;
+
 /**
  * @hide
  */
@@ -157,8 +159,8 @@ class DisplayDeviceManagementService extends IDisplayDeviceManagementService.Stu
             return NativeDaemonEvent.filterMessageList(
                     mConnector.executeForList("interface", "list", display), DisplaydResponseCode.InterfaceListResult);
         } catch (NativeDaemonConnectorException e) {
-            throw e.rethrowAsParcelableException();
-           // return null;
+           // throw e.rethrowAsParcelableException();
+            return null;
         }
 
     }
@@ -179,7 +181,9 @@ class DisplayDeviceManagementService extends IDisplayDeviceManagementService.Stu
             return NativeDaemonEvent.filterMessageList(
                     mConnector.executeForList("mode", "list", display, iface), DisplaydResponseCode.ModeListResult);
         } catch (NativeDaemonConnectorException e) {
-            throw e.rethrowAsParcelableException();
+           // throw e.rethrowAsParcelableException();
+            Log.e(TAG, "Error no mode list :" + e);
+            return null;
         }
     }
 
