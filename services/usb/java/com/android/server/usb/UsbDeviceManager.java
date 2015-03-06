@@ -112,6 +112,7 @@ public class UsbDeviceManager {
 
     private UsbHandler mHandler;
     private boolean mBootCompleted;
+    private boolean mUsbTetheringEnable = false;
 
     private final Object mLock = new Object();
 
@@ -638,7 +639,7 @@ public class UsbDeviceManager {
                     if (containsFunction(mCurrentFunctions,
                             UsbManager.USB_FUNCTION_ACCESSORY)) {
                         updateCurrentAccessory();
-                    } else if (!mConnected) {
+                    } else if (!mConnected && !mUsbTetheringEnable) {
                         // restore defaults when USB is disconnected
                         setEnabledFunctions(getDefaultFunctions(), false);
                     }
@@ -853,6 +854,10 @@ public class UsbDeviceManager {
 
     public void setCurrentFunctions(String functions, boolean makeDefault) {
         if (DEBUG) Slog.d(TAG, "setCurrentFunctions(" + functions + ") default: " + makeDefault);
+        if (functions != null && functions.equals(UsbManager.USB_FUNCTION_RNDIS))
+            mUsbTetheringEnable = true;
+        else
+            mUsbTetheringEnable = false;
         mHandler.sendMessage(MSG_SET_CURRENT_FUNCTIONS, functions, makeDefault);
     }
 

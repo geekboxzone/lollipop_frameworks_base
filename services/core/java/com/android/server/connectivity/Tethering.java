@@ -509,10 +509,12 @@ public class Tethering extends BaseNetworkObserver {
                     boolean usbConnected = intent.getBooleanExtra(UsbManager.USB_CONNECTED, false);
                     mRndisEnabled = intent.getBooleanExtra(UsbManager.USB_FUNCTION_RNDIS, false);
                     // start tethering if we have a request pending
+                    Log.d(TAG, "UsbManager.ACTION_USB_STATE: " + usbConnected + ", " + mRndisEnabled + 
+						", " + mUsbTetherRequested);
                     if (usbConnected && mRndisEnabled && mUsbTetherRequested) {
                         tetherUsb(true);
                     }
-                    mUsbTetherRequested = false;
+                    //mUsbTetherRequested = false;
                 }
             } else if (action.equals(ConnectivityManager.CONNECTIVITY_ACTION)) {
                 NetworkInfo networkInfo = (NetworkInfo)intent.getParcelableExtra(
