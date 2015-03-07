@@ -32,6 +32,9 @@ import com.android.internal.view.IInputMethodClient;
  * this file.
  */
 interface IInputMethodManager {
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    void commitText(String text);
+    //$_rbox_$_modify_$_end
     // TODO: Use ParceledListSlice instead
     List<InputMethodInfo> getInputMethodList();
     // TODO: Use ParceledListSlice instead

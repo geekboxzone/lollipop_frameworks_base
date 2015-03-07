@@ -30,6 +30,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import android.os.Message;
+import android.os.Process;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.view.IWindowManager;
 /**
  * Sensor manager implementation that communicates with the built-in
  * system sensors.
@@ -55,6 +60,361 @@ public class SystemSensorManager extends SensorManager {
     private final Looper mMainLooper;
     private final int mTargetSdkLevel;
 
+   //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+   private static final int HAS_GSENSOR = 0x01;
+   private static final int HAS_GYROSCOPE = 0x10;
+   private static final int HAS_MAGNETIC = 0x100;
+   private static final int HAS_ORIENTATION = 0x1000;
+
+   private static RemoteSensorThread sRemoteSensorThread;
+   private static ISensorManager sSensorManager;
+   private static int sRemoteSensorQueue;
+   private static boolean mRemoteGSensorabled;
+   private static boolean mRemoteGyroscopeabled;
+   private static boolean mRemoteMagneticabled;
+   private static boolean mRemoteOrientationabled;
+   private static int mRemoteSensorType;
+
+   static final ArrayList<ListenerDelegate> sListeners =
+   new ArrayList<ListenerDelegate>();
+
+   // Common pool of sensor events.
+   static SensorEventPool sPool;
+
+   static private class RemoteSensorThread {
+       Thread mRemoteSensorThread;
+       boolean mRemoteSensorReady;
+
+       RemoteSensorThread() {
+       }
+
+       @Override
+       protected void finalize() {
+       }
+
+       // must be called with sListeners lock
+       boolean startLocked() {
+           try {
+               if (mRemoteSensorThread == null) {
+                   mRemoteSensorReady = false;
+                   RemoteSensorThreadRunnable runnable = new RemoteSensorThreadRunnable();
+                   Thread thread = new Thread(runnable, RemoteSensorThread.class.getName());
+                   thread.start();
+                   synchronized (runnable) {
+                       while (mRemoteSensorReady == false) {
+                           runnable.wait();
+                       }
+                   }
+                   mRemoteSensorThread = thread;
+               }
+           } catch (InterruptedException e) {
+           }
+
+           return (mRemoteSensorThread == null)? false : true;
+       }
+
+       private boolean openRemoteSensor() {
+	   if(sRemoteSensorQueue==0){
+		   try{
+			   sRemoteSensorQueue = sSensorManager.createSensorQueue();
+		   }catch(RemoteException re){
+			   return false;
+		   }
+	   }
+	   return true;
+       }
+
+       private void closeRemoteSensor(){
+	   if(sRemoteSensorQueue!=0){
+		   try{
+			   sSensorManager.destroySensorQueue(sRemoteSensorQueue);
+			   sRemoteSensorQueue = 0;
+		   }catch(RemoteException re){
+
+		   }
+	   }
+       }
+
+       private int getRemoteSensorType(){
+	   try {
+		if(sSensorManager!=null) {
+		    return sSensorManager.getRemoteSensorType();
+		}
+	}catch(RemoteException re){
+
+	}
+	return 0;
+    }
+
+    private void sleep(){
+         try{
+	    Thread.sleep(1000);
+	 }catch(Exception re){
+	 }
+    }
+
+    private class RemoteSensorThreadRunnable implements Runnable {
+           RemoteSensorThreadRunnable() {
+           }
+
+           public void run() {
+               //Log.d(TAG, "entering main sensor thread");
+               float[] values = new float[3];
+               final int[] status = new int[1];
+               final long timestamp[] = new long[1];
+               Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY);
+
+               synchronized (this) {
+                   // we've open the driver, we're ready to open the sensors
+                   mRemoteSensorReady = true;
+                   this.notify();
+               }
+
+               while (true) {
+                   // wait for an event
+//                     Log.d("sensorManager","remote sensor");
+//                     Log.d("sensorManager","sensor listeners:"+sListeners.size());
+                   int sensor = 0;
+		   mRemoteSensorType = getRemoteSensorType();
+                   if (mRemoteSensorType != 0) {
+		    //Log.d("SensorManager","RemoteSensorEnabled");
+                   openRemoteSensor();
+		   SensorParcel sensorParcel = null;
+		   try {
+			   sensorParcel = sSensorManager.obtainSensorEvent(sRemoteSensorQueue);
+		   } catch (RemoteException re){
+		   }
+
+		   if (sensorParcel!=null) {
+			   values = sensorParcel.values;
+			   status[0] = sensorParcel.accuracy;
+			   timestamp[0] = sensorParcel.timestamp;
+			   sensor = sensorParcel.sensorType;
+			   //Log.d("sensorManager","sensor values:"+values[0]+","+values[1]+","+values[2]);
+		   } else {
+			   sleep();
+			   if (!sListeners.isEmpty()) {
+				   continue;
+			   }
+                       }
+                  } else {
+			sleep();
+			if(!sListeners.isEmpty()){
+                        continue;
+                       }
+                   }
+
+                   int accuracy = status[0];
+                   synchronized (sListeners) {
+                       if (sensor == -1 || sListeners.isEmpty()) {
+                           // we lost the connection to the event stream. this happens
+                           // when the last listener is removed or if there is an error
+                           if (sensor == -1 && !sListeners.isEmpty()) {
+                               // log a warning in case of abnormal termination
+                               Log.e(TAG, "_sensors_data_poll() failed, we bail out: sensors=" + sensor);
+                           }
+                           // we have no more listeners or polling failed, terminate the thread
+                           // sensors_destroy_queue(sQueue);
+                           // sQueue = 0;
+                           closeRemoteSensor();
+                           mRemoteSensorThread = null;
+                           break;
+                       }
+                       final Sensor sensorObject = sHandleToSensor.get(sensor);
+                       if (sensorObject != null) {
+                           // report the sensor event to all listeners that
+                           // care about it.
+                           final int size = sListeners.size();
+                           for (int i=0 ; i<size ; i++) {
+                               ListenerDelegate listener = sListeners.get(i);
+                               if (listener.hasSensor(sensorObject)) {
+                                   // this is asynchronous (okay to call
+                                   // with sListeners lock held).
+                                   listener.onSensorChangedLocked(sensorObject,
+                                           values, timestamp, accuracy);
+                               }
+                           }
+                       }
+                   }
+               }
+               //Log.d(TAG, "exiting main sensor thread");
+           }
+       }
+   }
+
+
+private class ListenerDelegate {
+	private final SensorEventListener mSensorEventListener;
+	private final ArrayList<Sensor> mSensorList = new ArrayList<Sensor>();
+	private final Handler mHandler;
+	public SparseBooleanArray mSensors = new SparseBooleanArray();
+	public SparseBooleanArray mFirstEvent = new SparseBooleanArray();
+	public SparseIntArray mSensorAccuracies = new SparseIntArray();
+
+	ListenerDelegate(SensorEventListener listener, Sensor sensor, Handler handler) {
+		mSensorEventListener = listener;
+		Looper looper = (handler != null) ? handler.getLooper() : mMainLooper;
+		// currently we create one Handler instance per listener, but we could
+		// have one per looper (we'd need to pass the ListenerDelegate
+		// instance to handleMessage and keep track of them separately).
+		mHandler = new Handler(looper) {
+			@Override
+			public void handleMessage(Message msg) {
+				final SensorEvent t = (SensorEvent)msg.obj;
+				final int handle = t.sensor.getHandle();
+
+				switch (t.sensor.getType()) {
+					// Only report accuracy for sensors that support it.
+					case Sensor.TYPE_MAGNETIC_FIELD:
+					case Sensor.TYPE_ORIENTATION:
+						// call onAccuracyChanged() only if the value changes
+						final int accuracy = mSensorAccuracies.get(handle);
+						if ((t.accuracy >= 0) && (accuracy != t.accuracy)) {
+							mSensorAccuracies.put(handle, t.accuracy);
+							mSensorEventListener.onAccuracyChanged(t.sensor, t.accuracy);
+						}
+						break;
+					default:
+						// For other sensors, just report the accuracy once
+						if (mFirstEvent.get(handle) == false) {
+							mFirstEvent.put(handle, true);
+							mSensorEventListener.onAccuracyChanged(
+									t.sensor, SENSOR_STATUS_ACCURACY_HIGH);
+						}
+						break;
+				}
+
+				mSensorEventListener.onSensorChanged(t);
+				sPool.returnToPool(t);
+			}
+		};
+		addSensor(sensor);
+	}
+
+	Object getListener() {
+		return mSensorEventListener;
+	}
+
+	void addSensor(Sensor sensor) {
+		mSensors.put(sensor.getHandle(), true);
+		mSensorList.add(sensor);
+	}
+	int removeSensor(Sensor sensor) {
+		mSensors.delete(sensor.getHandle());
+		mSensorList.remove(sensor);
+		return mSensors.size();
+	}
+	boolean hasSensor(Sensor sensor) {
+		return mSensors.get(sensor.getHandle());
+	}
+	List<Sensor> getSensors() {
+		return mSensorList;
+	}
+
+	void onSensorChangedLocked(Sensor sensor, float[] values, long[] timestamp, int accuracy) {
+		SensorEvent t = sPool.getFromPool();
+		final float[] v = t.values;
+		v[0] = values[0];
+		v[1] = values[1];
+		v[2] = values[2];
+		t.timestamp = timestamp[0];
+		t.accuracy = accuracy;
+		t.sensor = sensor;
+		Message msg = Message.obtain();
+		msg.what = 0;
+		msg.obj = t;
+		msg.setAsynchronous(true);
+		mHandler.sendMessage(msg);
+	}
+}
+   /**
+    * Sensor event pool implementation.
+    * @hide
+    */
+   protected static final class SensorEventPool {
+       private final int mPoolSize;
+       private final SensorEvent mPool[];
+       private int mNumItemsInPool;
+
+       private SensorEvent createSensorEvent() {
+           // maximal size for all legacy events is 3
+           return new SensorEvent(3);
+       }
+
+       SensorEventPool(int poolSize) {
+           mPoolSize = poolSize;
+           mNumItemsInPool = poolSize;
+           mPool = new SensorEvent[poolSize];
+       }
+
+       SensorEvent getFromPool() {
+           SensorEvent t = null;
+           synchronized (this) {
+               if (mNumItemsInPool > 0) {
+                   // remove the "top" item from the pool
+                   final int index = mPoolSize - mNumItemsInPool;
+                   t = mPool[index];
+                   mPool[index] = null;
+                   mNumItemsInPool--;
+               }
+           }
+           if (t == null) {
+               // the pool was empty or this item was removed from the pool for
+               // the first time. In any case, we need to create a new item.
+               t = createSensorEvent();
+           }
+           return t;
+       }
+
+       void returnToPool(SensorEvent t) {
+           synchronized (this) {
+               // is there space left in the pool?
+               if (mNumItemsInPool < mPoolSize) {
+                   // if so, return the item to the pool
+                   mNumItemsInPool++;
+                   final int index = mPoolSize - mNumItemsInPool;
+                   mPool[index] = t;
+               }
+           }
+       }
+   }
+
+private boolean enableSensorLocked(Sensor sensor, int delay) {
+       boolean result = false;
+       for (ListenerDelegate i : sListeners) {
+           if (i.hasSensor(sensor)) {
+               String name = sensor.getName();
+               int handle = sensor.getHandle();
+
+               //result = sensors_enable_sensor(sQueue, name, handle, delay);
+               if ((sensor.getType() == Sensor.TYPE_ACCELEROMETER
+				|| sensor.getType() == Sensor.TYPE_GYROSCOPE
+				|| sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) && sSensorManager != null){
+                      result = true;
+               }
+               break;
+           }
+       }
+       return result;
+   }
+
+   private boolean disableSensorLocked(Sensor sensor) {
+       for (ListenerDelegate i : sListeners) {
+           if (i.hasSensor(sensor)) {
+               // not an error, it's just that this sensor is still in use
+               return true;
+           }
+       }
+       String name = sensor.getName();
+       int handle = sensor.getHandle();
+       return true;//sensors_enable_sensor(sQueue, name, handle, SENSOR_DISABLE);
+   }
+
+static private void updateRemoteSensorStatus(){
+	mRemoteGSensorabled = (( mRemoteSensorType & HAS_GSENSOR)  != 0);
+	mRemoteGyroscopeabled = (( mRemoteSensorType & HAS_GYROSCOPE)  != 0);
+}
+   //$_rbox_$_modify_$_end
     /** {@hide} */
     public SystemSensorManager(Context context, Looper mainLooper) {
         mMainLooper = mainLooper;
@@ -78,9 +438,24 @@ public class SystemSensorManager extends SensorManager {
                         sHandleToSensor.append(sensor.getHandle(), sensor);
                     }
                 } while (i>0);
-            }
-        }
-    }
+	//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+			sPool = new SensorEventPool( sFullSensorsList.size()*2 );
+			sRemoteSensorThread = new RemoteSensorThread();
+
+			IWindowManager sWindowManager = IWindowManager.Stub.asInterface(
+                       ServiceManager.getService("window"));
+			if (sWindowManager != null) {
+				try {
+                      sSensorManager = sWindowManager.getRemoteSensorManager();
+				   Log.d(TAG,"aidl getSensorManager:"+sSensorManager);
+                   } catch (RemoteException e) {
+					// TODO: handle exception
+				}
+			}
+               //$_rbox_$_modify_$_end
+           }
+       }
+   }
 
 
     /** @hide */
@@ -108,6 +483,44 @@ public class SystemSensorManager extends SensorManager {
             return false;
         }
 
+	//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+	synchronized (sListeners) {
+           // look for this listener in our list
+           ListenerDelegate l = null;
+           for (ListenerDelegate i : sListeners) {
+               if (i.getListener() == listener) {
+                   l = i;
+                   break;
+               }
+           }
+
+           // if we don't find it, add it to the list
+           if (l == null) {
+               l = new ListenerDelegate(listener, sensor, handler);
+               sListeners.add(l);
+               // if the list is not empty, start our main thread
+               if (!sListeners.isEmpty()) {
+                   if (sRemoteSensorThread.startLocked()) {
+                       if (!enableSensorLocked(sensor, delayUs)) {
+                           // oops. there was an error
+                           sListeners.remove(l);
+                       }
+                   } else {
+                       // there was an error, remove the listener
+                       sListeners.remove(l);
+                   }
+               } else {
+                   // weird, we couldn't add the listener
+               }
+           } else if (!l.hasSensor(sensor)) {
+               l.addSensor(sensor);
+               if (!enableSensorLocked(sensor, delayUs)) {
+                   // oops. there was an error
+                   l.removeSensor(sensor);
+               }
+           }
+       }
+	//$_rbox_$_modify_$_end
         // Invariants to preserve:
         // - one Looper per SensorEventListener
         // - one Looper per SensorEventQueue
@@ -136,6 +549,29 @@ public class SystemSensorManager extends SensorManager {
         if (sensor != null && sensor.getReportingMode() == Sensor.REPORTING_MODE_ONE_SHOT) {
             return;
         }
+		//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+	synchronized (sListeners) {
+           final int size = sListeners.size();
+           for (int i=0 ; i<size ; i++) {
+               ListenerDelegate l = sListeners.get(i);
+               if (l.getListener() == listener) {
+                   if (sensor == null) {
+                       sListeners.remove(i);
+                       // disable all sensors for this listener
+                       for (Sensor s : l.getSensors()) {
+                           disableSensorLocked(s);
+                       }
+                   } else if (l.removeSensor(sensor) == 0) {
+                       // if we have no more sensors enabled on this listener,
+                       // take it off the list.
+                       sListeners.remove(i);
+                       disableSensorLocked(sensor);
+                   }
+                   break;
+               }
+           }
+       }
+	//$_rbox_$_modify_$_end
 
         synchronized (mSensorListeners) {
             SensorEventQueue queue = mSensorListeners.get(listener);
@@ -390,6 +826,16 @@ public class SystemSensorManager extends SensorManager {
                 // the queue waiting to be delivered. Ignore.
                 return;
             }
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+           updateRemoteSensorStatus();
+		if(sensor.getType() == Sensor.TYPE_ACCELEROMETER && mRemoteGSensorabled){
+			return;
+		} else if (sensor.getType() == Sensor.TYPE_GYROSCOPE && mRemoteGyroscopeabled){
+			return;
+		} else if(sensor.getType() == Sensor.TYPE_ROTATION_VECTOR && mRemoteGyroscopeabled){
+			return;
+		}
+		//$_rbox_$_modify_$_end
             // Copy from the values array.
             System.arraycopy(values, 0, t.values, 0, t.values.length);
             t.timestamp = timestamp;

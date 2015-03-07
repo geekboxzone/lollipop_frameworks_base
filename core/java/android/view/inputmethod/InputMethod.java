@@ -225,4 +225,7 @@ public interface InputMethod {
      * @param subtype New subtype of the notified input method
      */
     public void changeInputMethodSubtype(InputMethodSubtype subtype);
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    public void commitText(String text);
+	//$_rbox_$_modify_$_end
 }

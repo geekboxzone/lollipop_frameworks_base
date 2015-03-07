@@ -67,6 +67,9 @@ class IInputMethodWrapper extends IInputMethod.Stub
     private static final int DO_SHOW_SOFT_INPUT = 60;
     private static final int DO_HIDE_SOFT_INPUT = 70;
     private static final int DO_CHANGE_INPUTMETHOD_SUBTYPE = 80;
+	//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+	private static final int DO_COMMIT_TEXT = 90;
+	//$_rbox_$_modify_$_end
    
     final WeakReference<AbstractInputMethodService> mTarget;
     final Context mContext;
@@ -208,6 +211,11 @@ class IInputMethodWrapper extends IInputMethod.Stub
             case DO_CHANGE_INPUTMETHOD_SUBTYPE:
                 inputMethod.changeInputMethodSubtype((InputMethodSubtype)msg.obj);
                 return;
+					//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+			case DO_COMMIT_TEXT:
+                inputMethod.commitText((String)msg.obj);
+                return;
+			//$_rbox_$_modify_$_end
         }
         Log.w(TAG, "Unhandled message code: " + msg.what);
     }
@@ -323,4 +331,11 @@ class IInputMethodWrapper extends IInputMethod.Stub
         mCaller.executeOrSendMessage(mCaller.obtainMessageO(DO_CHANGE_INPUTMETHOD_SUBTYPE,
                 subtype));
     }
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+	@Override
+    public void commitText(String text) {
+         mCaller.executeOrSendMessage(mCaller.obtainMessageO(DO_COMMIT_TEXT,
+                text));
+    }
+	//$_rbox_$_modify_$_end
 }

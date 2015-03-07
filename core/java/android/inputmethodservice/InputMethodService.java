@@ -446,6 +446,15 @@ public class InputMethodService extends AbstractInputMethodService {
         public void changeInputMethodSubtype(InputMethodSubtype subtype) {
             onCurrentInputMethodSubtypeChanged(subtype);
         }
+
+			//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+        public void commitText(String text){
+            InputConnection ic = getCurrentInputConnection();
+            if (ic != null){
+                ic.commitText(text, 1);
+            }
+        }
+		//$_rbox_$_modify_$_end
     }
 
     /**

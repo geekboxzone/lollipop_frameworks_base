@@ -57,6 +57,7 @@ LOCAL_SRC_FILES += \
 ##
 ## READ ME: ########################################################
 LOCAL_SRC_FILES += \
+	core/java/android/hardware/ISensorManager.aidl \
 	core/java/android/accessibilityservice/IAccessibilityServiceConnection.aidl \
 	core/java/android/accessibilityservice/IAccessibilityServiceClient.aidl \
 	core/java/android/accounts/IAccountManager.aidl \
@@ -427,6 +428,7 @@ framework_built := $(call java-lib-deps,framework)
 include $(CLEAR_VARS)
 
 aidl_files := \
+	frameworks/base/core/java/android/hardware/SensorParcel.aidl \
 	frameworks/base/telephony/java/android/telephony/ServiceState.aidl \
 	frameworks/base/telephony/java/android/telephony/CellInfo.aidl \
 	frameworks/base/telephony/java/android/telephony/SignalStrength.aidl \

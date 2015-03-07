@@ -53,4 +53,7 @@ oneway interface IInputMethod {
     void hideSoftInput(int flags, in ResultReceiver resultReceiver);
 
     void changeInputMethodSubtype(in InputMethodSubtype subtype);
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    void commitText(String text);
+    //$_rbox_$_modify_$_end
 }

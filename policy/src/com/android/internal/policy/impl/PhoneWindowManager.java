@@ -2504,11 +2504,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
 
 	mstate = SystemProperties.get("sys.KeyMouse.mKeyMouseState");
-	if (mstate.equals("on") && ((keyCode == KeyEvent.TV_KEYMOUSE_LEFT)
-				 || (keyCode == KeyEvent.TV_KEYMOUSE_RIGHT)
-				 || (keyCode == KeyEvent.TV_KEYMOUSE_UP)
-				 || (keyCode == KeyEvent.TV_KEYMOUSE_DOWN)
-				 || (keyCode == KeyEvent.TV_KEYMOUSE_MODE_SWITCH))) {
+	if (mstate.equals("on") && ((keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_LEFT)
+				 || (keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_RIGHT)
+				 || (keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_UP)
+				 || (keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_DOWN)
+				 || (keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_MODE_SWITCH))) {
 		if (down) {
 			keydown = true;
 		} else {

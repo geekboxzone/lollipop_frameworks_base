@@ -1006,6 +1006,19 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
                 new UserHandle(mSettings.getCurrentUserId()));
     }
 
+		//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    @Override
+    public void commitText(String text){
+        if (mCurMethod != null) {
+           try {
+              mCurMethod.commitText(text);
+           } catch (RemoteException e) {
+              Slog.w(TAG, "Failed to call commitText");
+           }
+        }
+    }
+	//$_rbox_$_modify_$_end
+
     @Override
     public List<InputMethodInfo> getInputMethodList() {
         // TODO: Make this work even for non-current users?

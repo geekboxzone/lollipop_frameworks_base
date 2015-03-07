@@ -45,7 +45,10 @@ import com.android.server.Watchdog;
 import com.android.server.am.BatteryStatsService;
 import com.android.server.input.InputManagerService;
 import com.android.server.power.ShutdownThread;
-
+//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+import com.android.server.wm.remotecontrol.*;
+import android.hardware.ISensorManager;
+//$_rbox_$_modify_$_end
 import android.Manifest;
 import android.app.ActivityManagerNative;
 import android.app.IActivityManager;
@@ -630,6 +633,9 @@ public class WindowManagerService extends IWindowManager.Stub
     final InputManagerService mInputManager;
     final DisplayManagerInternal mDisplayManagerInternal;
     final DisplayManager mDisplayManager;
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    final RemoteControlManager RCManager;
+    //$_rbox_$_modify_$_end
 
     // Who is holding the screen on.
     Session mHoldingScreenOn;
@@ -924,6 +930,14 @@ public class WindowManagerService extends IWindowManager.Stub
 
         updateCircularDisplayMaskIfNeeded();
         showEmulatorDisplayOverlayIfNeeded();
+	        //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+        if (!SystemProperties.getBoolean("ro.config.low_ram_256",false)) {
+            RCManager = new RemoteControlManager(context, this);
+            RCManager.startListener();
+        } else {
+            RCManager = null;
+        }
+        //$_rbox_$_modify_$_begin
     }
 
     public InputMonitor getInputMonitor() {
@@ -7434,9 +7448,10 @@ public class WindowManagerService extends IWindowManager.Stub
     }
 
     public void dispatchMouseByCd(float x, float y) {
-	    mInputManager.dispatchMousebyCd(x,y);
+	    mInputManager.dispatchMouseByCd(x,y);
     }
 
+    //add for providing interface for mouse & key
     public boolean injectKeyEvent(KeyEvent ev, boolean sync) {
 	    int action = ev.getAction();
 	    int code = ev.getKeyCode();
@@ -7476,6 +7491,19 @@ public class WindowManagerService extends IWindowManager.Stub
 	    final boolean result = mInputManager.injectInputEvent(newEvent,sync ? 2:1);
 	    return result;
     }
+
+    //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    public ISensorManager getRemoteSensorManager(){
+        if (RCManager != null)
+            return RCManager.getRemoteSensorManager();
+        return null;
+    }
+
+    public void setJoyStick(int index, int[] position, int[] size){
+        RCManager.setJoyStick(index, position, size);
+    }
+    //$_rbox_$_modify_$_end
+
 
     @Override
     public void pauseKeyDispatching(IBinder _token) {

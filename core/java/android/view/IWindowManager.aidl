@@ -24,6 +24,9 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.graphics.Rect;
+//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+import android.hardware.ISensorManager;
+//$_rbox_$_modify_$_end
 import android.os.Bundle;
 import android.os.IRemoteCallback;
 import android.view.IApplicationToken;
@@ -265,4 +268,10 @@ interface IWindowManager
      * @return The frame statistics or null if the window does not exist.
      */
     WindowContentFrameStats getWindowContentFrameStats(IBinder token);
+
+       //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+    ISensorManager getRemoteSensorManager();
+
+    void setJoyStick(int index, in int[] position, in int[] size);
+    //$_rbox_$_modify_$_end
 }

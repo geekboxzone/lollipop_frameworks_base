@@ -69,6 +69,13 @@ public class BridgeIInputMethodManager implements IInputMethodManager {
         return null;
     }
 
+		//$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
+	@Override
+    public void commitText(String text){
+        // TODO Auto-generated method stub
+    }
+	//$_rbox_$_modify_$_end
+
     @Override
     public List<InputMethodInfo> getInputMethodList() throws RemoteException {
         // TODO Auto-generated method stub
