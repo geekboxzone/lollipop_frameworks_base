@@ -654,6 +654,8 @@ public class AudioManager {
         }
     }
 
+    private static int mVolume = 0;
+
     /**
      * @hide
      */
@@ -681,18 +683,35 @@ public class AudioManager {
                                     : ADJUST_LOWER,
                             stream,
                             flags);
+		    mVolume = getStreamVolume(STREAM_MUSIC);
+		    Log.d(TAG,"mVolume = "+mVolume);
                 }
                 break;
             case KeyEvent.KEYCODE_VOLUME_MUTE:
                 if (event.getRepeatCount() == 0) {
                     if (mUseMasterVolume) {
                         setMasterMute(!isMasterMute());
-                    } else {
+                    } else if(isBox) {
                         // TODO: Actually handle MUTE.
+			if(getStreamVolume(STREAM_MUSIC) != 0) {
+			    mVolume = getStreamVolume(STREAM_MUSIC);
+			    Log.d(TAG,"mVolume = "+mVolume);
+			    setStreamVolume(STREAM_MUSIC, 0, FLAG_SHOW_UI);
+			} else {
+			    Log.d(TAG,"mVolume = "+mVolume);
+			    setStreamVolume(STREAM_MUSIC, mVolume, FLAG_SHOW_UI);
+			}
                     }
                 }
                 break;
         }
+    }
+
+    private boolean isBox;
+
+    private void isBox() {
+	String boxString = android.os.SystemProperties.get("ro.target.product");
+        isBox = "box".equals(boxString);
     }
 
     /**
