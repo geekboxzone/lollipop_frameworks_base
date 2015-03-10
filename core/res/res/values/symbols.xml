@@ -1084,6 +1084,7 @@
   <java-symbol type="array" name="config_gpsParameters" />
 
   <java-symbol type="drawable" name="default_wallpaper" />
+  <java-symbol type="drawable" name="default_wallpaper_small" />
   <java-symbol type="drawable" name="indicator_input_error" />
   <java-symbol type="drawable" name="popup_bottom_dark" />
   <java-symbol type="drawable" name="popup_bottom_bright" />

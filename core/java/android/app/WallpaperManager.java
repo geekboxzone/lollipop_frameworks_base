@@ -1096,6 +1096,7 @@ public class WallpaperManager {
      */
     public static InputStream openDefaultWallpaper(Context context) {
         final String path = SystemProperties.get(PROP_WALLPAPER);
+	final File factoryWallpaperFile = new File("system/media/rkfactory/default_wallpaper.jpg");
         if (!TextUtils.isEmpty(path)) {
             final File file = new File(path);
             if (file.exists()) {
@@ -1105,9 +1106,23 @@ public class WallpaperManager {
                     // Ignored, fall back to platform default below
                 }
             }
-        }
+        } else if (factoryWallpaperFile.exists()) {
+	    try {
+		return new FileInputStream(factoryWallpaperFile);
+	    } catch (IOException e) {
+                    // Ignored, fall back to platform default below
+            }
+	}
         return context.getResources().openRawResource(
-                com.android.internal.R.drawable.default_wallpaper);
+		getDefaultWallpaperRes());
+    }
+
+    private static int getDefaultWallpaperRes() {
+	String boxString = android.os.SystemProperties.get("ro.target.product");
+	boolean isBox = "box".equals(boxString);
+	//return com.android.internal.R.drawable.default_wallpaper;
+	return (ActivityManager.isLowRamDeviceStatic() && isBox) ? com.android.internal.R.
+            drawable.default_wallpaper_small : com.android.internal.R.drawable.default_wallpaper;
     }
 
     /**
