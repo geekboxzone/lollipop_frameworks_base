@@ -32,6 +32,11 @@ public class BootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, Intent intent) {
+        boolean disableSystemUI = android.os.SystemProperties.getBoolean("config.disable_systemui", true);
+	if(disableSystemUI){
+		Log.e(TAG, "BootReceiver:config.disable_systemui=true");
+		return ;
+	}
         try {
             // Start the load average overlay, if activated
             ContentResolver res = context.getContentResolver();

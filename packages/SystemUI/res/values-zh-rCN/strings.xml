@@ -258,14 +258,28 @@
     <string name="quick_settings_cast_detail_empty_text" msgid="311785821261640623">"没有可用设备"</string>
     <string name="quick_settings_brightness_dialog_title" msgid="8599674057673605368">"亮度"</string>
     <string name="quick_settings_brightness_dialog_auto_brightness_label" msgid="5064982743784071218">"自动"</string>
+	
+    <!-- $_rbox_$_modify_$_chenxiao begin,hide bar msg -->
+    <string name="hidebar_msg">"系统栏已经被隐藏\n您可以在屏幕上下边缘拖拉再次显示它。" </string>
+	
+    <!-- $_rbox_$_modify_$_chenxiao begin,usb unmount msg -->
+    <string name="dlg_confirm_unmount_title" product="nosdcard" msgid="3077285629197874055">"要卸载 USB 存储设备吗？"</string>
+    <string name="dlg_confirm_unmount_title" product="default" msgid="3634502237262534381">"要卸载此存储设备吗？"</string>
+    <string name="dlg_confirm_unmount_text" product="nosdcard" msgid="4322636662873269018">"如果卸载该 USB 存储设备，您当前使用的某些应用会停止运行，并且在您重新装载该设备前可能都无法使用。"</string>
+    <string name="dlg_confirm_unmount_text" product="default" msgid="6998379994779187692">"如果卸载该存储设备，您当前使用的某些应用会停止，并且在您重新装载该存储设备前，这些应用可能都无法使用。"</string>
+    <string name="dlg_error_unmount_title" product="nosdcard" msgid="4642742385125426529"></string>
+    <string name="dlg_error_unmount_title" product="default" msgid="4642742385125426529"></string>
+    <string name="dlg_error_unmount_text" product="nosdcard" msgid="4346280469528260684">"无法卸载 USB 存储设备，请稍后重试。"</string>
+    <string name="dlg_error_unmount_text" product="default" msgid="3073562815631781894">"无法卸载此存储设备，请稍后重试。"</string>
+    <string name="unmount_inform_text" product="nosdcard" msgid="7120241136790744265">"系统将会卸载 USB 存储设备。"</string>
+    <string name="unmount_inform_text" product="default" msgid="1904212716075458402">"系统将会卸载此存储设备。"</string>
+
    
      <!--screen shot-->
     <string name="sdcard_unmount">内部存储正在使用中</string>
     <string name="external_sd_unmount">SD卡未挂载</string>
     <string name="usb_storage_unmount">USB存储未挂载</string>
 
-    <!-- $_rockchip_$_modify_$_huangjc,hide bar msg -->
-    <string name="hidebar_msg">"系统栏已经被隐藏\n您可以在屏幕下边缘拖拉再次显示它。" </string>
 
     <string name="quick_settings_inversion_label" msgid="8790919884718619648">"反色"</string>
     <string name="quick_settings_color_space_label" msgid="853443689745584770">"颜色校正模式"</string>

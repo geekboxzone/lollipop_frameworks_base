@@ -372,6 +372,11 @@
             </intent-filter>
         </activity>
 
+     <!-- $_rbox_$_modify_$_by cx,add for unmount usb safely -->
+        <activity android:name=".usb.UsbStorageUnmountDialog"
+                  android:theme="@android:style/Theme.Holo.Dialog.NoActionBar">
+        </activity>
+
         <!-- Doze with notifications, run in main sysui process for every user  -->
         <service
             android:name=".doze.DozeService"

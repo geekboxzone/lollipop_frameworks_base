@@ -1969,6 +1969,124 @@
   <java-symbol type="dimen" name="subtitle_shadow_offset" />
   <java-symbol type="dimen" name="subtitle_outline_width" />
 
+
+
+<!--$_rbox_$_modify_$_lijiehong_$_20120319_$-->
+<!--$_rbox_$_modify_$_begin-->
+    <!-- unmount USBMassStorage -->
+    <java-symbol type="string" name="usb_media_stop_title"/>
+    <java-symbol type="string" name="usb_media_stop_title_1"/>
+    <java-symbol type="string" name="usb_media_stop_title_2"/>
+    <java-symbol type="string" name="usb_media_stop_title_otg"/>
+    
+    <java-symbol type="string" name="usb_media_stop_message"/>
+    <java-symbol type="string" name="usb_media_stop_message_1"/>
+    <java-symbol type="string" name="usb_media_stop_message_2"/>
+    <java-symbol type="string" name="usb_media_stop_message_otg"/>
+
+    <java-symbol type="string" name="usb_storage_stop_button_unmount"/>
+    <java-symbol type="string" name="usb_mass_storage_stop_button"/>
+    <java-symbol type="string" name="usb_mass_storage_mount_button"/>
+    <java-symbol type="string" name="usb_mass_storage_activity_title"/>
+    <java-symbol type="string" name="usb_mass_storage_activity_title_1"/>
+    <java-symbol type="string" name="usb_mass_storage_activity_title_2"/>
+    <java-symbol type="string" name="usb_mass_storage_activity_title_otg"/>
+    <java-symbol type="string" name="usb_mass_storage_stop_error_message"/>
+    <java-symbol type="string" name="usb_mass_storage_stop_success_message"/>
+
+    <!-- USB_MASS_STORAGE_KILL_STORAGE_USERS dialog message text -->
+    <java-symbol type="string" name="dlg_confirm_kill_mass_storage_users_title"/>
+    <java-symbol type="string" name="dlg_confirm_kill_mass_storage_users_text"/>
+
+    <java-symbol type="string" name="ext_media_notification_title" product="default"/>
+    <java-symbol type="string" name="ext_media_notification_message"/>
+
+    <!-- usb media notification strings -->
+    <java-symbol type="string" name="usb_media_checking_notification_title"/>
+    <java-symbol type="string" name="usb_media_checking_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_checking_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_checking_notification_title_otg"/>
+    <java-symbol type="string" name="usb_media_checking_notification_message"/>
+
+    <!-- Internal media notification strings -->
+    <!-- Shown when external media is being checked -->
+    <java-symbol type="string" name="flash_media_checking_notification_title"/>
+    <java-symbol type="string" name="flash_media_checking_notification_message"/>
+
+    <!-- Shown when internal flash storage is blank (or unsupported filesystem) -->
+    <java-symbol type="string" name="flash_media_nofs_notification_title"/>
+    <java-symbol type="string" name="flash_media_nofs_notification_message"/>
+
+    <!-- Shown when usb media is blank (or unsupported filesystem) -->
+    <java-symbol type="string" name="usb_media_nofs_notification_title"/>
+    <java-symbol type="string" name="usb_media_nofs_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_nofs_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_nofs_notification_title_otg"/>
+    <java-symbol type="string" name="usb_media_nofs_notification_message"/>
+
+    <!-- Shown when usb media is mountable -->
+    <java-symbol type="string" name="usb_media_notification_title"/>
+    <java-symbol type="string" name="usb_media_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_notification_title_otg"/>
+    
+    <java-symbol type="string" name="usb_media_notification_message"/>
+    <java-symbol type="string" name="usb_media_notification_message_1"/>
+    <java-symbol type="string" name="usb_media_notification_message_2"/>
+    <java-symbol type="string" name="usb_media_notification_message_otg"/>
+
+    <!-- Shown when usb media is unmountable (corrupt)) -->
+    <java-symbol type="string" name="usb_media_unmountable_notification_title"/>
+    <java-symbol type="string" name="usb_media_unmountable_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_unmountable_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_unmountable_notification_title_otg"/>
+    <java-symbol type="string" name="usb_media_unmountable_notification_message"/>
+
+    <!-- Shown when usb media is unsafely removed -->
+    <java-symbol type="string" name="usb_media_badremoval_notification_title"/>
+    <java-symbol type="string" name="usb_media_badremoval_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_badremoval_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_badremoval_notification_title_otg"/>
+    <java-symbol type="string" name="usb_media_badremoval_notification_message"/>
+
+    <!-- Shown when usb media has been safely removed -->
+    <java-symbol type="string" name="usb_media_safe_unmount_notification_title"/>
+    <java-symbol type="string" name="usb_media_safe_unmount_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_safe_unmount_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_safe_unmount_notification_title_otg"/>
+    <java-symbol type="string" name="usb_media_safe_unmount_notification_message"/>
+
+    <!-- Shown when external media has been safely removed -->
+    <java-symbol type="string" name="flash_media_safe_unmount_notification_title"/>
+    <java-symbol type="string" name="flash_media_safe_unmount_notification_message"/>
+
+     <!-- Shown when usb media is missing -->
+    <java-symbol type="string" name="usb_media_nomedia_notification_title"/>
+    <java-symbol type="string" name="usb_media_nomedia_notification_title_1"/>
+    <java-symbol type="string" name="usb_media_nomedia_notification_title_2"/>
+    <java-symbol type="string" name="usb_media_nomedia_notification_title_otg"/>
+    <java-symbol type="string" name="usb_media_nomedia_notification_message"/>
+
+  <!-- config for storage removable status -->
+  <java-symbol type="bool" name="config_secondVolumeStorageRemovable" />
+
+  <!-- drawable for storage status -->
+  <java-symbol type="drawable" name="stat_notify_flash" />
+  <java-symbol type="drawable" name="stat_notify_flash_prepare" />
+  <java-symbol type="drawable" name="stat_notify_flash_usb" />
+  <java-symbol type="drawable" name="stat_notify_usb_media_prepared" />
+
+
+
+    <!-- Storage description for USB storage. [CHAR LIMIT=NONE] -->
+   <java-symbol type="string" name="storage_usb0"/>
+   <java-symbol type="string" name="storage_usb1"/>
+   <java-symbol type="string" name="storage_usb2"/>
+   <java-symbol type="string" name="storage_usb3"/>
+   <java-symbol type="string" name="storage_usb4"/>
+   <java-symbol type="string" name="storage_usb5"/>
+<!--$_rbox_$_modify_$_end-->
+
   <java-symbol type="attr" name="nestedScrollingEnabled" />
 
   <java-symbol type="style" name="TextAppearance.Holo.TimePicker.TimeLabel" />

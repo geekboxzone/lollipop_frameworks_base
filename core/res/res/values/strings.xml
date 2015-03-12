@@ -18,6 +18,7 @@
 */
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+<!--$_FOR_ROCKCHIP_RBOX_$-->
     <!-- Suffix added to a number to signify size in bytes. -->
     <string name="byteShort">B</string>
     <!-- Suffix added to a number to signify size in kilobytes. -->
@@ -398,10 +399,13 @@
 
     <!-- Shutdown Confirmation Dialog.  When the user chooses to power off the phone, there will
          be a confirmation dialog.  This is the message. -->
-    <string name="shutdown_confirm" product="tablet">Your tablet will shut down.</string>
-    <!-- Shutdown Confirmation Dialog.  When the user chooses to power off the TV, there will
-         be a confirmation dialog.  This is the message. -->
     <string name="shutdown_confirm" product="tv">Your TV will shut down.</string>
+
+    <!-- $_rbox_$_modify_$_chenxiao begin-->
+    <string name="shutdown_confirm" product="tablet">Your device will shut down.</string>
+    <!-- $_rbox_$_modify_$_chenxiao end-->
+
+
     <!-- Shutdown Confirmation Dialog.  When the user chooses to power off the watch, there will
          be a confirmation dialog.  This is the message. -->
     <string name="shutdown_confirm" product="watch">Your watch will shut down.</string>
@@ -5169,4 +5173,115 @@
     <string name="stk_cc_ss_to_ussd">SS request is modified to USSD request.</string>
     <string name="stk_cc_ss_to_ss">SS request is modified to new SS request.</string>
 
+<!--$_rbox_$_modify_$_lijiehong_$_20120319_$-->
+<!--$_rbox_$_modify_$_begin--> 
+  
+    <!-- unmount USBMassStorage -->
+    <string name="usb_media_stop_title">USBMassStorage Prepared</string>
+    <string name="usb_media_stop_title_1">USBMassStorage_1 Prepared</string>
+    <string name="usb_media_stop_title_2">USBMassStorage_2 Prepared</string>
+    <string name="usb_media_stop_title_otg">OTGStorage Prepared</string>
+    
+    <string name="usb_media_stop_message">USBMassStorage is prepared. You can select the button below to unmount it.</string>
+    <string name="usb_media_stop_message_1">USBMassStorage_1 is prepared. You can select the button below to unmount 
+       it.</string>
+    <string name="usb_media_stop_message_2">USBMassStorage_2 is prepared. You can select the button below to unmount 
+       it.</string>
+    <string name="usb_media_stop_message_otg">OTGStorage is prepared. You can select the button below to unmount it.</string>
+
+    <string name="usb_storage_stop_button_unmount">Unmount USB Storage</string>
+    <string name="usb_mass_storage_stop_button">Unmount MassStorage</string>
+    <string name="usb_mass_storage_mount_button">Mount USBMassStorage</string>
+    <string name="usb_mass_storage_activity_title">USBMassStorage</string>
+    <string name="usb_mass_storage_activity_title_1">USBMassStorage_1</string>
+    <string name="usb_mass_storage_activity_title_2">USBMassStorage_2</string>
+    <string name="usb_mass_storage_activity_title_otg">OTGStorage</string>
+    <string name="usb_mass_storage_stop_error_message">There was a problem turning off the Storage. Try again.</string>
+    <string name="usb_mass_storage_stop_success_message">You have unmount the Storage successful.You can safely remove 
+       it.</string>
+
+    <!-- USB_MASS_STORAGE_KILL_STORAGE_USERS dialog message text -->
+    <string name="dlg_confirm_kill_mass_storage_users_title">Unmount USBMassStorage</string>
+    <string name="dlg_confirm_kill_mass_storage_users_text">If you Unmount USBMASSStorage, some applications you are using 
+       will stop.</string>
+
+    <string name="ext_media_notification_title" product="default">SD card prepared</string>
+    <string name="ext_media_notification_message">SD card is prepared and ready for using.</string>
+
+    <!-- usb media notification strings -->
+    <string name="usb_media_checking_notification_title">Preparing USBMassStorage</string>
+    <string name="usb_media_checking_notification_title_1">Preparing USBMassStorage_1</string>
+    <string name="usb_media_checking_notification_title_2">Preparing USBMassStorage_2</string>
+    <string name="usb_media_checking_notification_title_otg">Preparing OTGStorage</string>
+    <string name="usb_media_checking_notification_message">Checking for errors.</string>
+
+    <!-- Internal media notification strings -->
+    <!-- Shown when external media is being checked -->
+    <string name="flash_media_checking_notification_title">Preparing Internal Flash Storage</string>
+    <string name="flash_media_checking_notification_message">Checking for errors.</string>
+
+    <!-- Shown when internal flash storage is blank (or unsupported filesystem) -->
+    <string name="flash_media_nofs_notification_title">Blank Internal Flash</string>
+    <string name="flash_media_nofs_notification_message">Internal Flash blank or has unsupported filesystem.</string>
+
+    <!-- Shown when usb media is blank (or unsupported filesystem) -->
+    <string name="usb_media_nofs_notification_title">Blank USBMassStorage</string>
+    <string name="usb_media_nofs_notification_title_1">Blank USBMassStorage_1</string>
+    <string name="usb_media_nofs_notification_title_2">Blank USBMassStorage_2</string>
+    <string name="usb_media_nofs_notification_title_otg">Blank OTGStorage</string>
+    <string name="usb_media_nofs_notification_message">USBMassStorage blank or has unsupported filesystem.</string>
+
+    <!-- Shown when usb media is mountable -->
+    <string name="usb_media_notification_title">USBMassStorage prepared</string>
+    <string name="usb_media_notification_title_1">USBMassStorage_1 prepared</string>
+    <string name="usb_media_notification_title_2">USBMassStorage_2 prepared</string>
+    <string name="usb_media_notification_title_otg">OTGStorage prepared</string>
+    
+    <string name="usb_media_notification_message">Click to unmount USBMassStorage safely.</string>
+    <string name="usb_media_notification_message_1">Click to unmount USBMassStorage_1 safely.</string>
+    <string name="usb_media_notification_message_2">Click to unmount USBMassStorage_2 safely.</string>
+    <string name="usb_media_notification_message_otg">Click to unmount OTGStorage safely.</string>
+
+    <!-- Shown when usb media is unmountable (corrupt)) -->
+    <string name="usb_media_unmountable_notification_title">Damaged USBMassStorage</string>
+    <string name="usb_media_unmountable_notification_title_1">Damaged USBMassStorage_1</string>
+    <string name="usb_media_unmountable_notification_title_2">Damaged USBMassStorage_2</string>
+    <string name="usb_media_unmountable_notification_title_otg">Damaged OTGStorage</string>
+    <string name="usb_media_unmountable_notification_message">USBMassStorage damaged. You may have to reformat it.</string>
+
+    <!-- Shown when usb media is unsafely removed -->
+    <string name="usb_media_badremoval_notification_title">USBMassStorage unexpectedly removed</string>
+    <string name="usb_media_badremoval_notification_title_1">USBMassStorage_1 unexpectedly removed</string>
+    <string name="usb_media_badremoval_notification_title_2">USBMassStorage_2 unexpectedly removed</string>
+    <string name="usb_media_badremoval_notification_title_otg">OTGStorage unexpectedly removed</string>
+    <string name="usb_media_badremoval_notification_message">Unmount USBMassStorage before removing to avoid data 
+       loss.</string>
+
+    <!-- Shown when usb media has been safely removed -->
+    <string name="usb_media_safe_unmount_notification_title">USBMassStorage safe to remove</string>
+    <string name="usb_media_safe_unmount_notification_title_1">USBMassStorage_1 safe to remove</string>
+    <string name="usb_media_safe_unmount_notification_title_2">USBMassStorage_2 safe to remove</string>
+    <string name="usb_media_safe_unmount_notification_title_otg">OTGStorage safe to remove</string>
+    <string name="usb_media_safe_unmount_notification_message">You can safely remove USBMassStorage.</string>
+
+    <!-- Shown when external media has been safely removed -->
+    <string name="flash_media_safe_unmount_notification_title">Internal flash storage safe to remove</string>
+    <string name="flash_media_safe_unmount_notification_message">Safely remove internal flash storage.</string>
+
+     <!-- Shown when usb media is missing -->
+    <string name="usb_media_nomedia_notification_title">Removed USBMassStorage</string>
+    <string name="usb_media_nomedia_notification_title_1">Removed USBMassStorage_1</string>
+    <string name="usb_media_nomedia_notification_title_2">Removed USBMassStorage_2</string>
+    <string name="usb_media_nomedia_notification_title_otg">Removed OTGStorage</string>
+    <string name="usb_media_nomedia_notification_message">USBMassStorage removed. Insert a new one.</string>
+ 
+
+    <!-- Storage description for USB storage. [CHAR LIMIT=NONE] -->
+    <string name="storage_usb0">USB storage 0</string>
+    <string name="storage_usb1">USB storage 1</string>
+    <string name="storage_usb2">USB storage 2</string>
+    <string name="storage_usb3">USB storage 3</string>
+    <string name="storage_usb4">USB storage 4</string>
+    <string name="storage_usb5">USB storage 5</string>
+<!--$_rbox_$_modify_$_end-->
 </resources>

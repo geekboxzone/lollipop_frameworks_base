@@ -16,6 +16,10 @@
 
 package android.os;
 
+/*$_rbox_$_modify_$_lijiehong_begin$20120319$*/
+import android.content.res.Resources;
+/*$_rbox_$_modify_$_lijiehong_end$20120319$*/
+
 import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.os.storage.IMountService;
@@ -60,6 +64,10 @@ public class Environment {
     private static final File DIR_OEM_ROOT = getDirectory(ENV_OEM_ROOT, "/oem");
     private static final File DIR_VENDOR_ROOT = getDirectory(ENV_VENDOR_ROOT, "/vendor");
     private static final File DIR_MEDIA_STORAGE = getDirectory(ENV_MEDIA_STORAGE, "/data/media");
+
+    /*$_rbox_$_modify_$_lijiehong_begin$20120319$*/
+    private static IMountService mMntSvc = null;
+    /*$_rbox_$_modify_$_lijiehong_end$20120319$*/
 
     private static final String CANONCIAL_EMULATED_STORAGE_TARGET = getCanonicalPathOrNull(
             ENV_EMULATED_STORAGE_TARGET);
@@ -323,6 +331,42 @@ public class Environment {
 
     private static final File DOWNLOAD_CACHE_DIRECTORY = getDirectory("DOWNLOAD_CACHE", "/cache");
 
+    /*$_rbox_$_modify_$_lijiehong_begin$20120319$*/
+    private static final File SECOND_VOLUME_STORAGE_DIRECTORY
+            = getDirectory("SECOND_VOLUME_STORAGE", "/mnt/external_sd");
+
+    private static final File INTERNAL_DISK_STORAGE_DIRECTORY
+            = getDirectory("INTERNAL_DISK_STORAGE", "/interdisk");
+    /*$_rbox_$_modify_$_lijiehong_end$20120319$*/
+
+
+    /*$_rbox_$_modify_$_lijiehong_begin$20120319$*/
+    private static final File HOST_STORAGE_DIRECTORY
+            = getDirectory("HOST_STORAGE_DIRECTORY", "/mnt/usb_storage");
+
+    private static final File OTG_STORAGE_DIRECTORY
+            = getDirectory("OTG_STORAGE_DIRECTORY", "/mnt/usbb_storage/USB_DISK1");
+       
+    private static final File HOST_STORAGE_DIRECTORY_EXTERN_0
+            = getDirectory("THIRD_VOLUME_STORAGE", "/mnt/usb_storage/USB_DISK0");
+
+    private static final File HOST_STORAGE_DIRECTORY_EXTERN_1
+            = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_1", "/mnt/usb_storage/USB_DISK1");
+
+    private static final File HOST_STORAGE_DIRECTORY_EXTERN_2
+            = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_2", "/mnt/usb_storage/USB_DISK2");
+
+    private static final File HOST_STORAGE_DIRECTORY_EXTERN_3
+            = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_3", "/mnt/usb_storage/USB_DISK3");
+
+    private static final File HOST_STORAGE_DIRECTORY_EXTERN_4
+            = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_4", "/mnt/usb_storage/USB_DISK4");
+
+    private static final File HOST_STORAGE_DIRECTORY_EXTERN_5
+            = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_5", "/mnt/usb_storage/USB_DISK5");
+    /*$_rbox_$_modify_$_lijiehong_end$20120319$*/
+
+
     /**
      * Return the user data directory.
      */
@@ -391,6 +435,114 @@ public class Environment {
         throwIfUserRequired();
         return sCurrentUser.getExternalDirsForApp()[0];
     }
+
+/*$_rbox_$_modify_$public static File getSecondVolumeStorageDirectory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: 1. Gets the Android flash storage directory */
+    /**
+     * 
+     * Gets the Android flash storage directory.
+     */
+    public static File getSecondVolumeStorageDirectory() {
+        return SECOND_VOLUME_STORAGE_DIRECTORY;
+    }
+
+/*$_rbox_$_modify_$public static File getInterHardDiskStorageDirectory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log:  Gets the Android internal harddisk storage directory */
+    /**
+     * 
+     * Gets the Android internal harddisk storage directory.
+     */
+    public static File getInterHardDiskStorageDirectory() {
+        return INTERNAL_DISK_STORAGE_DIRECTORY;
+    }
+
+/*$_rbox_$_modify_$public static File getHostStorageDirectory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log:  Gets the Android host storage directory */
+     /**
+     * * 
+     * * Gets the Android host storage directory
+     */
+    public static File getHostStorageDirectory() {
+        return HOST_STORAGE_DIRECTORY;
+    }
+
+/*$_rbox_$_modify_$public static File getHostStorage_Extern_0_Directory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage extern_0 directory */
+    /**
+     * * 
+     * * Gets the Android host storage extern_0  directory
+     */
+    public static File getHostStorage_Extern_0_Directory() {
+        return HOST_STORAGE_DIRECTORY_EXTERN_0;
+    }
+
+/*$_rbox_$_modify_$public static File getHostStorage_Extern_1_Directory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage extern_1 directory */
+    /**
+     * * 
+     * * Gets the Android host storage extern_1  directory
+     */
+    public static File getHostStorage_Extern_1_Directory() {
+        return HOST_STORAGE_DIRECTORY_EXTERN_1;
+    }
+
+/*$_rbox_$_modify_$public static File getHostStorage_Extern_2_Directory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage extern_2 directory */
+    /**
+     * * 
+     * * Gets the Android host storage extern_2 directory
+     */
+    public static File getHostStorage_Extern_2_Directory() {
+        return HOST_STORAGE_DIRECTORY_EXTERN_2;
+    }
+
+/*$_rbox_$_modify_$public static File getOTGStorageDirectory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage OTG directory */
+       public static File getOTGStorageDirectory() {
+                return OTG_STORAGE_DIRECTORY;
+        }
+
+/*$_rbox_$_modify_$public static File getHostStorage_Extern_3_Directory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage extern_3 directory */
+    /**
+     * * 
+     * * Gets the Android host storage extern_3 directory
+     */
+    public static File getHostStorage_Extern_3_Directory() {
+        return HOST_STORAGE_DIRECTORY_EXTERN_3;
+    }
+
+/*$_rbox_$_modify_$public static File getHostStorage_Extern_4_Directory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage extern_4 directory */
+    /**
+     * * 
+     * * Gets the Android host storage extern_4 directory
+     */
+    public static File getHostStorage_Extern_4_Directory() {
+        return HOST_STORAGE_DIRECTORY_EXTERN_4;
+    }
+
+/*$_rbox_$_modify_$public static File getHostStorage_Extern_5_Directory()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the Android host storage extern_5 directory */
+     /**
+     * * 
+     * * Gets the Android host storage extern_5 directory
+      */
+    public static File getHostStorage_Extern_5_Directory() {
+        return HOST_STORAGE_DIRECTORY_EXTERN_5;
+    }
+
+
 
     /** {@hide} */
     public static File getLegacyExternalStorageDirectory() {
@@ -705,6 +857,198 @@ public class Environment {
         return getExternalStorageState(path);
     }
 
+/*$_rbox_$_modify_$public static String getSecondVolumeStorageState()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the flash storage device */
+    /**
+     * 
+     * Gets the current state of the flash storage device.
+     */
+    public static String getSecondVolumeStorageState() {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+            return mMntSvc.getVolumeState(getSecondVolumeStorageDirectory().toString());
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+
+    }
+
+/*$_rbox_$_modify_$public static String getInterHardDiskStorageState()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the flash storage device */
+    /**
+     * 
+     * Gets the current state of the flash storage device.
+     */
+    public static String getInterHardDiskStorageState() {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+            return mMntSvc.getVolumeState(getInterHardDiskStorageDirectory().toString());
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+
+    }
+
+/*$_rbox_$_modify_$public static String getHostStorage_Extern_0_State()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the host storage device,usb0 */
+    /**
+     *
+     *  Gets the current state of the host storage device,usb0.
+     */
+    public static String getHostStorage_Extern_0_State()
+    {
+        try {
+                       
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+                       String volState;
+                       volState =mMntSvc.getVolumeState(getHostStorage_Extern_0_Directory().toString());
+            return volState;
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
+/*$_rbox_$_modify_$public static String getHostStorage_Extern_1_State()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the host storage device,usb1 */
+    /**
+     *
+     *  Gets the current state of the host storage device,usb1.
+     */
+    public static String getHostStorage_Extern_1_State()
+    {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+                       String volState;
+                       volState =mMntSvc.getVolumeState(getHostStorage_Extern_1_Directory().toString());
+            return volState;
+
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
+/*$_rbox_$_modify_$public static String getHostStorage_Extern_2_State()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the host storage device,usb2 */
+    /**
+     *
+     *  Gets the current state of the host storage device,usb2.
+     */
+    public static String getHostStorage_Extern_2_State()
+    {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+                       String volState;
+                       volState =mMntSvc.getVolumeState(getHostStorage_Extern_2_Directory().toString());
+            return volState;
+
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
+/*$_rbox_$_modify_$public static String getHostStorage_Extern_3_State()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the host storage device,usb3 */
+    /**
+     *
+     *  Gets the current state of the host storage device,usb3.
+     */
+    public static String getHostStorage_Extern_3_State()
+    {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+            return mMntSvc.getVolumeState(getHostStorage_Extern_3_Directory().toString());
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
+/*$_rbox_$_modify_$public static String getHostStorage_Extern_4_State()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current state of the host storage device,usb4 */
+    /**
+     *
+     *  Gets the current state of the host storage device,usb4.
+     */
+    public static String getHostStorage_Extern_4_State()
+    {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+            return mMntSvc.getVolumeState(getHostStorage_Extern_4_Directory().toString());
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
+/*$_rbox_$_modify_$public static String getHostStorage_Extern_5_State()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: 1. Gets the current state of the host storage device,usb5 */
+    /**
+     * 
+     *  Gets the current state of the host storage device,usb5.
+     */
+    public static String getHostStorage_Extern_5_State()
+    {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+            return mMntSvc.getVolumeState(getHostStorage_Extern_5_Directory().toString());
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
+/*$_rbox_$_modify_$public static String getOTGStorageState()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current removable state of the OTG storage device */
+    public static String getOTGStorageState()
+    {
+        try {
+            if (mMntSvc == null) {
+                mMntSvc = IMountService.Stub.asInterface(ServiceManager
+                                                         .getService("mount"));
+            }
+            return mMntSvc.getVolumeState(getOTGStorageDirectory().toString());
+        } catch (Exception rex) {
+            return Environment.MEDIA_REMOVED;
+        }
+    
+    }
+
     /**
      * Returns the current state of the storage device that provides the given
      * path.
@@ -759,6 +1103,17 @@ public class Environment {
         } else {
             throw new IllegalArgumentException("Failed to find storage device at " + path);
         }
+    }
+
+/*$_rbox_$_modify_$public static boolean isSecondVolumeStorageRemovable()*/
+/*$_rbox_$_modify_$_lijiehong_$_20120319_$*/
+/*$_rbox_$_modify_$ log: Gets the current removable state of the sdcard storage device */
+    /**
+     * 
+     * Gets the current removable state of the sdcard storage device.
+     */
+    public static boolean isSecondVolumeStorageRemovable() {
+        return Resources.getSystem().getBoolean( com.android.internal.R.bool.config_secondVolumeStorageRemovable);
     }
 
     /**

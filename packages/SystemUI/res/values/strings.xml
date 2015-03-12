@@ -499,6 +499,30 @@
         No Internet connection
     </string>
 
+	    
+	
+    <!-- $_rbox_$_modify_$_chenxiao begin,usb unmount msg -->
+    <!-- SD card eject confirmation dialog title   [CHAR LIMIT=25] -->
+    <string name="dlg_confirm_unmount_title" product="nosdcard">Unmount USB storage?</string>
+    <!-- SD card eject confirmation dialog title   -->
+    <string name="dlg_confirm_unmount_title" product="default">Unmount storage?</string>
+	<!-- SD card eject confirmation dialog  [CHAR LIMIT=NONE] -->
+    <string name="dlg_confirm_unmount_text" product="nosdcard">If you unmount the USB storage, some apps you are using will stop and may be unavailable until you remount the USB storage.</string>
+    <!-- SD card eject confirmation dialog  -->
+    <string name="dlg_confirm_unmount_text" product="default">If you unmount the storage, some apps you are using will stop and may be unavailable until you remount the storage.</string>
+    <!-- SD card eject error dialog title   [CHAR LIMIT=30] -->
+    <string name="dlg_error_unmount_title" product="nosdcard"></string>
+    <!-- SD card eject error dialog title   -->
+    <string name="dlg_error_unmount_title" product="default"></string>
+    <!-- SD card eject error dialog text   [CHAR LIMIT=NONE] -->
+    <string name="dlg_error_unmount_text" product="nosdcard">Couldn\'t unmount USB storage. Try again later.</string>
+    <!-- SD card eject error dialog text   -->
+    <string name="dlg_error_unmount_text" product="default">Couldn\'t unmount storage. Try again later.</string>
+    <!-- SD card unmount informative text   [CHAR LIMIT=NONE] -->
+    <string name="unmount_inform_text" product="nosdcard">USB storage will be unmounted.</string>
+    <!-- SD card unmount informative text   [CHAR LIMIT=NONE] -->
+    <string name="unmount_inform_text" product="default">Storage will be unmounted.</string>
+
 
         <!--screen shot-->
            <string name="sdcard_unmount">internal storage is unmount</string>

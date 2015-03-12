@@ -27,13 +27,14 @@ import android.view.animation.AccelerateInterpolator;
 import com.android.internal.statusbar.IStatusBarService;
 import com.android.systemui.R;
 import com.android.systemui.statusbar.policy.KeyButtonView;
+import android.os.SystemProperties;
 
 public final class NavigationBarTransitions extends BarTransitions {
 
     private static final int CONTENT_FADE_DURATION = 200;
 
     private final NavigationBarView mView;
-    private final IStatusBarService mBarService;
+    private IStatusBarService mBarService = null;
 
     private boolean mLightsOut;
     private boolean mVertical;
@@ -42,8 +43,11 @@ public final class NavigationBarTransitions extends BarTransitions {
     public NavigationBarTransitions(NavigationBarView view) {
         super(view, R.drawable.nav_background);
         mView = view;
-        mBarService = IStatusBarService.Stub.asInterface(
+	boolean disableSystemUI = SystemProperties.getBoolean("config.disable_systemui", true);
+	if ((mBarService == null)&&(!disableSystemUI)){
+      	    mBarService = IStatusBarService.Stub.asInterface(
                 ServiceManager.getService(Context.STATUS_BAR_SERVICE));
+        }
     }
 
     public void init(boolean isVertical) {
@@ -173,10 +177,13 @@ public final class NavigationBarTransitions extends BarTransitions {
                 // on, we need them to come up faster so that they can catch this motion
                 // event
                 applyLightsOut(false, false, false);
-
+              
                 try {
                     mBarService.setSystemUiVisibility(0, View.SYSTEM_UI_FLAG_LOW_PROFILE,
                             "LightsOutListener");
+                    if(null!=mBarService){
+                    	mBarService.setSystemUiVisibility(0, View.SYSTEM_UI_FLAG_LOW_PROFILE);
+		    }
                 } catch (android.os.RemoteException ex) {
                 }
             }

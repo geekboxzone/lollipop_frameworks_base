@@ -2030,4 +2030,17 @@
 
     <!-- Whether to start in touch mode -->
     <bool name="config_defaultInTouchMode">true</bool>
+
+    <!--$_rbox_$_modify_$_lijiehong_$_20120319_$-->
+    <!--$_rbox_$_modify_$_begin-->
+    <!-- A product with no SD card == not removable. --> 
+    <bool name="config_secondVolumeStorageRemovable" product="nosdcard">false</bool>
+    <!-- Configures whether the primary second volume storage device is
+         removable.  For example, if second volume storage is on an SD card,
+         it is removable; if it is built in to the device, it is not removable.
+         The default product has second volume storage on an SD card, which is
+         removable. -->
+    <bool name="config_secondVolumeStorageRemovable" product="default">true</bool>
+    <!--$_rbox_$_modify_$_end-->
+
 </resources>
