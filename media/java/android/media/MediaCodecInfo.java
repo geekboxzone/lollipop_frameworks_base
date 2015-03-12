@@ -127,6 +127,7 @@ public final class MediaCodecInfo {
                      new Rational(Integer.MAX_VALUE, 1));
     private static final Range<Integer> SIZE_RANGE = Range.create(1, 32768);
     private static final Range<Integer> FRAME_RATE_RANGE = Range.create(0, 960);
+    private static final Range<Integer> BITRATE_RANGE = Range.create(0, 500000000);
 
     // found stuff that is not supported by framework (=> this should not happen)
     private static final int ERROR_UNRECOGNIZED   = (1 << 0);
@@ -649,7 +650,7 @@ public final class MediaCodecInfo {
                 maxChannels = 48;
             } else if (mime.equalsIgnoreCase(MediaFormat.MIMETYPE_AUDIO_VORBIS)) {
                 bitRates = Range.create(32000, 500000);
-                sampleRates = new int[] { 8000, 12000, 16000, 24000, 48000, 192000 };
+                sampleRateRange = Range.create(8000, 192000);
                 maxChannels = 255;
             } else if (mime.equalsIgnoreCase(MediaFormat.MIMETYPE_AUDIO_OPUS)) {
                 bitRates = Range.create(6000, 510000);
@@ -712,7 +713,7 @@ public final class MediaCodecInfo {
             }
             if (info.containsKey("bitrate-range")) {
                 bitRates = bitRates.intersect(
-                        Utils.parseIntRange(info.getString("bitrate"), bitRates));
+                        Utils.parseIntRange(info.getString("bitrate-range"), bitRates));
             }
             applyLimits(maxInputChannels, bitRates);
         }
@@ -974,7 +975,7 @@ public final class MediaCodecInfo {
         }
 
         private boolean supports(
-                Integer width, Integer height, Double rate) {
+                Integer width, Integer height, Number rate) {
             boolean ok = true;
 
             if (ok && width != null) {
@@ -986,7 +987,7 @@ public final class MediaCodecInfo {
                         && (height % mHeightAlignment == 0);
             }
             if (ok && rate != null) {
-                ok = mFrameRateRange.contains(Utils.intRangeFor(rate));
+                ok = mFrameRateRange.contains(Utils.intRangeFor(rate.doubleValue()));
             }
             if (ok && height != null && width != null) {
                 ok = Math.min(height, width) <= mSmallerDimensionUpperLimit;
@@ -999,7 +1000,7 @@ public final class MediaCodecInfo {
                                 new Rational(widthInBlocks, heightInBlocks))
                         && mAspectRatioRange.contains(new Rational(width, height));
                 if (ok && rate != null) {
-                    double blocksPerSec = blockCount * rate;
+                    double blocksPerSec = blockCount * rate.doubleValue();
                     ok = mBlocksPerSecondRange.contains(
                             Utils.longRangeFor(blocksPerSec));
                 }
@@ -1014,7 +1015,7 @@ public final class MediaCodecInfo {
             final Map<String, Object> map = format.getMap();
             Integer width = (Integer)map.get(MediaFormat.KEY_WIDTH);
             Integer height = (Integer)map.get(MediaFormat.KEY_HEIGHT);
-            Double rate = (Double)map.get(MediaFormat.KEY_FRAME_RATE);
+            Number rate = (Number)map.get(MediaFormat.KEY_FRAME_RATE);
 
             // we ignore color-format for now as it is not reliably reported by codec
 
@@ -1062,7 +1063,7 @@ public final class MediaCodecInfo {
         }
 
         private void initWithPlatformLimits() {
-            mBitrateRange = Range.create(0, Integer.MAX_VALUE);
+            mBitrateRange = BITRATE_RANGE;
 
             mWidthRange  = SIZE_RANGE;
             mHeightRange = SIZE_RANGE;
@@ -1091,7 +1092,7 @@ public final class MediaCodecInfo {
             Size blockSize = new Size(mBlockWidth, mBlockHeight);
             Size alignment = new Size(mWidthAlignment, mHeightAlignment);
             Range<Integer> counts = null, widths = null, heights = null;
-            Range<Integer> frameRates = null;
+            Range<Integer> frameRates = null, bitRates = null;
             Range<Long> blockRates = null;
             Range<Rational> ratios = null, blockRatios = null;
 
@@ -1149,6 +1150,16 @@ public final class MediaCodecInfo {
                     frameRates = null;
                 }
             }
+            bitRates = Utils.parseIntRange(map.get("bitrate-range"), null);
+            if (bitRates != null) {
+                try {
+                    bitRates = bitRates.intersect(BITRATE_RANGE);
+                } catch (IllegalArgumentException e) {
+                    Log.w(TAG,  "bitrate range (" + bitRates
+                            + ") is out of limits: " + BITRATE_RANGE);
+                    bitRates = null;
+                }
+            }
 
             checkPowerOfTwo(
                     blockSize.getWidth(), "block-size width must be power of two");
@@ -1197,6 +1208,9 @@ public final class MediaCodecInfo {
                 if (frameRates != null) {
                     mFrameRateRange = FRAME_RATE_RANGE.intersect(frameRates);
                 }
+                if (bitRates != null) {
+                    mBitrateRange = BITRATE_RANGE.intersect(bitRates);
+                }
             } else {
                 // no unsupported profile/levels, so restrict values to known limits
                 if (widths != null) {
@@ -1226,6 +1240,9 @@ public final class MediaCodecInfo {
                 }
                 if (frameRates != null) {
                     mFrameRateRange = mFrameRateRange.intersect(frameRates);
+                }
+                if (bitRates != null) {
+                    mBitrateRange = mBitrateRange.intersect(bitRates);
                 }
             }
             updateLimits();
