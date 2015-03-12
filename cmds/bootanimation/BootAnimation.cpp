@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (C) 2015 Rockchip
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,7 +220,11 @@ status_t BootAnimation::initTexture(const Animation::Frame& frame)
     if (codec) {
         codec->setDitherImage(false);
         codec->decode(&stream, &bitmap,
+                #ifdef USE_565
+                kRGB_565_SkColorType,
+                #else
                 kN32_SkColorType,
+                #endif
                 SkImageDecoder::kDecodePixels_Mode);
         delete codec;
     }
@@ -311,6 +316,15 @@ status_t BootAnimation::readyToRun() {
     sp<Surface> s = control->getSurface();
 
     // initialize opengl and egl
+#ifdef USE_565
+    const EGLint attribs[] = {
+            EGL_RED_SIZE,   5,
+            EGL_GREEN_SIZE, 6,
+            EGL_BLUE_SIZE,  5,
+            EGL_DEPTH_SIZE, 0,
+            EGL_NONE
+    };
+#else
     const EGLint attribs[] = {
             EGL_RED_SIZE,   8,
             EGL_GREEN_SIZE, 8,
@@ -318,6 +332,7 @@ status_t BootAnimation::readyToRun() {
             EGL_DEPTH_SIZE, 0,
             EGL_NONE
     };
+#endif
     EGLint w, h, dummy;
     EGLint numConfigs;
     EGLConfig config;
@@ -396,6 +411,37 @@ status_t BootAnimation::readyToRun() {
             }
         }
     }
+
+#ifdef PRELOAD_BOOTANIMATION
+    // Preload the bootanimation zip on memory, so we don't stutter
+    // when showing the animation
+    FILE* fd;
+    if (encryptedAnimation && access(SYSTEM_ENCRYPTED_BOOTANIMATION_FILE, R_OK) == 0)
+        fd = fopen(SYSTEM_ENCRYPTED_BOOTANIMATION_FILE, "r");
+    else if (access(OEM_BOOTANIMATION_FILE, R_OK) == 0)
+        fd = fopen(OEM_BOOTANIMATION_FILE, "r");
+    else if (access(SYSTEM_BOOTANIMATION_FILE, R_OK) == 0)
+        fd = fopen(SYSTEM_BOOTANIMATION_FILE, "r");
+    else
+        return NO_ERROR;
+
+    if (fd != NULL) {
+        // We could use readahead..
+        // ... if bionic supported it :(
+        //readahead(fd, 0, INT_MAX);
+        void *crappyBuffer = malloc(2*1024*1024);
+        if (crappyBuffer != NULL) {
+            // Read all the zip
+            while (!feof(fd))
+                fread(crappyBuffer, 1024, 2*1024, fd);
+
+            free(crappyBuffer);
+        } else {
+            ALOGW("Unable to allocate memory to preload the animation");
+        }
+        fclose(fd);
+    }
+#endif
 
     return NO_ERROR;
 }
@@ -788,6 +834,7 @@ bool BootAnimation::movie()
 
     mZip->endIteration(cookie);
 
+#ifndef CONTINUOUS_SPLASH
     // clear screen
     glShadeModel(GL_FLAT);
     glDisable(GL_DITHER);
@@ -810,6 +857,7 @@ bool BootAnimation::movie()
 
     eglSwapBuffers(mDisplay, mSurface);
 
+#endif
     glBindTexture(GL_TEXTURE_2D, 0);
     glEnable(GL_TEXTURE_2D);
     glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
