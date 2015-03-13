@@ -90,9 +90,9 @@
                 android:paddingStart="20dp" 
                 android:paddingEnd="20dp"
                 android:src="@drawable/ic_sysbar_back"
+                android:scaleType="centerInside"
                 systemui:keyCode="4"
                 android:layout_weight="0"
-                android:scaleType="center"
                 android:contentDescription="@string/accessibility_back"
                 />
             <!--View 
@@ -107,6 +107,7 @@
                 android:paddingStart="20dp" 
                 android:paddingEnd="20dp"
                 android:src="@drawable/ic_sysbar_home"
+                android:scaleType="centerInside"
                 systemui:keyCode="3"
                 systemui:keyRepeat="false"
                 android:layout_weight="0"
@@ -124,6 +125,7 @@
                 android:paddingStart="20dp" 
                 android:paddingEnd="20dp"
                 android:src="@drawable/ic_sysbar_recent"
+                android:scaleType="centerInside"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 />
@@ -155,6 +157,7 @@
                     android:layout_marginEnd="2dp"
                     android:contentDescription="@string/accessibility_menu"
                     android:src="@drawable/ic_sysbar_menu"
+                android:scaleType="centerInside"
                     android:visibility="invisible"
                     systemui:keyCode="82" />
 
@@ -298,6 +301,7 @@
                 android:layout_width="92dp" android:paddingStart="12dp" android:paddingEnd="12dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_back"
+                android:scaleType="centerInside"
                 systemui:keyCode="4"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_back"
@@ -306,6 +310,7 @@
                 android:layout_width="92dp" android:paddingStart="12dp" android:paddingEnd="12dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_home"
+                android:scaleType="centerInside"
                 systemui:keyCode="3"
                 systemui:keyRepeat="true"
                 android:layout_weight="0"
@@ -315,6 +320,7 @@
                 android:layout_width="92dp" android:paddingStart="12dp" android:paddingEnd="12dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_recent"
+                android:scaleType="centerInside"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 />
@@ -345,6 +351,7 @@
                     android:layout_height="match_parent"
                     android:layout_marginEnd="2dp"
                     android:src="@drawable/ic_sysbar_menu"
+                android:scaleType="centerInside"
                     systemui:keyCode="82"
                     android:visibility="invisible"
                     android:contentDescription="@string/accessibility_menu" />
