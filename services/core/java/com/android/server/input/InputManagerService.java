@@ -114,7 +114,7 @@ public class InputManagerService extends IInputManager.Stub
     private static final int MSG_RELOAD_DEVICE_ALIASES = 5;
 
     // Pointer to native input manager service object.
-    private final int mPtr;
+    private final long mPtr;
 
     private final Context mContext;
     private final InputManagerHandler mHandler;
@@ -153,7 +153,7 @@ public class InputManagerService extends IInputManager.Stub
     IInputFilter mInputFilter; // guarded by mInputFilterLock
     InputFilterHost mInputFilterHost; // guarded by mInputFilterLock
 
-    private static native int nativeInit(InputManagerService service,
+    private static native long nativeInit(InputManagerService service,
             Context context, MessageQueue messageQueue);
     private static native void nativeStart(long ptr);
     private static native void nativeSetDisplayViewport(long ptr, boolean external,
@@ -195,8 +195,8 @@ public class InputManagerService extends IInputManager.Stub
     private static native void nativeReloadDeviceAliases(long ptr);
     private static native String nativeDump(long ptr);
     private static native void nativeMonitor(long ptr);
-    private static native void nativedispatchMouse(float x, float y, int w, int h, int ptr);
-    private static native void nativedispatchMouseByCd(float x, float y, int ptr);
+    private static native void nativedispatchMouse(float x, float y, int w, int h, long ptr);
+    private static native void nativedispatchMouseByCd(float x, float y, long ptr);
 
     // Input event injection constants defined in InputDispatcher.h.
     private static final int INPUT_EVENT_INJECTION_SUCCEEDED = 0;

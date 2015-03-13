@@ -1355,7 +1355,7 @@ static void nativeMonitor(JNIEnv* env, jclass clazz, jlong ptr) {
 //$_rbox_$_modify_$   make a function interface here to painter the mouse pointer
 //$_rbox_$_modify_$_begin
 static void android_server_InputManager_nativedispatchMouse(JNIEnv* env,
-		jclass clazz,jfloat x,jfloat y,jint w,jint h,jint ptr) {
+		jclass clazz, jfloat x, jfloat y, jint w, jint h, jlong ptr) {
     NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
 
     int mID;
@@ -1403,7 +1403,7 @@ static void android_server_InputManager_nativedispatchMouse(JNIEnv* env,
 //$_rbox_$_modify_$  by Coordinate rather than by Offset
 //$_rbox_$_modify_$_begin
 static void android_server_InputManager_nativedispatchMouseByCd(JNIEnv* env,
-jclass clazz,jfloat x,jfloat y,jint ptr) {
+jclass clazz, jfloat x, jfloat y, jlong ptr) {
    NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
    int mID;
    char *mgetID=new char[PROPERTY_VALUE_MAX];
@@ -1414,11 +1414,11 @@ jclass clazz,jfloat x,jfloat y,jint ptr) {
    mPointerController=im->obtainPointerController(mID);
 
    //start to dispatchMouse
-    mPointerController->setPresentation(
+   mPointerController->setPresentation(
                     PointerControllerInterface::PRESENTATION_POINTER);
-    mPointerController->setPosition(x,y);
-    mPointerController->unfade(PointerControllerInterface::TRANSITION_IMMEDIATE);
-	//mPointerController->fade(PointerControllerInterface::TRANSITION_IMMEDIATE);
+   mPointerController->setPosition(x,y);
+   mPointerController->unfade(PointerControllerInterface::TRANSITION_IMMEDIATE);
+   //mPointerController->fade(PointerControllerInterface::TRANSITION_IMMEDIATE);
 }
 
 // ----------------------------------------------------------------------------
@@ -1479,9 +1479,9 @@ static JNINativeMethod gInputManagerMethods[] = {
             (void*) nativeDump },
     { "nativeMonitor", "(J)V",
             (void*) nativeMonitor },
-    { "nativedispatchMouse", "(FFIII)V",
+    { "nativedispatchMouse", "(FFIIJ)V",
 	    (void*) android_server_InputManager_nativedispatchMouse },
-    { "nativedispatchMouseByCd", "(FFI)V",
+    { "nativedispatchMouseByCd", "(FFJ)V",
 	    (void*) android_server_InputManager_nativedispatchMouseByCd },
 };
 
