@@ -1446,9 +1446,10 @@ class MountService extends IMountService.Stub
         mVolumeStates.clear();
 
         Resources resources = mContext.getResources();
-
+        boolean isTablet = "tablet".equals(SystemProperties.get("ro.target.product", "tablet"));
         int id = com.android.internal.R.xml.storage_list;
-        XmlResourceParser parser = resources.getXml(id);
+        int boxid = com.android.internal.R.xml.storage_list_box;
+        XmlResourceParser parser = resources.getXml(isTablet ?id:boxid);
         AttributeSet attrs = Xml.asAttributeSet(parser);
         String enableUms= SystemProperties.get("ro.factory.hasUMS","false");
         
