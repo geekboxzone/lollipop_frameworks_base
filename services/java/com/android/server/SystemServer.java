@@ -678,7 +678,7 @@ public final class SystemServer {
                 mSystemServiceManager.startService("com.android.server.wifi.RttService");
 
                 if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_ETHERNET)) {
-                    //mSystemServiceManager.startService(ETHERNET_SERVICE_CLASS);
+                    mSystemServiceManager.startService(ETHERNET_SERVICE_CLASS);
                 }
 
                 try {
