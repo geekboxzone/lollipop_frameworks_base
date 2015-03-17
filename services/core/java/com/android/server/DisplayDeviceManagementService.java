@@ -67,6 +67,10 @@ class DisplayDeviceManagementService extends IDisplayDeviceManagementService.Stu
             return;
         }
 
+        if ("unknown".equals(SystemProperties.get("ro.target.product", "unknown"))) {
+            return;
+        }
+
         mConnector = new NativeDaemonConnector(
                 new DisplaydCallbackReceiver(), "displayd", 10, DISPLAYD_TAG, 160, null);
         Thread thread = new Thread(mConnector, DISPLAYD_TAG);
