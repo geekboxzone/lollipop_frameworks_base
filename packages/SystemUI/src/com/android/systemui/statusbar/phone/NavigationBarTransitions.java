@@ -177,13 +177,11 @@ public final class NavigationBarTransitions extends BarTransitions {
                 // on, we need them to come up faster so that they can catch this motion
                 // event
                 applyLightsOut(false, false, false);
-              
                 try {
-                    mBarService.setSystemUiVisibility(0, View.SYSTEM_UI_FLAG_LOW_PROFILE,
+                    if (null != mBarService) {
+                        mBarService.setSystemUiVisibility(0, View.SYSTEM_UI_FLAG_LOW_PROFILE,
                             "LightsOutListener");
-                    if(null!=mBarService){
-                    	mBarService.setSystemUiVisibility(0, View.SYSTEM_UI_FLAG_LOW_PROFILE);
-		    }
+                    }
                 } catch (android.os.RemoteException ex) {
                 }
             }
