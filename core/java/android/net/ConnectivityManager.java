@@ -407,12 +407,14 @@ public class ConnectivityManager {
      * It may or may not be providing security services.
      */
     public static final int TYPE_VPN = 17;
+   /** {@hide} */
+    public static final int TYPE_PPPOE=18;
 
     /** {@hide} */
     public static final int MAX_RADIO_TYPE   = TYPE_VPN;
 
     /** {@hide} */
-    public static final int MAX_NETWORK_TYPE = TYPE_VPN;
+    public static final int MAX_NETWORK_TYPE = TYPE_PPPOE;
 
     /**
      * If you want to set the default network preference,you can directly
@@ -504,6 +506,8 @@ public class ConnectivityManager {
                 return "MOBILE_EMERGENCY";
             case TYPE_PROXY:
                 return "PROXY";
+            case TYPE_PPPOE:
+                return "PPPOE";
             default:
                 return Integer.toString(type);
         }

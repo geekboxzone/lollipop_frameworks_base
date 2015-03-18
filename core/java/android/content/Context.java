@@ -2111,6 +2111,7 @@ public abstract class Context {
             WIFI_P2P_SERVICE,
             WIFI_SCANNING_SERVICE,
             //@hide: ETHERNET_SERVICE,
+            //@hide: PPPOE_SERVICE,
             WIFI_RTT_SERVICE,
             NSD_SERVICE,
             AUDIO_SERVICE,
@@ -2529,6 +2530,21 @@ public abstract class Context {
      * @hide
      */
     public static final String ETHERNET_SERVICE = "ethernet";
+
+//$_rbox_$_modify_$_blb_20150303: for pppoe service
+
+    /**
+     * Use with {@link #getSystemService} to retrieve a {@link
+     * android.net.pppoe.PppoeManager} for handling management of
+     * Ethernet access.
+     *
+     * @see #getSystemService
+     * @see android.net.pppoe.PppoeManager
+     * 
+     *@hide
+     */
+    public static final String PPPOE_SERVICE = "pppoe";
+//$_rbox_$_modify_$ end
 
     /**
      * Use with {@link #getSystemService} to retrieve a {@link

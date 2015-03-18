@@ -280,8 +280,14 @@ public final class NetworkCapabilities implements Parcelable {
      */
     public static final int TRANSPORT_VPN = 4;
 
+    /**
+     *Indicates this network uses a PPPOE transport.
+     *@hide
+     */
+    public static final int TRANSPORT_PPPOE = 5;
+
     private static final int MIN_TRANSPORT = TRANSPORT_CELLULAR;
-    private static final int MAX_TRANSPORT = TRANSPORT_VPN;
+    private static final int MAX_TRANSPORT = TRANSPORT_PPPOE; //TRANSPORT_VPN;
 
     /**
      * Adds the given transport type to this {@code NetworkCapability} instance.
@@ -580,6 +586,7 @@ public final class NetworkCapabilities implements Parcelable {
                 case TRANSPORT_BLUETOOTH:   transports += "BLUETOOTH"; break;
                 case TRANSPORT_ETHERNET:    transports += "ETHERNET"; break;
                 case TRANSPORT_VPN:         transports += "VPN"; break;
+                case TRANSPORT_PPPOE:       transports += "PPPOE"; break;
             }
             if (++i < types.length) transports += "|";
         }
