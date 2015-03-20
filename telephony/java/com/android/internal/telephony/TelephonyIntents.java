@@ -395,4 +395,8 @@ public class TelephonyIntents {
      */
     public static final String ACTION_SET_RADIO_CAPABILITY_FAILED =
             "android.intent.action.ACTION_SET_RADIO_CAPABILITY_FAILED";
+    public static final String ACTION_MODEM_FAST_OOS_IND =
+            "intel.intent.action.MODEM_FAST_OOS_IND";
+
+    public static final String EXTRA_TOOS_STATE = "state";
 }
