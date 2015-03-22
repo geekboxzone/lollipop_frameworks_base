@@ -293,7 +293,7 @@ public class NetworkMonitor extends StateMachine {
                 DEFAULT_REEVALUATE_DELAY_MS);
 
         mIsCaptivePortalCheckEnabled = Settings.Global.getInt(mContext.getContentResolver(),
-                Settings.Global.CAPTIVE_PORTAL_DETECTION_ENABLED, 1) == 1;
+                Settings.Global.CAPTIVE_PORTAL_DETECTION_ENABLED, 0) == 1;
 
         mCaptivePortalLoggedInResponseToken = String.valueOf(new Random().nextLong());
 
