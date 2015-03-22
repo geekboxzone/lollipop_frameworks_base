@@ -264,21 +264,19 @@ public class NetworkControllerImpl extends BroadcastReceiver
         return mPhone.getPhoneType() != TelephonyManager.PHONE_TYPE_NONE;
     }
 
-    private MobileSignalController getDataController() {
-        int dataSubId = SubscriptionManager.getDefaultDataSubId();
-        if (!SubscriptionManager.isValidSubscriptionId(dataSubId)) {
-            if (DEBUG) Log.e(TAG, "No data sim selected");
+    private MobileSignalController getDataController(int subId) {
+        if (!SubscriptionManager.isValidSubscriptionId(subId)) {
             return mDefaultSignalController;
         }
-        if (mMobileSignalControllers.containsKey(dataSubId)) {
-            return mMobileSignalControllers.get(dataSubId);
+        if (mMobileSignalControllers.containsKey(subId)) {
+            return mMobileSignalControllers.get(subId);
         }
-        if (DEBUG) Log.e(TAG, "Cannot find controller for data sub: " + dataSubId);
+        if (DEBUG) Log.e(TAG, "Cannot find controller for sub: " + subId);
         return mDefaultSignalController;
     }
 
-    public String getMobileNetworkName() {
-        MobileSignalController controller = getDataController();
+    public String getMobileNetworkName(int subId) {
+        MobileSignalController controller = getDataController(subId);
         return controller != null ? controller.getState().networkName : "";
     }
 
@@ -660,7 +658,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
     }
 
     private boolean isMobileDataConnected() {
-        MobileSignalController controller = getDataController();
+        int dataSubId = SubscriptionManager.getDefaultDataSubId();
+        MobileSignalController controller = getDataController(dataSubId);
         return controller != null ? controller.getState().dataConnected : false;
     }
 
@@ -1192,11 +1191,14 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     || mCurrentState.iconGroup == TelephonyIcons.ROAMING;
 
             // Only send data sim callbacks to QS.
-            if (mCurrentState.dataSim) {
+            //if (mCurrentState.dataSim) {
                 int qsTypeIcon = showDataIcon ? icons.mQsDataType[mCurrentState.inetForNetwork] : 0;
                 int length = mSignalsChangedCallbacks.size();
                 for (int i = 0; i < length; i++) {
-                    mSignalsChangedCallbacks.get(i).onMobileDataSignalChanged(mCurrentState.enabled
+                    NetworkSignalChangedCallback callback = mSignalsChangedCallbacks.get(i);
+                    int slotId = SubscriptionManager.getSlotId(mSubscriptionInfo.getSubscriptionId());
+                    if (callback.getSlotId() == slotId) {
+                        callback.onMobileDataSignalChanged(mCurrentState.enabled
                             && !mCurrentState.isEmergency,
                             getQsCurrentIconId(), contentDescription,
                             qsTypeIcon,
@@ -1206,8 +1208,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
                             mCurrentState.isEmergency ? null : mCurrentState.networkName,
                             // Only wide if actually showing something.
                             icons.mIsWide && qsTypeIcon != 0);
+                    }
                 }
-            }
+            //}
             int typeIcon = showDataIcon ? icons.mDataType : 0;
             int signalClustersLength = mSignalClusters.size();
             for (int i = 0; i < signalClustersLength; i++) {

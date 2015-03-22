@@ -964,7 +964,7 @@ public class SubscriptionManager {
     }
 
     /** @hide */
-    public int getDefaultDataPhoneId() {
+    public static int getDefaultDataPhoneId() {
         return getPhoneId(getDefaultDataSubId());
     }
 

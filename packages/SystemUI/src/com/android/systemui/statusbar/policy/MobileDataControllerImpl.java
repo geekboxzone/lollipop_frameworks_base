@@ -105,7 +105,12 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
     }
 
     public DataUsageInfo getDataUsageInfo() {
-        final String subscriberId = getActiveSubscriberId(mContext);
+        return getDataUsageInfo(SubscriptionManager.DEFAULT_SIM_SLOT_INDEX);
+    }
+
+    public DataUsageInfo getDataUsageInfo(int slotId) {
+        final int subId = getSubId(slotId);
+        final String subscriberId = getActiveSubscriberId(subId, mContext);
         if (subscriberId == null) {
             return warn("no subscriber id");
         }
@@ -162,7 +167,7 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
                 usage.warningLevel = DEFAULT_WARNING_LEVEL;
             }
             if (usage != null) {
-                usage.carrier = mNetworkController.getMobileNetworkName();
+                usage.carrier = mNetworkController.getMobileNetworkName(subId);
             }
             return usage;
         } catch (RemoteException e) {
@@ -211,15 +216,27 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
                 && mTelephonyManager.getSimState() == SIM_STATE_READY;
     }
 
+    public boolean isMobileDataSupported(int slotId) {
+        // require both supported network and ready SIM
+        return mConnectivityManager.isNetworkSupported(TYPE_MOBILE)
+                && mTelephonyManager.getSimState(slotId) == SIM_STATE_READY
+                && SubscriptionManager.getDefaultDataPhoneId() == slotId;
+    }
+
     public boolean isMobileDataEnabled() {
         return mTelephonyManager.getDataEnabled();
     }
 
-    private static String getActiveSubscriberId(Context context) {
+    private static String getActiveSubscriberId(int subId, Context context) {
         final TelephonyManager tele = TelephonyManager.from(context);
-        final String actualSubscriberId = tele.getSubscriberId(
-                SubscriptionManager.getDefaultDataSubId());
+        final String actualSubscriberId = tele.getSubscriberId(subId);
         return actualSubscriberId;
+    }
+
+    private static int getSubId(int slotId) {
+        final int[] subIds = SubscriptionManager.getSubId(slotId);
+        final int subId = (subIds != null && subIds.length > 0) ? subIds[0] : SubscriptionManager.DEFAULT_SUBSCRIPTION_ID;
+        return subId;
     }
 
     private String formatDateRange(long start, long end) {

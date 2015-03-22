@@ -40,6 +40,7 @@ public interface NetworkController {
         void onNoSimVisibleChanged(boolean visible);
         void onAirplaneModeChanged(boolean enabled);
         void onMobileDataEnabled(boolean enabled);
+        int getSlotId();
     }
 
     /**
@@ -76,9 +77,11 @@ public interface NetworkController {
      */
     public interface MobileDataController {
         boolean isMobileDataSupported();
+        boolean isMobileDataSupported(int slotId);
         boolean isMobileDataEnabled();
         void setMobileDataEnabled(boolean enabled);
         DataUsageInfo getDataUsageInfo();
+        DataUsageInfo getDataUsageInfo(int slotId);
 
         public static class DataUsageInfo {
             public String carrier;

@@ -236,6 +236,12 @@ public class WifiTile extends QSTile<QSTile.SignalState> {
         public void onMobileDataEnabled(boolean enabled) {
             // noop
         }
+
+        @Override
+        public int getSlotId() {
+            // noop
+            return 0;
+        }
     };
 
     private final class WifiDetailAdapter implements DetailAdapter,

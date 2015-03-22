@@ -26,6 +26,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import com.android.systemui.R;
@@ -34,6 +35,7 @@ import com.android.systemui.qs.tiles.AirplaneModeTile;
 import com.android.systemui.qs.tiles.BluetoothTile;
 import com.android.systemui.qs.tiles.CastTile;
 import com.android.systemui.qs.tiles.CellularTile;
+import com.android.systemui.qs.tiles.CellularTileForSlot;
 import com.android.systemui.qs.tiles.ColorInversionTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
 import com.android.systemui.qs.tiles.HotspotTile;
@@ -257,6 +259,7 @@ public class QSTileHost implements QSTile.Host {
         else if (tileSpec.equals("bt")) return new BluetoothTile(this);
         else if (tileSpec.equals("inversion")) return new ColorInversionTile(this);
         else if (tileSpec.equals("cell")) return new CellularTile(this);
+        else if (tileSpec.equals("cell2")) return new CellularTileForSlot(this, 1);
         else if (tileSpec.equals("airplane")) return new AirplaneModeTile(this);
         else if (tileSpec.equals("rotation")) return new RotationLockTile(this);
         else if (tileSpec.equals("flashlight")) return new FlashlightTile(this);
@@ -269,8 +272,16 @@ public class QSTileHost implements QSTile.Host {
 
     private List<String> loadTileSpecs() {
         final Resources res = mContext.getResources();
-        final String defaultTileList = res.getString(R.string.quick_settings_tiles_default);
-        final String defaultTileList_bt = res.getString(R.string.quick_settings_tiles_default_bt);
+        final String defaultTileList;
+        final String defaultTileList_bt;
+        if (TelephonyManager.getDefault().getPhoneCount() > 1) {
+            defaultTileList = res.getString(R.string.quick_settings_tiles_default_dualsim);
+            defaultTileList_bt = res.getString(R.string.quick_settings_tiles_default_bt_dualsim);
+        } else {
+            defaultTileList = res.getString(R.string.quick_settings_tiles_default);
+            defaultTileList_bt = res.getString(R.string.quick_settings_tiles_default_bt);
+        }
+
         String tileList = Secure.getStringForUser(mContext.getContentResolver(), TILES_SETTING,
                 mUserTracker.getCurrentUserId());
         if (tileList == null) {

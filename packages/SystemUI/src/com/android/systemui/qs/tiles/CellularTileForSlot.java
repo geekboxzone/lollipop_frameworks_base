@@ -23,6 +23,7 @@ import android.content.res.Resources;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.telephony.SubscriptionManager;
 
 import com.android.systemui.R;
 import com.android.systemui.qs.QSTile;
@@ -34,7 +35,7 @@ import com.android.systemui.statusbar.policy.NetworkController.MobileDataControl
 import com.android.systemui.statusbar.policy.NetworkController.NetworkSignalChangedCallback;
 
 /** Quick settings tile: Cellular **/
-public class CellularTile extends QSTile<QSTile.SignalState> {
+public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
     private static final Intent CELLULAR_SETTINGS = new Intent().setComponent(new ComponentName(
             "com.android.settings", "com.android.settings.Settings$DataUsageSummaryActivity"));
 
@@ -42,11 +43,14 @@ public class CellularTile extends QSTile<QSTile.SignalState> {
     private final MobileDataController mDataController;
     private final CellularDetailAdapter mDetailAdapter;
 
-    public CellularTile(Host host) {
+    private int mSlotId = 0;
+
+    public CellularTileForSlot(Host host, int slotId) {
         super(host);
         mController = host.getNetworkController();
         mDataController = mController.getMobileDataController();
         mDetailAdapter = new CellularDetailAdapter();
+        this.mSlotId = slotId;
     }
 
     @Override
@@ -203,7 +207,7 @@ public class CellularTile extends QSTile<QSTile.SignalState> {
 
         @Override
         public int getSlotId() {
-            return 0;
+            return mSlotId;
         }
     };
 
@@ -216,14 +220,16 @@ public class CellularTile extends QSTile<QSTile.SignalState> {
 
         @Override
         public Boolean getToggleState() {
-            return mDataController.isMobileDataSupported()
+            return mDataController.isMobileDataSupported(mSlotId)
                     ? mDataController.isMobileDataEnabled()
                     : null;
         }
 
         @Override
         public Intent getSettingsIntent() {
-            return CELLULAR_SETTINGS;
+            Intent intent = CELLULAR_SETTINGS;
+            SubscriptionManager.putPhoneIdAndSubIdExtra(intent, mSlotId);
+            return intent;
         }
 
         @Override
@@ -236,7 +242,7 @@ public class CellularTile extends QSTile<QSTile.SignalState> {
             final DataUsageDetailView v = (DataUsageDetailView) (convertView != null
                     ? convertView
                     : LayoutInflater.from(mContext).inflate(R.layout.data_usage, parent, false));
-            final DataUsageInfo info = mDataController.getDataUsageInfo();
+            final DataUsageInfo info = mDataController.getDataUsageInfo(mSlotId);
             if (info == null) return v;
             v.bind(info);
             return v;
