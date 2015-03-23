@@ -2094,6 +2094,19 @@ public final class Settings {
         public static final String HDMI_LCD_TIMEOUT = "hdmi_lcd_timeout";
 
         /**
+         * The button lights off timeout seconds
+         *@hide
+         */
+        public static final String BUTTON_LIGHTS_OFF_TIMEOUT = "button_lights_off_timeout";
+
+        /**
+         * The button lights enable. 1 = enabled, 0 = disabled.
+         *@hide
+         */
+        public static final String BUTTON_LIGHTS_ENABLED = "button_lights_enabled";
+
+
+        /**
          * SCREEN_BRIGHTNESS_MODE value for manual mode.
          */
         public static final int SCREEN_BRIGHTNESS_MODE_MANUAL = 0;

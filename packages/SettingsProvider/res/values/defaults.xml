@@ -214,4 +214,10 @@
 
     <!--Default for HDMI_LCD_TIMEOUT-->
         <integer name="def_hdmi_lcd_timeout">-1</integer>
+
+    <!-- Default for Settings.System.BUTTON_LIGHTS_ENABLED -->
+    <bool name="def_button_lights_enabled">true</bool>
+
+    <!--Default for Settings.System.BUTTON_LIGHTS_OFF_TIMEOUT-->
+    <integer name="def_button_lights_off_timeout">1500</integer>
 </resources>

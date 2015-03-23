@@ -2309,6 +2309,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             loadSetting(stmt, Settings.System.SCREEN_OFF_TIMEOUT,
                      SystemProperties.getInt("ro.rk.screenoff_time", mContext.getResources().getInteger(R.integer.def_screen_off_timeout)));
 
+            // Set default button lights settings
+            loadBooleanSetting(stmt,Settings.System.BUTTON_LIGHTS_ENABLED,
+                    R.bool.def_button_lights_enabled);
+            loadIntegerSetting(stmt, Settings.System.BUTTON_LIGHTS_OFF_TIMEOUT,
+                    R.integer.def_button_lights_off_timeout);
+			
             // Set default cdma DTMF type
             loadSetting(stmt, Settings.System.DTMF_TONE_TYPE_WHEN_DIALING, 0);
 

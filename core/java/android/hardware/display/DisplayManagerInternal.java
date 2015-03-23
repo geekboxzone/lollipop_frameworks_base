@@ -192,6 +192,11 @@ public abstract class DisplayManagerInternal {
         public int dozeScreenBrightness;
         public int dozeScreenState;
 
+        public boolean useButtonLights;
+        public boolean buttonLightsOn;
+        public int buttonLightsOffTimeout;
+        public int buttonLightsTmpBrightness;
+
         public DisplayPowerRequest() {
             policy = POLICY_BRIGHT;
             useProximitySensor = false;
@@ -201,6 +206,10 @@ public abstract class DisplayManagerInternal {
             blockScreenOn = false;
             dozeScreenBrightness = PowerManager.BRIGHTNESS_DEFAULT;
             dozeScreenState = Display.STATE_UNKNOWN;
+            useButtonLights = false;
+            buttonLightsOn = false;
+            buttonLightsOffTimeout = -1;
+            buttonLightsTmpBrightness = -1;
         }
 
         public DisplayPowerRequest(DisplayPowerRequest other) {
@@ -222,6 +231,10 @@ public abstract class DisplayManagerInternal {
             boostScreenBrightness = other.boostScreenBrightness;
             dozeScreenBrightness = other.dozeScreenBrightness;
             dozeScreenState = other.dozeScreenState;
+            useButtonLights = other.useButtonLights;
+            buttonLightsOn = other.buttonLightsOn;
+            buttonLightsOffTimeout = other.buttonLightsOffTimeout;
+            buttonLightsTmpBrightness = other.buttonLightsTmpBrightness;
         }
 
         @Override
@@ -241,7 +254,11 @@ public abstract class DisplayManagerInternal {
                     && lowPowerMode == other.lowPowerMode
                     && boostScreenBrightness == other.boostScreenBrightness
                     && dozeScreenBrightness == other.dozeScreenBrightness
-                    && dozeScreenState == other.dozeScreenState;
+                    && dozeScreenState == other.dozeScreenState
+                    && useButtonLights == other.useButtonLights
+                    && buttonLightsOn == other.buttonLightsOn
+                    && buttonLightsOffTimeout == other.buttonLightsOffTimeout
+                    && buttonLightsTmpBrightness == other.buttonLightsTmpBrightness;
         }
 
         @Override
@@ -260,7 +277,11 @@ public abstract class DisplayManagerInternal {
                     + ", lowPowerMode=" + lowPowerMode
                     + ", boostScreenBrightness=" + boostScreenBrightness
                     + ", dozeScreenBrightness=" + dozeScreenBrightness
-                    + ", dozeScreenState=" + Display.stateToString(dozeScreenState);
+                    + ", dozeScreenState=" + Display.stateToString(dozeScreenState)
+                    + ", useButtonLights=" + useButtonLights
+                    + ", buttonLightsOn=" + buttonLightsOn
+                    + ", buttonLightsOffTimeout=" + buttonLightsOffTimeout
+                    + ", buttonLightsTmpBrightness=" + buttonLightsTmpBrightness;
         }
 
         public static String policyToString(int policy) {

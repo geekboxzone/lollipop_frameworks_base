@@ -435,6 +435,14 @@ public final class PowerManagerService extends SystemService
     // True if hdmi is connect.
     private boolean mHdmiConnect;
 
+    //------modify begin for button & keyboard backlight by cx@rock-chips.com------
+    private static final int DEFAULT_BUTTON_LIGHTS_OFF_TIMEOUT = 1500;
+    private boolean mButtonLightsEnabled = false;
+    private boolean mButtonLightsOn = false;
+    private int mButtonLightsOffTimeoutSetting;
+    private int mTemporaryButtonBrightnessSettingOverride = -1;
+    //------modify end------
+
     // True if theater mode is enabled
     private boolean mTheaterModeEnabled;
 
@@ -595,6 +603,14 @@ public final class PowerManagerService extends SystemService
                     Settings.System.HDMI_LCD_TIMEOUT),
                     false, mSettingsObserver, UserHandle.USER_ALL);
             //-----------------end------------------
+            //------modify begin for button & keyboard backlight by cx@rock-chips.com------
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.BUTTON_LIGHTS_ENABLED),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.BUTTON_LIGHTS_OFF_TIMEOUT),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
+            //------modify end------
             resolver.registerContentObserver(Settings.Global.getUriFor(
                     Settings.Global.THEATER_MODE_ON),
                     false, mSettingsObserver, UserHandle.USER_ALL);
@@ -713,7 +729,23 @@ public final class PowerManagerService extends SystemService
 	if(isAbleChangeHDMIMode()){
 		turnonScreen();
 	}
-        //----------end--------------- 
+        //----------end---------------
+        //------modify begin for button & keyboard backlight by cx@rock-chips.com------
+        mButtonLightsOffTimeoutSetting = Settings.System.getIntForUser(resolver,
+                Settings.System.BUTTON_LIGHTS_OFF_TIMEOUT, DEFAULT_BUTTON_LIGHTS_OFF_TIMEOUT,
+                UserHandle.USER_CURRENT);
+        boolean newenabled = (Settings.System.getIntForUser(resolver,
+                Settings.System.BUTTON_LIGHTS_ENABLED, 1,
+                UserHandle.USER_CURRENT) != 0);
+        if (newenabled && !mButtonLightsEnabled) {
+            mButtonLightsOn = true;
+            mTemporaryButtonBrightnessSettingOverride = mScreenBrightnessSettingDefault;
+        } else {
+            mButtonLightsOn = false;
+            mTemporaryButtonBrightnessSettingOverride = -1;
+        }
+        mButtonLightsEnabled = newenabled;
+        //------modify end------
     }
 
     void updateLowPowerModeLocked() {
@@ -1033,6 +1065,12 @@ public final class PowerManagerService extends SystemService
 		    }
 	    }
 	    //--------------------end-------------------------
+        //------modify begin for button & keyboard backlight by cx@rock-chips.com------
+        if (event == PowerManager.USER_ACTIVITY_EVENT_CAPACITIVE_BUTTON)
+            mButtonLightsOn = true;
+        else
+            mButtonLightsOn = false;
+        //------modify end------
         userActivityInternal(eventTime, event, flags, Process.SYSTEM_UID);
     }
 
@@ -1094,6 +1132,7 @@ public final class PowerManagerService extends SystemService
     private void wakeUpInternal(long eventTime, int uid) {
         synchronized (mLock) {
             if (wakeUpNoUpdateLocked(eventTime, uid)) {
+                mButtonLightsOn = true;
                 updatePowerStateLocked();
             }
         }
@@ -1946,7 +1985,14 @@ public final class PowerManagerService extends SystemService
                 mDisplayPowerRequest.dozeScreenState = Display.STATE_UNKNOWN;
                 mDisplayPowerRequest.dozeScreenBrightness = PowerManager.BRIGHTNESS_DEFAULT;
             }
-
+            //------modify begin for button & keyboard backlight by cx@rock-chips.com------
+            mDisplayPowerRequest.useButtonLights = mButtonLightsEnabled;
+            mDisplayPowerRequest.buttonLightsOn = mButtonLightsOn;
+            mDisplayPowerRequest.buttonLightsOffTimeout = mButtonLightsOffTimeoutSetting;
+            mDisplayPowerRequest.buttonLightsTmpBrightness = mTemporaryButtonBrightnessSettingOverride;
+            mTemporaryButtonBrightnessSettingOverride = -1;
+            mButtonLightsOn = false;
+            //------modify end------
             mDisplayReady = mDisplayManagerInternal.requestPowerState(mDisplayPowerRequest,
                     mRequestWaitForNegativeProximity);
             mRequestWaitForNegativeProximity = false;
