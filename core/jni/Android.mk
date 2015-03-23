@@ -258,6 +258,7 @@ ifeq ($(WITH_NATIVE_BRIDGE), true)
 
 	LOCAL_SRC_FILES += \
 		nativebridgehelper/ABIList.cpp \
+		nativebridgehelper/ELFParser.cpp \
 		nativebridgehelper/AppLibInfo.cpp
 
 	LOCAL_C_INCLUDES += $(LOCAL_PATH)/nativebridgehelper

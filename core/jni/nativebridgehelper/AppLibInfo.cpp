@@ -5,7 +5,7 @@
  * which is subject to a non-disclosure agreement between Intel Corporation
  * and you or your company.
  */
-#define LOG_TAG "NativeBridgeHelper"
+#define LOG_TAG "NativeLibraryHelper"
 //#define LOG_NDEBUG 0
 
 #include <cutils/log.h>
@@ -20,6 +20,7 @@
 
 #include "ABIList.h"
 #include "AppLibInfo.h"
+#include "ELFParser.h"
 
 #define APK_LIB "lib/"
 #define APK_LIB_LEN (sizeof(APK_LIB) - 1)
@@ -35,8 +36,6 @@ using namespace nativebridgehelper;
 
 #define ARR_SIZE(x) sizeof(x)/sizeof(x[0])
 
-#define NBH_DBG     true
-
 const char* oemSpecific[] = {
     #include "OEMWhiteList"
 };
@@ -44,22 +43,18 @@ const char* thirdPartySOes[] = {
     #include "ThirdPartySO"
 };
 
-bool nativebridgehelper::isOEMWhiteListSO(const char* name) {
-    if (!name) return false;
+bool nativebridgehelper::isInOEMWhiteList(const char* pkgName) {
+    if (!pkgName) return false;
 
     bool ret = false;
     size_t len = ARR_SIZE(oemSpecific);
     for (size_t i = 0; i < len; i++) {
-        if (oemSpecific[i] && strlen(name) >= strlen(oemSpecific[i])) {
-            if (!strcmp(name, oemSpecific[i])) {
+        if (oemSpecific[i] && strlen(pkgName) >= strlen(oemSpecific[i])) {
+            if (!strcmp(pkgName, oemSpecific[i])) {
                 ret = true;
                 break;
             }
         }
-    }
-
-    if (NBH_DBG && ret) {
-        ALOGD("%s is oem specific SO", name);
     }
 
     return ret;
@@ -76,7 +71,7 @@ AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
     }
 
     if (path) {
-        ALOGD("apk is %s", path);
+        ALOGV("apk is %s", path);
     }
 
     mAl = al;
@@ -97,6 +92,8 @@ AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
 
     ZipEntryRO next = NULL;
     char fileName[SO_NAME_MAX];
+    char* buffer = NULL;
+    bool mixedX86AndARM = false;
     while ((next = zipFile->nextEntry(cookie)) != NULL) {
         if (zipFile->getEntryFileName(next, fileName, sizeof(fileName))) {
             continue;
@@ -113,7 +110,7 @@ AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
             continue;
         }
 
-        if(NBH_DBG) ALOGD(".so: %s", fileName);
+        ALOGV(".so: %s", fileName);
 
         // according to observation, any library file with name like
         // "*.wav.so" and "*.dat.so" is not a real .so files
@@ -136,6 +133,40 @@ AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
         if (!mAl->getIdxByName(tmpName, &abiIdx)) {
             continue;
         }
+        if (mAl->isX86Compatible(abiIdx)) {
+            if (mixedX86AndARM) {
+                continue;
+            }
+
+            // check if ISV puts some ARM .so into lib/x86/
+            if (buffer != NULL) {
+                free(buffer);
+                buffer = NULL;
+            }
+
+            size_t unCompLen = 0;
+            if (!zipFile->getEntryInfo(next, NULL, &unCompLen, NULL, NULL, NULL, NULL)) {
+                continue;
+            }
+
+            buffer = (char*)malloc(unCompLen * sizeof(char));
+            memset(buffer, 0, sizeof(char) * unCompLen);
+
+            if (zipFile->uncompressEntry(next, buffer, unCompLen * sizeof(char))) {
+                if (!is_elf_from_buffer(buffer)) {
+                    continue;
+                }
+
+                if (is_arm_elf_from_buffer(buffer)) {
+                    mixedX86AndARM = true;
+                    mSONum[abiIdx] = 0;
+                    continue;
+                }
+            } else {
+                ALOGE("%s: uncompress failed\n", fileName);
+                continue;
+            }
+        }
         mSONum[abiIdx]++;
 
         // fill library name
@@ -154,8 +185,8 @@ AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
         struct soInfo* soinfo = NULL;
         List<struct soInfo*>::iterator it = mSOList->begin();
         while (it != mSOList->end()) {
-            //if (!strcmp((*it)->name, tmpName)) {
-            if (cmpIgnPst((*it)->name, tmpName)) {
+            if (!strcmp((*it)->name, tmpName)) {
+            //if (cmpIgnPst((*it)->name, tmpName)) {
                 soinfo = (*it);
                 break;
             }
@@ -175,8 +206,13 @@ AppLibInfo::AppLibInfo(void* apkHandle, const char* path, ABIList* al) {
         soinfo->abiType[abiIdx] = true;
     }
 
+    if (buffer != NULL) {
+        free(buffer);
+        buffer = NULL;
+    }
+
     zipFile->endIteration(cookie);
-    if (NBH_DBG) dump();
+    //dump();
 }
 
 AppLibInfo::~AppLibInfo() {
@@ -214,8 +250,8 @@ bool AppLibInfo::isKnownThirdPartySO(const char* name) {
         }
     }
 
-    if (NBH_DBG && ret) {
-        ALOGD("%s is known 3rd party SO", name);
+    if (ret) {
+        ALOGV("%s is known 3rd party SO", name);
     }
 
     return ret;
@@ -223,14 +259,14 @@ bool AppLibInfo::isKnownThirdPartySO(const char* name) {
 
 
 void AppLibInfo::dump(void) {
-    ALOGD("CURRENT APPLICAITON'S LIBRARY INFOMATION DUMP:");
-    ALOGD("|name|:[%s  %s  %s  %s  %s]",
+    ALOGV("CURRENT APPLICAITON'S LIBRARY INFOMATION DUMP:");
+    ALOGV("|name|:[%s  %s  %s  %s  %s]",
             mAl->getNameByIdx(0), mAl->getNameByIdx(1),
             mAl->getNameByIdx(2), mAl->getNameByIdx(3),
             mAl->getNameByIdx(4));
     List<struct soInfo*>::iterator it = mSOList->begin();
     while (it != mSOList->end()) {
-        ALOGD("|%20s|:[%d  %d  %d  %d  %d]",
+        ALOGV("|%20s|:[%d  %d  %d  %d  %d]",
                 (*it)->name, (*it)->abiType[0], (*it)->abiType[1],
                 (*it)->abiType[2], (*it)->abiType[3], (*it)->abiType[4]);
         it++;
@@ -313,32 +349,24 @@ int AppLibInfo::whoAmI(int sysPrfr) {
         }
 
         if (!mSONum[x86Idx] && !mSONum[referenceARMIdx]) {
-            if (NBH_DBG) {
-                ALOGD("B0, pure JAVA");
-            }
+            ALOGV("B0, pure JAVA");
             break;
         }
 
         if (!mSONum[x86Idx]) {
-            if (NBH_DBG) {
-                ALOGD("B0, no any x86 .so");
-            }
+            ALOGV("B0, no any x86 .so");
             ret = referenceARMIdx;
             break;
         }
 
         // 0. only x86/ or x8664/ has .so(es)
         if (!mSONum[referenceARMIdx]) {
-            if (NBH_DBG) {
-                ALOGD("B0, only x86 .so");
-            }
+            ALOGV("B0, only x86 .so");
             break;
         }
 
         if (detectX86Keywords(is64ABIType)) {
-            if (NBH_DBG) {
-                ALOGD("B1, x86 keywords");
-            }
+            ALOGV("B1, x86 keywords");
             break;
         }
 
@@ -367,32 +395,24 @@ int AppLibInfo::whoAmI(int sysPrfr) {
 
         if (found) {
             ret = referenceARMIdx;
-            if (NBH_DBG) {
-                ALOGD("B2, x86/ misses at least one 3rd party.so");
-            }
+            ALOGV("B2, x86/ misses at least one 3rd party.so");
             break;
         }
 
         if (!x86ISVSO) {
             if (!referenceARMISVSO) {
-                if (NBH_DBG) {
-                    ALOGD("B3, apk just has 3rd party .so and x86 matches all");
-                }
+                ALOGV("B3, apk just has 3rd party .so and x86 matches all");
             } else {
                 ret = referenceARMIdx;
-                if (NBH_DBG) {
-                    ALOGD("B4, x86 misses ISV .so");
-                }
+                ALOGV("B4, x86 misses ISV .so");
             }
         } else {
-            if (NBH_DBG) {
-                ALOGD("B5, x86/ has at least one ISV .so");
-            }
+            ALOGV("B5, x86/ has at least one ISV .so");
         }
 
     } while (0);
 
-    if (NBH_DBG) ALOGD("Actually, I am %s", mAl->getNameByIdx(ret));
+    ALOGV("Actually, I am %s", mAl->getNameByIdx(ret));
     return ret;
 }
 
@@ -409,7 +429,7 @@ bool AppLibInfo::cmpIgnPst(const char* s1, const char* s2) {
     }
 
     ret = ignPst(s1 + i) && ignPst(s2 + i);
-//    if (NBH_DBG) ALOGD("cmpIgnPst. <%s>-<%s>,  %d", s1, s2, ret);
+//  ALOGV("cmpIgnPst. <%s>-<%s>,  %d", s1, s2, ret);
     return ret;
 }
 
@@ -437,9 +457,7 @@ bool AppLibInfo::ignPst(const char* postfix) {
                 n--;
             }
 
-//            if (NBH_DBG) {
-//                ALOGD("check %s, n=%d", tmpStart, n);
-//            }
+//                ALOGV("check %s, n=%d", tmpStart, n);
 
             bool passFlag = false;
             for (size_t i = 0; i < listLen; i++) {
@@ -455,9 +473,7 @@ bool AppLibInfo::ignPst(const char* postfix) {
                     n--;
                 }
 
-//                if (NBH_DBG) {
-//                    ALOGD("check number %s, n=%d", tmpStart, n);
-//                }
+//                    ALOGV("check number %s, n=%d", tmpStart, n);
                 bool allNumeric = true;
                 size_t i = 1;
                 while (*tmpStart != '\0' && i <= n) {

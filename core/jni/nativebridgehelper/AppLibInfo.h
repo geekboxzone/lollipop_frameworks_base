@@ -45,7 +45,7 @@ private:
     size_t mSONum[ABI_TYPE_MAX];
 };
 
-bool isOEMWhiteListSO(const char* name);
+bool isInOEMWhiteList(const char* pkgName);
 }//namespace
 
 #endif//___LIBS_APPLICATIONLIBINFO_H

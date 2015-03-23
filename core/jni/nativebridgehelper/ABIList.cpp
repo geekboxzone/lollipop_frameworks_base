@@ -5,7 +5,8 @@
  * which is subject to a non-disclosure agreement between Intel Corporation
  * and you or your company.
  */
-#define LOG_TAG "NativeBridgeHelper"
+#define LOG_TAG "NativeLibraryHelper"
+//#define LOG_NDEBUG 0
 
 #include <cutils/log.h>
 #include <string.h>
