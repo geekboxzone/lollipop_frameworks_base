@@ -738,6 +738,19 @@ public class Intent implements Parcelable, Cloneable {
     public static final String EXTRA_SHORTCUT_ICON_RESOURCE =
             "android.intent.extra.shortcut.ICON_RESOURCE";
 
+	/**
+     * @hide
+     */
+	public static final String ACTION_UNREAD_CHANGED = "android.intent.action.UNREAD_CHANGED";
+	/**
+     * @hide
+     */
+    public static final String EXTRA_UNREAD_NUMBER = "android.intent.extra.UNREAD_NUMBER";
+	/**
+     * @hide
+     */
+    public static final String EXTRA_UNREAD_COMPONENT = "android.intent.extra.UNREAD_COMPONENT";
+
     /**
      * Represents a shortcut/live folder icon resource.
      *
