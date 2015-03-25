@@ -108,6 +108,10 @@ public class RingtoneManager {
     public static final String EXTRA_RINGTONE_SHOW_SILENT =
             "android.intent.extra.ringtone.SHOW_SILENT";
 
+	/** {@hide} */
+	public static final String EXTRA_RINGTONE_SHOW_MORE_RINGTONES =
+            "android.intent.extra.ringtone.SHOW_MORE_RINGTONES";
+
     /**
      * Given to the ringtone picker as a boolean. Whether to include DRM ringtones.
      * @deprecated DRM ringtones are no longer supported
@@ -366,6 +370,16 @@ public class RingtoneManager {
              
         return mCursor = new SortCursor(new Cursor[] { internalCursor, mediaCursor },
                 MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+    }
+
+		/** {@hide} */
+    public Cursor getNewCursor() {
+
+        final Cursor internalCursor = getInternalRingtones();
+        final Cursor mediaCursor = getMediaRingtones();
+             
+        return mCursor = new SortCursor(new Cursor[] { internalCursor, mediaCursor },
+                MediaStore.Audio.Media.DEFAULT_SORT_ORDER);		
     }
 
     /**
