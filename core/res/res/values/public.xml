@@ -2598,4 +2598,10 @@
     <public type="style" name="Theme.DeviceDefault.Dialog.Alert" />
     <public type="style" name="Theme.DeviceDefault.Light.Dialog.Alert" />
 
+
+	<java-symbol type="string" name="reboot" />
+    <java-symbol type="string" name="reboot_confirm" />
+    <java-symbol type="string" name="reboot_progress" />
+	<java-symbol type="string" name="global_action_reboot" />
+
 </resources>

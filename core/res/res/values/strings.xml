@@ -5284,4 +5284,11 @@
     <string name="storage_usb4">USB storage 4</string>
     <string name="storage_usb5">USB storage 5</string>
 <!--$_rbox_$_modify_$_end-->
+
+	<string name="reboot">Reboot</string>
+	<string name="reboot_progress">Reboot\u2026</string>
+	<string name="reboot_confirm" product="tablet">Your tablet will reboot.</string>
+	<string name="reboot_confirm" product="default">Your phone will reboot.</string>
+	<!-- label for item that reboot in phone options dialog -->
+	<string name="global_action_reboot">Reboot</string>
 </resources>
