@@ -32,6 +32,7 @@ import android.net.NetworkInfo;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.net.EthernetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -202,6 +203,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         filter.addAction(WifiManager.RSSI_CHANGED_ACTION);
         filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
         filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
+        filter.addAction(EthernetManager.ETHERNET_STATE_CHANGED_ACTION);
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED);
         filter.addAction(TelephonyIntents.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED);
@@ -323,6 +325,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
         for (MobileSignalController mobileSignalController : mMobileSignalControllers.values()) {
             mobileSignalController.notifyListeners();
         }
+
+        cluster.setEthernetIndicators(mEthernetConnected, R.drawable.stat_sys_eth_connected);
+
     }
 
     public void addNetworkSignalChangedCallback(NetworkSignalChangedCallback cb) {
@@ -394,7 +399,10 @@ public class NetworkControllerImpl extends BroadcastReceiver
         } else if (action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
             // Might have different subscriptions now.
             updateMobileControllers();
-        } else {
+        } else if(action.equals(EthernetManager.ETHERNET_STATE_CHANGED_ACTION)) {
+            updateEthernetState(intent);
+            Log.e(TAG, "onReceive ETHERNET_STATE_CHANGED_ACTION ");
+        }  else {
             int subId = intent.getIntExtra(PhoneConstants.SUBSCRIPTION_KEY,
                     SubscriptionManager.INVALID_SUBSCRIPTION_ID);
             if (SubscriptionManager.isValidSubscriptionId(subId)) {
@@ -420,6 +428,25 @@ public class NetworkControllerImpl extends BroadcastReceiver
         refreshCarrierLabel();
     }
 
+
+    private void updateEthernetState(Intent intent) {
+        final String action = intent.getAction();
+        if (action.equals(EthernetManager.ETHERNET_STATE_CHANGED_ACTION)) {
+            mEthernetConnected = intent.getIntExtra(EthernetManager.EXTRA_ETHERNET_STATE,
+                    EthernetManager.ETHER_STATE_DISCONNECTED) == EthernetManager.ETHER_STATE_CONNECTED;
+        }
+
+        notifyListeners();
+    }
+/*
+    private void updateEthernetIcons() {
+        if (mEthernetConnected) {
+            mEthernetIconId = R.drawable.stat_sys_eth_connected;
+        } else {
+            mEthernetIconId = 0;
+        }
+    }
+*/
     private void updateMobileControllers() {
         if (!mListening) {
             return;
@@ -558,7 +585,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
             mSignalClusters.get(i).setIsAirplaneMode(mAirplaneMode, TelephonyIcons.FLIGHT_MODE_ICON,
                     R.string.accessibility_airplane_mode);
             mSignalClusters.get(i).setNoSims(mHasNoSims);
+            mSignalClusters.get(i).setEthernetIndicators(mEthernetConnected, R.drawable.stat_sys_eth_connected);
         }
+
         int signalsChangedLength = mSignalsChangedCallbacks.size();
         for (int i = 0; i < signalsChangedLength; i++) {
             mSignalsChangedCallbacks.get(i).onAirplaneModeChanged(mAirplaneMode);
@@ -1793,6 +1822,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
         void setNoSims(boolean show);
 
         void setIsAirplaneMode(boolean is, int airplaneIcon, int contentDescription);
+
+        void setEthernetIndicators(boolean visible, int ethernetIconId);
     }
 
     public interface EmergencyListener {
