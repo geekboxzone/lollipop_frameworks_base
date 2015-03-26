@@ -31,4 +31,5 @@ interface IEthernetManager
     boolean isAvailable();
     void addListener(in IEthernetServiceListener listener);
     void removeListener(in IEthernetServiceListener listener);
+    int getEthernetConnectState();
 }

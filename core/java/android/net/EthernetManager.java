@@ -23,6 +23,7 @@ import android.net.IpConfiguration;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -156,7 +157,14 @@ public class EthernetManager {
             }
         }
     }
-
+    public int getEthernetConnectState() {
+        Log.d(TAG,"getEthernetState() : Entered.");
+        try {
+            return mService.getEthernetConnectState();
+        } catch (RemoteException e) {
+            return EthernetManager.ETHER_STATE_DISCONNECTED;
+        }
+    }
     /**
      * Removes a listener.
      * @param listener A {@link Listener} to remove.
