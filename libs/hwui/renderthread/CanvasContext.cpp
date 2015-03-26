@@ -46,6 +46,7 @@ CanvasContext::CanvasContext(RenderThread& thread, bool translucent,
         , mSwapBehavior(kSwap_default)
         , mOpaque(!translucent)
         , mCanvas(NULL)
+	, mNativeWindow(NULL)
         , mHaveNewSurface(false)
         , mRootRenderNode(rootRenderNode) {
     mAnimationContext = contextFactory->createAnimationContext(mRenderThread.timeLord());
@@ -168,7 +169,7 @@ void CanvasContext::prepareTree(TreeInfo& info) {
         freePrefetechedLayers();
     }
 
-    if (CC_UNLIKELY(!mNativeWindow.get())) {
+    if ( mNativeWindow == NULL || CC_UNLIKELY(!mNativeWindow.get())) {
         info.out.canDrawThisFrame = false;
         return;
     }
