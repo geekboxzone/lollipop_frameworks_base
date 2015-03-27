@@ -345,10 +345,10 @@ public class Environment {
             = getDirectory("HOST_STORAGE_DIRECTORY", "/mnt/usb_storage");
 
     private static final File OTG_STORAGE_DIRECTORY
-            = getDirectory("OTG_STORAGE_DIRECTORY", "/mnt/usbb_storage/USB_DISK1");
+           = getDirectory("OTG_STORAGE_DIRECTORY", "/mnt/usb_storage/USB_DISK0");
        
     private static final File HOST_STORAGE_DIRECTORY_EXTERN_0
-            = getDirectory("THIRD_VOLUME_STORAGE", "/mnt/usb_storage/USB_DISK0");
+            = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_0", "/mnt/usb_storage/USB_DISK0");
 
     private static final File HOST_STORAGE_DIRECTORY_EXTERN_1
             = getDirectory("HOST_STORAGE_DIRECTORY_EXTERN_1", "/mnt/usb_storage/USB_DISK1");
