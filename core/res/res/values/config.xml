@@ -199,6 +199,7 @@
         <item>"wifi_p2p,13,1,0,-1,true"</item>
         <item>"mobile_ia,14,0,2,-1,true"</item>
         <item>"mobile_emergency,15,0,2,-1,true"</item>
+        <item>"bluetooth,7,7,1,60000,true"</item>
     </string-array>
 
     <!-- Array of ConnectivityManager.TYPE_xxxx constants for networks that may only
@@ -261,6 +262,7 @@
          bluetooth interfaces.  If the device doesn't want to support tethering over bluetooth this
          should be empty. -->
     <string-array translatable="false" name="config_tether_bluetooth_regexs">
+        <item>"bt-pan"</item>
     </string-array>
 
     <!-- Max number of Bluetooth tethering connections allowed. If this is
