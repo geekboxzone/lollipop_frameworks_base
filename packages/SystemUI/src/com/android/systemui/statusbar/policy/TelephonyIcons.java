@@ -78,13 +78,13 @@ class TelephonyIcons {
     //GSM/UMTS
     static final int[][] DATA_G = {
             { R.drawable.stat_sys_data_fully_connected_g,
-              R.drawable.stat_sys_data_fully_connected_g,
-              R.drawable.stat_sys_data_fully_connected_g,
-              R.drawable.stat_sys_data_fully_connected_g },
+              R.drawable.stat_sys_data_fully_connected_g_in,
+              R.drawable.stat_sys_data_fully_connected_g_out,
+              R.drawable.stat_sys_data_fully_connected_g_in_out },
             { R.drawable.stat_sys_data_fully_connected_g,
-              R.drawable.stat_sys_data_fully_connected_g,
-              R.drawable.stat_sys_data_fully_connected_g,
-              R.drawable.stat_sys_data_fully_connected_g }
+              R.drawable.stat_sys_data_fully_connected_g_in,
+              R.drawable.stat_sys_data_fully_connected_g_out,
+              R.drawable.stat_sys_data_fully_connected_g_in_out }
         };
 
     static final int[] QS_DATA_G = {
@@ -94,13 +94,13 @@ class TelephonyIcons {
 
     static final int[][] DATA_3G = {
             { R.drawable.stat_sys_data_fully_connected_3g,
-              R.drawable.stat_sys_data_fully_connected_3g,
-              R.drawable.stat_sys_data_fully_connected_3g,
-              R.drawable.stat_sys_data_fully_connected_3g },
+              R.drawable.stat_sys_data_fully_connected_3g_in,
+              R.drawable.stat_sys_data_fully_connected_3g_out,
+              R.drawable.stat_sys_data_fully_connected_3g_in_out },
             { R.drawable.stat_sys_data_fully_connected_3g,
-              R.drawable.stat_sys_data_fully_connected_3g,
-              R.drawable.stat_sys_data_fully_connected_3g,
-              R.drawable.stat_sys_data_fully_connected_3g }
+              R.drawable.stat_sys_data_fully_connected_3g_in,
+              R.drawable.stat_sys_data_fully_connected_3g_out,
+              R.drawable.stat_sys_data_fully_connected_3g_in_out }
         };
 
     static final int[] QS_DATA_3G = {
@@ -110,13 +110,13 @@ class TelephonyIcons {
 
     static final int[][] DATA_E = {
             { R.drawable.stat_sys_data_fully_connected_e,
-              R.drawable.stat_sys_data_fully_connected_e,
-              R.drawable.stat_sys_data_fully_connected_e,
-              R.drawable.stat_sys_data_fully_connected_e },
+              R.drawable.stat_sys_data_fully_connected_e_in,
+              R.drawable.stat_sys_data_fully_connected_e_out,
+              R.drawable.stat_sys_data_fully_connected_e_in_out },
             { R.drawable.stat_sys_data_fully_connected_e,
-              R.drawable.stat_sys_data_fully_connected_e,
-              R.drawable.stat_sys_data_fully_connected_e,
-              R.drawable.stat_sys_data_fully_connected_e }
+              R.drawable.stat_sys_data_fully_connected_e_in,
+              R.drawable.stat_sys_data_fully_connected_e_out,
+              R.drawable.stat_sys_data_fully_connected_e_in_out }
         };
 
     static final int[] QS_DATA_E = {
@@ -127,13 +127,13 @@ class TelephonyIcons {
     //3.5G
     static final int[][] DATA_H = {
             { R.drawable.stat_sys_data_fully_connected_h,
-              R.drawable.stat_sys_data_fully_connected_h,
-              R.drawable.stat_sys_data_fully_connected_h,
-              R.drawable.stat_sys_data_fully_connected_h },
+              R.drawable.stat_sys_data_fully_connected_h_in,
+              R.drawable.stat_sys_data_fully_connected_h_out,
+              R.drawable.stat_sys_data_fully_connected_h_in_out },
             { R.drawable.stat_sys_data_fully_connected_h,
-              R.drawable.stat_sys_data_fully_connected_h,
-              R.drawable.stat_sys_data_fully_connected_h,
-              R.drawable.stat_sys_data_fully_connected_h }
+              R.drawable.stat_sys_data_fully_connected_h_in,
+              R.drawable.stat_sys_data_fully_connected_h_out,
+              R.drawable.stat_sys_data_fully_connected_h_in_out }
     };
 
     static final int[] QS_DATA_H = {
@@ -145,13 +145,13 @@ class TelephonyIcons {
     // Use 3G icons for EVDO data and 1x icons for 1XRTT data
     static final int[][] DATA_1X = {
             { R.drawable.stat_sys_data_fully_connected_1x,
-              R.drawable.stat_sys_data_fully_connected_1x,
-              R.drawable.stat_sys_data_fully_connected_1x,
-              R.drawable.stat_sys_data_fully_connected_1x },
+              R.drawable.stat_sys_data_fully_connected_1x_in,
+              R.drawable.stat_sys_data_fully_connected_1x_out,
+              R.drawable.stat_sys_data_fully_connected_1x_in_out },
             { R.drawable.stat_sys_data_fully_connected_1x,
-              R.drawable.stat_sys_data_fully_connected_1x,
-              R.drawable.stat_sys_data_fully_connected_1x,
-              R.drawable.stat_sys_data_fully_connected_1x }
+              R.drawable.stat_sys_data_fully_connected_1x_in,
+              R.drawable.stat_sys_data_fully_connected_1x_out,
+              R.drawable.stat_sys_data_fully_connected_1x_in_out }
             };
 
     static final int[] QS_DATA_1X = {
@@ -162,13 +162,13 @@ class TelephonyIcons {
     // LTE and eHRPD
     static final int[][] DATA_4G = {
             { R.drawable.stat_sys_data_fully_connected_4g,
-              R.drawable.stat_sys_data_fully_connected_4g,
-              R.drawable.stat_sys_data_fully_connected_4g,
-              R.drawable.stat_sys_data_fully_connected_4g },
+              R.drawable.stat_sys_data_fully_connected_4g_in,
+              R.drawable.stat_sys_data_fully_connected_4g_out,
+              R.drawable.stat_sys_data_fully_connected_4g_in_out },
             { R.drawable.stat_sys_data_fully_connected_4g,
-              R.drawable.stat_sys_data_fully_connected_4g,
-              R.drawable.stat_sys_data_fully_connected_4g,
-              R.drawable.stat_sys_data_fully_connected_4g }
+              R.drawable.stat_sys_data_fully_connected_4g_in,
+              R.drawable.stat_sys_data_fully_connected_4g_out,
+              R.drawable.stat_sys_data_fully_connected_4g_in_out }
         };
 
     static final int[] QS_DATA_4G = {
@@ -179,13 +179,13 @@ class TelephonyIcons {
     // LTE branded "LTE"
     static final int[][] DATA_LTE = {
             { R.drawable.stat_sys_data_fully_connected_lte,
-                    R.drawable.stat_sys_data_fully_connected_lte,
-                    R.drawable.stat_sys_data_fully_connected_lte,
-                    R.drawable.stat_sys_data_fully_connected_lte },
+                    R.drawable.stat_sys_data_fully_connected_lte_in,
+                    R.drawable.stat_sys_data_fully_connected_lte_out,
+                    R.drawable.stat_sys_data_fully_connected_lte_in_out  },
             { R.drawable.stat_sys_data_fully_connected_lte,
-                    R.drawable.stat_sys_data_fully_connected_lte,
-                    R.drawable.stat_sys_data_fully_connected_lte,
-                    R.drawable.stat_sys_data_fully_connected_lte }
+                    R.drawable.stat_sys_data_fully_connected_lte_in,
+                    R.drawable.stat_sys_data_fully_connected_lte_out,
+                    R.drawable.stat_sys_data_fully_connected_lte_in_out }
     };
 
     static final int[] QS_DATA_LTE = {
@@ -220,7 +220,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_3g,
             TelephonyIcons.ICON_3G,
             true,
-            TelephonyIcons.QS_DATA_3G
+            TelephonyIcons.QS_DATA_3G,
+            TelephonyIcons.DATA_3G[0]
             );
 
     static final MobileIconGroup UNKNOWN = new MobileIconGroup(
@@ -232,7 +233,8 @@ class TelephonyIcons {
             TelephonyIcons.TELEPHONY_NO_NETWORK,
             TelephonyIcons.QS_TELEPHONY_NO_NETWORK,
             AccessibilityContentDescriptions.PHONE_SIGNAL_STRENGTH[0],
-            0, 0, false, new int[2]
+            0, 0, false, new int[2],
+            new int[4]
             );
 
     static final MobileIconGroup E = new MobileIconGroup(
@@ -247,7 +249,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_edge,
             TelephonyIcons.ICON_E,
             false,
-            TelephonyIcons.QS_DATA_E
+            TelephonyIcons.QS_DATA_E,
+            TelephonyIcons.DATA_E[0]
             );
 
     static final MobileIconGroup ONE_X = new MobileIconGroup(
@@ -262,7 +265,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_cdma,
             TelephonyIcons.ICON_1X,
             true,
-            TelephonyIcons.QS_DATA_1X
+            TelephonyIcons.QS_DATA_1X,
+            TelephonyIcons.DATA_1X[0]
             );
 
     static final MobileIconGroup G = new MobileIconGroup(
@@ -277,7 +281,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_gprs,
             TelephonyIcons.ICON_G,
             false,
-            TelephonyIcons.QS_DATA_G
+            TelephonyIcons.QS_DATA_G,
+            TelephonyIcons.DATA_G[0]
             );
 
     static final MobileIconGroup H = new MobileIconGroup(
@@ -292,7 +297,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_3_5g,
             TelephonyIcons.ICON_H,
             false,
-            TelephonyIcons.QS_DATA_H
+            TelephonyIcons.QS_DATA_H,
+            TelephonyIcons.DATA_H[0]
             );
 
     static final MobileIconGroup FOUR_G = new MobileIconGroup(
@@ -307,7 +313,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_4g,
             TelephonyIcons.ICON_4G,
             true,
-            TelephonyIcons.QS_DATA_4G
+            TelephonyIcons.QS_DATA_4G,
+            TelephonyIcons.DATA_4G[0]
             );
 
     static final MobileIconGroup LTE = new MobileIconGroup(
@@ -322,7 +329,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_lte,
             TelephonyIcons.ICON_LTE,
             true,
-            TelephonyIcons.QS_DATA_LTE
+            TelephonyIcons.QS_DATA_LTE,
+            TelephonyIcons.DATA_LTE[0]
             );
 
     static final MobileIconGroup ROAMING = new MobileIconGroup(
@@ -337,7 +345,8 @@ class TelephonyIcons {
             R.string.accessibility_data_connection_roaming,
             TelephonyIcons.ROAMING_ICON,
             false,
-            TelephonyIcons.QS_DATA_R
+            TelephonyIcons.QS_DATA_R,
+            new int[4]
             );
 }
 

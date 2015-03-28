@@ -1240,6 +1240,23 @@ public class NetworkControllerImpl extends BroadcastReceiver
                     }
                 }
             //}
+
+			if(mCurrentState.activityIn && mCurrentState.activityOut){
+                icons.mDataType = icons.mDataTypeList[3];
+                icons.mCurWide = true;
+            }
+            else if(mCurrentState.activityIn){
+                icons.mDataType = icons.mDataTypeList[1];
+                icons.mCurWide = true;
+            }
+            else if(mCurrentState.activityOut){
+                icons.mDataType = icons.mDataTypeList[2];
+                icons.mCurWide = true;
+            }
+            else{
+                icons.mDataType = icons.mDataTypeList[0];
+                icons.mCurWide = icons.mIsWide;
+            }
             int typeIcon = showDataIcon ? icons.mDataType : 0;
             int signalClustersLength = mSignalClusters.size();
             for (int i = 0; i < signalClustersLength; i++) {
@@ -1463,20 +1480,24 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
         static class MobileIconGroup extends SignalController.IconGroup {
             final int mDataContentDescription; // mContentDescriptionDataType
-            final int mDataType;
+            int mDataType;
             final boolean mIsWide;
             final int[] mQsDataType;
+			final int[] mDataTypeList;
+            boolean mCurWide;
 
             public MobileIconGroup(String name, int[][] sbIcons, int[][] qsIcons, int[] contentDesc,
                     int sbNullState, int qsNullState, int sbDiscState, int qsDiscState,
                     int discContentDesc, int dataContentDesc, int dataType, boolean isWide,
-                    int[] qsDataType) {
+                    int[] qsDataType, int[] dataTypeList) {
                 super(name, sbIcons, qsIcons, contentDesc, sbNullState, qsNullState, sbDiscState,
                         qsDiscState, discContentDesc);
                 mDataContentDescription = dataContentDesc;
                 mDataType = dataType;
                 mIsWide = isWide;
                 mQsDataType = qsDataType;
+				mDataTypeList = dataTypeList;
+                mCurWide = isWide;
             }
         }
 
