@@ -17,8 +17,15 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "BootAnimation"
 
+#define ENABLE_DEBUG_LOG
+#include <log/custom_log.h>
+#undef I        // 和 SkMatrix.h 有干涉.
+
+#include <string.h>
+#include <errno.h>
 #include <stdint.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <math.h>
 #include <fcntl.h>
 #include <utils/misc.h>
@@ -51,12 +58,19 @@
 
 #include "BootAnimation.h"
 #include "AudioPlayer.h"
+#include <media/mediaplayer.h>
 
 #define OEM_BOOTANIMATION_FILE "/oem/media/bootanimation.zip"
 #define SYSTEM_BOOTANIMATION_FILE "/system/media/bootanimation.zip"
 #define SYSTEM_ENCRYPTED_BOOTANIMATION_FILE "/system/media/bootanimation-encrypted.zip"
 #define EXIT_PROP_NAME "service.bootanim.exit"
+#define FIXED_ONE 1
 
+#define USER_BOOTANIMATION_FILE "/data/local/bootanimation.zip"
+#define BOOTMUSIC_FILE "/system/media/audio/boot.ogg"
+
+#define USER_SHUTDOWN_ANIMATION_FILE "/data/local/shutdownanimation.zip"
+#define SYSTEM_SHUTDOWN_ANIMATION_FILE "/system/media/shutdownanimation.zip"
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
                            const struct timespec *request,
                            struct timespec *remain);
@@ -67,9 +81,40 @@ static const int ANIM_ENTRY_NAME_MAX = 256;
 
 // ---------------------------------------------------------------------------
 
-BootAnimation::BootAnimation() : Thread(false), mZip(NULL)
+BootAnimation::BootAnimation(bool shutdown) : Thread(false), mZip(NULL)
 {
     mSession = new SurfaceComposerClient();
+    mHardwareRotation = 0;
+    mReverseAxis = false;
+    mShutdown = shutdown;
+    char property[PROPERTY_VALUE_MAX];
+
+    if (property_get("ro.sf.hwrotation", property, "0") > 0) {
+        mHardwareRotation = atoi(property);
+    }
+
+    if (property_get("ro.sf.fakerotation", property, "false") > 0) {
+        mReverseAxis = !strcmp(property, "true");
+    }
+
+    sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
+                        ISurfaceComposer::eDisplayIdMain)); // primary_display_token
+    DisplayInfo dinfo;
+    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+    ALOGD("DISPLAY,W-H: %d-%d, ori: %d", dinfo.w, dinfo.h, dinfo.orientation);
+
+    if (mShutdown) {
+	    bool vertical = 
+            dinfo.orientation == 0 
+            || dinfo.orientation == 2 ;
+	    if(vertical)
+        {
+		    mReverseAxis =false;
+	    }else
+        {
+		    mReverseAxis=true;
+	    }
+    }
 }
 
 BootAnimation::~BootAnimation() {
@@ -77,6 +122,11 @@ BootAnimation::~BootAnimation() {
         delete mZip;
     }
 }
+
+void BootAnimation::isShutdown(bool shutdown) {
+     mShutdown = shutdown;
+}
+
 
 void BootAnimation::onFirstRef() {
     status_t err = mSession->linkToComposerDeath(this);
@@ -194,6 +244,11 @@ status_t BootAnimation::initTexture(const Animation::Frame& frame)
     if (tw < w) tw <<= 1;
     if (th < h) th <<= 1;
 
+    mBMPWidth = w;
+    mBMPHeight = h;
+    mTexWidth = tw;
+    mTexHeight = th;
+
     switch (bitmap.colorType()) {
         case kN32_SkColorType:
             if (tw != w || th != h) {
@@ -231,15 +286,24 @@ status_t BootAnimation::readyToRun() {
     mAssets.addDefaultAssets();
 
     sp<IBinder> dtoken(SurfaceComposerClient::getBuiltInDisplay(
-            ISurfaceComposer::eDisplayIdMain));
+                            ISurfaceComposer::eDisplayIdMain));     // primary_display_token
     DisplayInfo dinfo;
-    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+    status_t status = SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);    // display_info
     if (status)
         return -1;
+    int curWidth = dinfo.w;
+    int curHeight = dinfo.h;
+
+    if (mShutdown) {
+	    if (dinfo.orientation % 2 == 0) {
+		    curWidth = dinfo.h;
+		    curHeight = dinfo.w;
+	    }
+    }
 
     // create the native surface
     sp<SurfaceControl> control = session()->createSurface(String8("BootAnimation"),
-            dinfo.w, dinfo.h, PIXEL_FORMAT_RGB_565);
+            curWidth, curHeight, PIXEL_FORMAT_RGB_565);
 
     SurfaceComposerClient::openGlobalTransaction();
     control->setLayer(0x40000000);
@@ -289,16 +353,49 @@ status_t BootAnimation::readyToRun() {
     bool encryptedAnimation = atoi(decrypt) != 0 || !strcmp("trigger_restart_min_framework", decrypt);
 
     ZipFileRO* zipFile = NULL;
-    if ((encryptedAnimation &&
-            (access(SYSTEM_ENCRYPTED_BOOTANIMATION_FILE, R_OK) == 0) &&
-            ((zipFile = ZipFileRO::open(SYSTEM_ENCRYPTED_BOOTANIMATION_FILE)) != NULL)) ||
-
-            ((access(OEM_BOOTANIMATION_FILE, R_OK) == 0) &&
-            ((zipFile = ZipFileRO::open(OEM_BOOTANIMATION_FILE)) != NULL)) ||
-
-            ((access(SYSTEM_BOOTANIMATION_FILE, R_OK) == 0) &&
-            ((zipFile = ZipFileRO::open(SYSTEM_BOOTANIMATION_FILE)) != NULL))) {
+    if ((encryptedAnimation 
+            && (access(SYSTEM_ENCRYPTED_BOOTANIMATION_FILE, R_OK) == 0) 
+            && ((zipFile = ZipFileRO::open(SYSTEM_ENCRYPTED_BOOTANIMATION_FILE)) != NULL)) 
+        || ((access(OEM_BOOTANIMATION_FILE, R_OK) == 0) 
+            && ((zipFile = ZipFileRO::open(OEM_BOOTANIMATION_FILE)) != NULL)) 
+        || ((access(SYSTEM_BOOTANIMATION_FILE, R_OK) == 0) 
+            && ((zipFile = ZipFileRO::open(SYSTEM_BOOTANIMATION_FILE)) != NULL))) {
         mZip = zipFile;
+    }
+    zipFile = NULL;
+
+    if ( !encryptedAnimation )
+    {
+#warning "the behavior here is different from the default."
+        
+        if ( NULL != zipFile )
+        {
+            delete mZip;
+            mZip = NULL;
+        }
+
+        /* 若当前要显示 "不是" 关机动画, 即要显示 开机动画, 则... */
+        if ( !mShutdown )
+        {
+            if ( ( (access(USER_BOOTANIMATION_FILE, R_OK) == 0) 
+                    && ( (zipFile = ZipFileRO::open(USER_BOOTANIMATION_FILE) ) != NULL) )
+                || ( (access(SYSTEM_BOOTANIMATION_FILE, R_OK) == 0) 
+                    && ( (zipFile = ZipFileRO::open(SYSTEM_BOOTANIMATION_FILE) ) != NULL) ) ) 
+            {
+                mZip = zipFile;
+            }
+        } 
+        /* 否则, 即要显示 "关机动画", 则... */
+        else 
+        {
+            if ( ( (access(USER_SHUTDOWN_ANIMATION_FILE, R_OK) == 0) 
+                    && ( (zipFile = ZipFileRO::open(USER_SHUTDOWN_ANIMATION_FILE) ) != NULL) )
+                || ( (access(SYSTEM_SHUTDOWN_ANIMATION_FILE, R_OK) == 0) 
+                    && ( (zipFile = ZipFileRO::open(SYSTEM_SHUTDOWN_ANIMATION_FILE) ) != NULL) ) ) 
+            {
+                mZip = zipFile;
+            }
+        }
     }
 
     return NO_ERROR;
@@ -325,53 +422,190 @@ bool BootAnimation::threadLoop()
     return r;
 }
 
+void BootAnimation::getTexCoordinate() {
+
+    GLfloat w_scale = float(mBMPWidth)/mTexWidth;
+    GLfloat h_scale = float(mBMPHeight)/mTexHeight;
+
+	if (mReverseAxis) {
+		mTexCoords[0]=0;                 mTexCoords[1]=FIXED_ONE*h_scale;
+		mTexCoords[2]=0;                 mTexCoords[3]=0;
+		mTexCoords[4]=FIXED_ONE*w_scale; mTexCoords[5]=0;
+		mTexCoords[6]=FIXED_ONE*w_scale; mTexCoords[7]=FIXED_ONE*h_scale;
+	} else {
+		mTexCoords[0]=0;                 mTexCoords[1]=0;
+		mTexCoords[2]=FIXED_ONE*w_scale; mTexCoords[3]=0;
+		mTexCoords[4]=FIXED_ONE*w_scale; mTexCoords[5]=FIXED_ONE*h_scale;
+		mTexCoords[6]=0;                 mTexCoords[7]=FIXED_ONE*h_scale;
+	}
+}
+
+
+
+void BootAnimation::playMusic()
+{
+    status_t ret = 0;        // dummy_ret.
+
+    sp<MediaPlayer> mp = new MediaPlayer();
+    int fd = -1;
+    const int64_t offset = 0;
+    int64_t length = 0;
+    
+    if ( NULL == mp.get() )
+    {
+        SET_ERROR_AND_JUMP("fail to new media_player", ret, -1, EXIT);
+    }
+    if ( 0 != access(BOOTMUSIC_FILE, F_OK) )
+    {
+        W("'%s' is not accessible.", BOOTMUSIC_FILE);
+        ret = -1;
+        goto EXIT;
+    }
+    
+    fd = open(BOOTMUSIC_FILE, O_RDONLY);
+    if ( -1 == fd )
+    {
+        SET_ERROR_AND_JUMP("fail to open '%s'. err : '%s'.", ret, -1, EXIT,
+                           BOOTMUSIC_FILE,
+                           strerror(errno) );
+    }
+
+    length = getFileSize(fd);
+   
+    CHECK_FUNC_CALL( mp->setDataSource(fd, offset, length) , ret, EXIT);
+    CHECK_FUNC_CALL( mp->prepare() , ret, EXIT);
+    CHECK_FUNC_CALL( mp->start() , ret, EXIT);
+
+EXIT:
+    return;
+}
+
 bool BootAnimation::android()
 {
     initTexture(&mAndroid[0], mAssets, "images/android-logo-mask.png");
     initTexture(&mAndroid[1], mAssets, "images/android-logo-shine.png");
+    mBMPWidth = mTexWidth = mBMPHeight = mTexHeight = 1;
+    getTexCoordinate();
+
+    // to add startup music
+    #ifdef BOOTMUSIC_FILE
+    playMusic();
+    #endif
 
     // clear screen
     glShadeModel(GL_FLAT);
     glDisable(GL_DITHER);
+    glViewport(0, 0, mWidth, mHeight);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    float ratio = mWidth / mHeight;
+    glFrustumf(-ratio, ratio, -1, 1, 0, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glOrthof(0, mWidth, mHeight, 0, 0, 1);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisable(GL_SCISSOR_TEST);
     glClearColor(0,0,0,1);
     glClear(GL_COLOR_BUFFER_BIT);
     eglSwapBuffers(mDisplay, mSurface);
 
-    glEnable(GL_TEXTURE_2D);
-    glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-    const GLint xc = (mWidth  - mAndroid[0].w) / 2;
-    const GLint yc = (mHeight - mAndroid[0].h) / 2;
-    const Rect updateRect(xc, yc, xc + mAndroid[0].w, yc + mAndroid[0].h);
-
-    glScissor(updateRect.left, mHeight - updateRect.bottom, updateRect.width(),
-            updateRect.height());
-
     // Blend state
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glTexEnvx(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+
+    if (mReverseAxis) {
+        exchangeParameters(&mWidth, &mHeight);
+    }
+
+    GLfloat xc = float(mWidth  - mAndroid[0].w) / 2;
+    GLfloat yc = float(mHeight - mAndroid[0].h) / 2;
+
+    if (mReverseAxis) {
+        exchangeParameters(&xc, &yc);
+        exchangeParameters(&mAndroid[0].w, &mAndroid[0].h);
+        exchangeParameters(&mAndroid[1].w, &mAndroid[1].h);
+    }
+
+	const GLfloat mask_vertices[] = {
+			xc, yc, 0,
+			xc+mAndroid[0].w, yc, 0,
+			xc+mAndroid[0].w, yc+mAndroid[0].h, 0,
+			xc, yc+mAndroid[0].h, 0
+	};
+
+	const GLfloat shine_vertices[] = {
+			xc, yc, 0,
+			xc+mAndroid[1].w, yc, 0,
+			xc+mAndroid[1].w, yc+mAndroid[1].h, 0,
+			xc, yc+mAndroid[1].h, 0
+	};
+
+	const GLushort indices[] = { 0, 1, 2,  0, 2, 3 };
+	int nelem = sizeof(indices)/sizeof(indices[0]);
+
+    const Rect updateRect(xc, yc, xc + mAndroid[0].w, yc + mAndroid[0].h);
+    glScissor(updateRect.left, updateRect.top, updateRect.width(),
+            updateRect.height());
 
     const nsecs_t startTime = systemTime();
     do {
         nsecs_t now = systemTime();
         double time = now - startTime;
-        float t = 4.0f * float(time / us2ns(16667)) / mAndroid[1].w;
-        GLint offset = (1 - (t - floorf(t))) * mAndroid[1].w;
-        GLint x = xc - offset;
+        float t = 0;
+        GLint x, y, offset;
+
+        if (mReverseAxis) {
+            t = 4.0f * float(time / us2ns(16667)) / mAndroid[1].h;
+            offset = (1 - (t - floorf(t))) * mAndroid[1].h;
+            y = yc - offset;
+        } else {
+            t = 4.0f * float(time / us2ns(16667)) / mAndroid[1].w;
+            offset = (1 - (t - floorf(t))) * mAndroid[1].w;
+            x = xc - offset;
+        }
+
+        glMatrixMode(GL_TEXTURE);
+        glLoadIdentity();
+        glMatrixMode(GL_MODELVIEW);
+
 
         glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glEnable(GL_SCISSOR_TEST);
+
+        if (mReverseAxis) {
+            glTranslatef(0, -offset, 0);
+        } else {
+            glTranslatef(-offset, 0, 0);
+        }
         glDisable(GL_BLEND);
         glBindTexture(GL_TEXTURE_2D, mAndroid[1].name);
-        glDrawTexiOES(x,                 yc, 0, mAndroid[1].w, mAndroid[1].h);
-        glDrawTexiOES(x + mAndroid[1].w, yc, 0, mAndroid[1].w, mAndroid[1].h);
+        glVertexPointer(3, GL_FLOAT, 0, shine_vertices);
+        glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+
+        if (mReverseAxis) {
+            glTranslatef(0, mAndroid[1].h, 0);
+        } else {
+            glTranslatef(mAndroid[1].w, 0, 0);
+        }
+        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+
+        if (mReverseAxis) {
+            glTranslatef(0, offset - mAndroid[1].h, 0);
+        } else {
+            glTranslatef(offset - mAndroid[1].w, 0, 0);
+        }
 
         glEnable(GL_BLEND);
         glBindTexture(GL_TEXTURE_2D, mAndroid[0].name);
-        glDrawTexiOES(xc, yc, 0, mAndroid[0].w, mAndroid[0].h);
+        glVertexPointer(3, GL_FLOAT, 0, mask_vertices);
+        glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
 
         EGLBoolean res = eglSwapBuffers(mDisplay, mSurface);
         if (res == EGL_FALSE)
@@ -393,6 +627,11 @@ bool BootAnimation::android()
 
 void BootAnimation::checkExit() {
     // Allow surface flinger to gracefully request shutdown
+    if(mShutdown)//shutdown animation
+        {
+        return;
+        }
+
     char value[PROPERTY_VALUE_MAX];
     property_get(EXIT_PROP_NAME, value, "0");
     int exitnow = atoi(value);
@@ -482,9 +721,14 @@ bool BootAnimation::movie()
 
         char pathType;
         if (sscanf(l, "%d %d %d", &width, &height, &fps) == 3) {
-            // ALOGD("> w=%d, h=%d, fps=%d", width, height, fps);
-            animation.width = width;
-            animation.height = height;
+            //LOGD("> w=%d, h=%d, fps=%d", width, height, fps);
+            if (mReverseAxis) {
+                animation.width = height;
+                animation.height = width;
+            } else {
+                animation.width = width;
+                animation.height = height;
+            }
             animation.fps = fps;
         }
         else if (sscanf(l, " %c %d %d %s #%6s", &pathType, &count, &pause, path, color) >= 4) {
@@ -552,12 +796,30 @@ bool BootAnimation::movie()
             }
         }
     }
+    //TODO
+    if (mShutdown) {
+	    if (mReverseAxis) {
+//		    exchangeParameters(&mWidth, &mHeight);
+	    }
+    }
 
     mZip->endIteration(cookie);
 
     // clear screen
     glShadeModel(GL_FLAT);
     glDisable(GL_DITHER);
+    glViewport(0, 0, mWidth, mHeight);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    float ratio = mWidth / mHeight;
+    glFrustumf(-ratio, ratio, -1, 1, 0, 1);
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glOrthof(0, mWidth, mHeight, 0, 0, 1);
+
+    glEnable(GL_TEXTURE_2D);
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_BLEND);
     glClearColor(0,0,0,1);
@@ -580,6 +842,16 @@ bool BootAnimation::movie()
 
     Region clearReg(Rect(mWidth, mHeight));
     clearReg.subtractSelf(Rect(xc, yc, xc+animation.width, yc+animation.height));
+
+    const GLfloat vertices[] = {
+            xc, yc, 0,
+            xc+animation.width, yc, 0,
+            xc+animation.width, yc+animation.height, 0,
+            xc, yc+animation.height, 0
+    };
+
+    const GLushort indices[] = { 0, 1, 2,  0, 2, 3 };
+    int nelem = sizeof(indices)/sizeof(indices[0]);
 
     for (size_t i=0 ; i<pcount ; i++) {
         const Animation::Part& part(animation.parts[i]);
@@ -616,6 +888,8 @@ bool BootAnimation::movie()
                         glTexParameterx(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                     }
                     initTexture(frame);
+
+                    getTexCoordinate();
                 }
 
                 if (!clearReg.isEmpty()) {
@@ -630,7 +904,11 @@ bool BootAnimation::movie()
                     }
                     glDisable(GL_SCISSOR_TEST);
                 }
-                glDrawTexiOES(xc, yc, 0, animation.width, animation.height);
+
+                glVertexPointer(3, GL_FLOAT, 0, vertices);
+                glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+                glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+
                 eglSwapBuffers(mDisplay, mSurface);
 
                 nsecs_t now = systemTime();
@@ -670,6 +948,17 @@ bool BootAnimation::movie()
     return false;
 }
 
+/* ############################################################################################# */
+
+int64_t BootAnimation::getFileSize(int fd)
+{
+   struct stat st;
+   int ret;
+
+   ret = fstat(fd, &st);
+   return ret ? 0 : st.st_size;
+}
+    
 // ---------------------------------------------------------------------------
 
 }

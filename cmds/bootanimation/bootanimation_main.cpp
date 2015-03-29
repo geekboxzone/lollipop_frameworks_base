@@ -38,6 +38,8 @@ using namespace android;
 
 int main(int argc, char** argv)
 {
+    ALOGI("boot_animation_process start, built at '%s', on '%s'.", __TIME__, __DATE__);
+
 #if defined(HAVE_PTHREADS)
     setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_DISPLAY);
 #endif
@@ -52,8 +54,14 @@ int main(int argc, char** argv)
         ProcessState::self()->startThreadPool();
 
         // create the boot animation object
-        sp<BootAnimation> boot = new BootAnimation();
-
+	sp<BootAnimation> boot ;
+        if (argc > 1) {
+            if (strcmp(argv[1], "-shutdown") == 0) {
+		     boot = new BootAnimation(true);
+            }
+        }else {
+		boot = new BootAnimation(false);
+	}
         IPCThreadState::self()->joinThreadPool();
 
     }

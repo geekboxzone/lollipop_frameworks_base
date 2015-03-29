@@ -20,8 +20,12 @@ LOCAL_SHARED_LIBRARIES := \
 	libskia \
     libEGL \
     libGLESv1_CM \
+    libmedia \
     libgui \
-    libtinyalsa
+	libtinyalsa
+
+LOCAL_C_INCLUDES += \
+	$(call include-path-for, corecg graphics)
 
 LOCAL_MODULE:= bootanimation
 
