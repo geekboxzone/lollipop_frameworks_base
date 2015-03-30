@@ -498,12 +498,12 @@ public class AudioService extends IAudioService.Stub {
             = new RemoteCallbackList<IAudioRoutesObserver>();
 
     // Devices for which the volume is fixed and VolumePanel slider should be disabled
-    int mFixedVolumeDevices = //AudioSystem.DEVICE_OUT_HDMI |
+    int mFixedVolumeDevices = 0;//AudioSystem.DEVICE_OUT_HDMI |
             //AudioSystem.DEVICE_OUT_DGTL_DOCK_HEADSET |
             //AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET |
-            AudioSystem.DEVICE_OUT_HDMI_ARC |
-            AudioSystem.DEVICE_OUT_SPDIF |
-            AudioSystem.DEVICE_OUT_AUX_LINE;
+            //AudioSystem.DEVICE_OUT_HDMI_ARC |
+            //AudioSystem.DEVICE_OUT_SPDIF |
+            //AudioSystem.DEVICE_OUT_AUX_LINE;
     int mFullVolumeDevices = 0;
 
     // TODO merge orientation and rotation
@@ -2318,6 +2318,8 @@ public class AudioService extends IAudioService.Stub {
 
     /** @see AudioManager#playSoundEffect(int, float) */
     public void playSoundEffectVolume(int effectType, float volume) {
+	if(SystemProperties.getBoolean("media.cfg.audio.bypass", false))
+                return;
         if (effectType >= AudioManager.NUM_SOUND_EFFECTS || effectType < 0) {
             Log.w(TAG, "AudioService effectType value " + effectType + " out of range");
             return;
@@ -3418,6 +3420,8 @@ public class AudioService extends IAudioService.Stub {
                 device = AudioSystem.DEVICE_OUT_SPDIF;
             } else if ((device & AudioSystem.DEVICE_OUT_AUX_LINE) != 0) {
                 device = AudioSystem.DEVICE_OUT_AUX_LINE;
+            } else if((device & AudioSystem.DEVICE_OUT_AUX_DIGITAL) != 0) {
+                device = AudioSystem.DEVICE_OUT_AUX_DIGITAL;
             } else {
                 device &= AudioSystem.DEVICE_OUT_ALL_A2DP;
             }
@@ -4659,6 +4663,26 @@ public class AudioService extends IAudioService.Stub {
         synchronized (mConnectedDevices) {
             boolean isConnected = (mConnectedDevices.containsKey(device) &&
                     (params.isEmpty() || mConnectedDevices.get(device).equals(params)));
+	
+	    boolean isSpdifOrHdmi = ((device == AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET) ||
+                                        (device == AudioSystem.DEVICE_OUT_AUX_DIGITAL));
+            if (isSpdifOrHdmi) {
+                if (!connected) {
+                    AudioSystem.setDeviceConnectionState(device,
+                                              AudioSystem.DEVICE_STATE_UNAVAILABLE,
+                                              mConnectedDevices.get(device));
+                    mConnectedDevices.remove(device);
+                    return true;
+                } else {
+                    AudioSystem.setDeviceConnectionState(device,
+                                              AudioSystem.DEVICE_STATE_AVAILABLE,
+                                                         params);
+                    mConnectedDevices.put(new Integer(device), params);
+                    return true;
+                }
+
+            }
+
 
             if (isConnected && !connected) {
                 AudioSystem.setDeviceConnectionState(device,
