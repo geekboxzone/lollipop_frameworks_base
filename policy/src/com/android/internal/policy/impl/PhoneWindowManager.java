@@ -633,6 +633,41 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 	}
     };
 
+   /*$_rbox_$_modify_$_zhangwen_20140224:add support for TV Media Key*/
+//$_rbox_$_modify_$_begin
+    public static final String RKVIDEOPLAYER_ACTIVE_ACTION = "android.rk.RockVideoPlayer.state.active";
+    public static final String RKVIDEOPLAYER_STOP_ACTION = "android.rk.RockVideoPlayer.state.stop";
+    public static final String MUSICPLAYER_FOREGROUND_ACTION = "com.android.music.state.foreground";
+    public static final String MUSICPLAYER_BACKGROUND_ACTION = "com.android.music.state.background";
+    private boolean mRkVideoPlaying = false;
+    private boolean mMusicActivityOn = false;
+    BroadcastReceiver mMusicStateReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(RKVIDEOPLAYER_ACTIVE_ACTION.equals(action)){
+                mRkVideoPlaying = true;
+                Log.i(TAG,"----------- RockVideoPlayer is active ----------");
+            }
+            else if(RKVIDEOPLAYER_STOP_ACTION.equals(action)){
+                mRkVideoPlaying = false;
+                Log.i(TAG,"----------- RockVideoPlayer is stop ----------");
+            }
+            else if(MUSICPLAYER_FOREGROUND_ACTION.equals(action)){
+                mMusicActivityOn = true;
+                Log.i(TAG,"----------- MusicPlayerActivity is at foreground ----------");
+            }
+            else if(MUSICPLAYER_BACKGROUND_ACTION.equals(action)){
+                mMusicActivityOn = false;
+                Log.i(TAG,"----------- MusicPlayerActivity is at background ----------");
+            }
+        }
+    };
+
+    static final int FREQUENCY = 10;
+    private int mKeyDownCount = 0;
+    private long mKeyDownTime = 0;
+//$_rbox_$_modify_$_end
+
     private class PolicyHandler extends Handler {
         @Override
         public void handleMessage(Message msg) {
@@ -1408,10 +1443,21 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             goingToSleep(WindowManagerPolicy.OFF_BECAUSE_OF_USER);
         }
 
-
 	if (platformRoName.contains("3288") || platformSysName.contains("rk3368")) {
 		mForceUseHwui = true;
 	}
+
+        /*$_rbox_$_modify_$_zhangwen_20140224:add by ljh to support remote ctrl of musicplayer*/
+               //$_rbox_$_modify_$_begin
+        // register for rockvideoplayer running state
+        IntentFilter musicFilter = new IntentFilter();
+        musicFilter.addAction(RKVIDEOPLAYER_ACTIVE_ACTION);
+        musicFilter.addAction(RKVIDEOPLAYER_STOP_ACTION);
+        //register for musicplayer running state
+        musicFilter.addAction(MUSICPLAYER_FOREGROUND_ACTION);
+        musicFilter.addAction(MUSICPLAYER_BACKGROUND_ACTION);
+        context.registerReceiver(mMusicStateReceiver, musicFilter);
+               //$_rbox_$_modify_$_end
 
 	WindowManager wm = (WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
 	DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -2502,6 +2548,110 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     + repeatCount + " keyguardOn=" + keyguardOn + " mHomePressed=" + mHomePressed
                     + " canceled=" + canceled);
         }
+
+       /*$_rbox_$_modify_$_zhangwen_20140224:support remote control of musicplayer*/
+//$_rbox_$_modify_$_begin
+    if(!mRkVideoPlaying && !mMusicActivityOn){
+    //we only control musicplayer while it is playing background and video is off
+        if ( keyCode == KeyEvent.KEYCODE_TV_MEDIA_PREVIOUS
+            || keyCode == KeyEvent.KEYCODE_TV_MEDIA_REWIND 
+            || keyCode == KeyEvent.KEYCODE_TV_MEDIA_MULT_BACKWARD) {
+            Intent i = new Intent();
+            i.setAction("com.android.music.backgroundcontrol");
+            if (!down) {//play previous at key up
+                if(((keyCode==KeyEvent.KEYCODE_TV_MEDIA_MULT_BACKWARD) && (mKeyDownCount == 0))
+                    || (keyCode == KeyEvent.KEYCODE_TV_MEDIA_PREVIOUS)) {
+                    i.putExtra("command","previous");
+                }else{
+                    i.putExtra("command","backward");
+                    i.putExtra("repeatcount",0);
+                }
+                mContext.sendBroadcast(i);
+               // mKeyDownCount = 0;
+            }else{//play backward at key down
+                if(keyCode!=KeyEvent.KEYCODE_TV_MEDIA_PREVIOUS){
+                    if(keyCode == KeyEvent.KEYCODE_TV_MEDIA_MULT_BACKWARD)
+                        mKeyDownCount = repeatCount;
+                    if(repeatCount==0)
+                        mKeyDownTime = SystemClock.elapsedRealtime();
+                    if(((keyCode == KeyEvent.KEYCODE_TV_MEDIA_REWIND)||(repeatCount>0))
+                        && (repeatCount%FREQUENCY == 0)){
+                        i.putExtra("command","backward");
+                        i.putExtra("repeatcount",repeatCount);
+//                        long now = SystemClock.elapsedRealtime();
+//                        i.putExtra("presstime",(now-mKeyDownTime));
+                        mContext.sendBroadcast(i);
+                    }
+                }
+            }
+            return -1;
+        }else if (keyCode == KeyEvent.KEYCODE_TV_MEDIA_PLAY) {
+            if (down && repeatCount == 0) {//do play at first key down
+                Intent i = new Intent();
+                i.setAction("com.android.music.backgroundcontrol");
+                i.putExtra("command","play");
+                mContext.sendBroadcast(i);
+                return -1;
+             }
+        }else if (keyCode == KeyEvent.KEYCODE_TV_MEDIA_PAUSE) {
+            if (down && repeatCount == 0) {//do pause at first key down
+                Intent i = new Intent();
+                i.setAction("com.android.music.backgroundcontrol");
+                i.putExtra("command","pause");
+                mContext.sendBroadcast(i);
+                return -1;
+             }
+        }else if (keyCode == KeyEvent.KEYCODE_TV_MEDIA_PLAY_PAUSE) {
+            if (down && repeatCount == 0) {//do pause or play at first key down
+                Intent i = new Intent();
+                i.setAction("com.android.music.backgroundcontrol");
+                i.putExtra("command","togglepause");
+                mContext.sendBroadcast(i);
+                return -1;
+             }
+        }else if (keyCode == KeyEvent.KEYCODE_TV_MEDIA_NEXT
+            || keyCode == KeyEvent.KEYCODE_TV_MEDIA_FAST_FORWARD 
+            || keyCode == KeyEvent.KEYCODE_TV_MEDIA_MULT_FORWARD) {
+            Intent i = new Intent();
+            i.setAction("com.android.music.backgroundcontrol");
+            if (!down) {//play next at key up
+                if(((keyCode==KeyEvent.KEYCODE_TV_MEDIA_MULT_FORWARD) && (mKeyDownCount == 0)) 
+                    || (keyCode==KeyEvent.KEYCODE_TV_MEDIA_NEXT)){
+                    i.putExtra("command","next");
+                }else{
+                    i.putExtra("command","forward");
+                    i.putExtra("repeatcount",0);
+                }
+                mContext.sendBroadcast(i);
+                //mKeyDownCount = 0;
+            }else{//play forward at key down
+                if(keyCode!=KeyEvent.KEYCODE_TV_MEDIA_NEXT){
+                    if(keyCode == KeyEvent.KEYCODE_TV_MEDIA_MULT_FORWARD)
+                        mKeyDownCount = repeatCount;
+                    if(repeatCount==0)
+                        mKeyDownTime = SystemClock.elapsedRealtime();
+                    if(((keyCode == KeyEvent.KEYCODE_TV_MEDIA_FAST_FORWARD)||(repeatCount>0))
+                        && (repeatCount%FREQUENCY == 0)){
+                        i.putExtra("command","forward");
+                        i.putExtra("repeatcount",repeatCount);
+//                        long now = SystemClock.elapsedRealtime();
+//                        i.putExtra("presstime",(now-mKeyDownTime));
+                        mContext.sendBroadcast(i);
+                    }
+                }
+            }
+            return -1;
+
+        }else if (keyCode == KeyEvent.KEYCODE_TV_MEDIA_STOP) {
+            if (down && repeatCount==0) {//do stop at first key down
+                Intent i = new Intent();
+                i.setAction("com.android.music.backgroundcontrol");
+                i.putExtra("command","stop");
+                mContext.sendBroadcast(i);
+                return -1;
+             }
+        }
+    }
 
 	mstate = SystemProperties.get("sys.KeyMouse.mKeyMouseState");
 	if (mstate.equals("on") && ((keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_LEFT)

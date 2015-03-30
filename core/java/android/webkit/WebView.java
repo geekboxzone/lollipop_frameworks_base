@@ -2305,8 +2305,31 @@ public class WebView extends AbsoluteLayout
         return mProvider.getViewDelegate().onTrackballEvent(event);
     }
 
+    /*$_rbox_$_modify_$_huangjc: handle zoom in/out keyevent*/
+    //$_rbox_$_modify_$_begin
+    private boolean keyProcess(int keyCode) 
+    {
+        if(keyCode == KeyEvent.KEYCODE_ZOOM_IN)// zoomIn
+        {
+               zoomIn();
+               return true;
+        }
+        else if(keyCode == KeyEvent.KEYCODE_ZOOM_OUT) //zoomOut
+        {
+               zoomOut();
+               return true;
+        }              
+        return false;
+    }
+     //$_rbox_$_modify_$_end
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
+        /*$_rbox_$_modify_$_huangjc: handle zoom in/out keyevent*/
+        //$_rbox_$_modify_$_begin
+        if(keyProcess(keyCode))
+               return true;
+        //$_rbox_$_modify_$_end
         return mProvider.getViewDelegate().onKeyDown(keyCode, event);
     }
 
