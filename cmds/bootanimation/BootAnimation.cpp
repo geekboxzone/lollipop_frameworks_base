@@ -67,7 +67,6 @@
 #define FIXED_ONE 1
 
 #define USER_BOOTANIMATION_FILE "/data/local/bootanimation.zip"
-#define BOOTMUSIC_FILE "/system/media/audio/boot.ogg"
 
 #define USER_SHUTDOWN_ANIMATION_FILE "/data/local/shutdownanimation.zip"
 #define SYSTEM_SHUTDOWN_ANIMATION_FILE "/system/media/shutdownanimation.zip"
@@ -437,60 +436,24 @@ void BootAnimation::getTexCoordinate() {
 		mTexCoords[2]=FIXED_ONE*w_scale; mTexCoords[3]=0;
 		mTexCoords[4]=FIXED_ONE*w_scale; mTexCoords[5]=FIXED_ONE*h_scale;
 		mTexCoords[6]=0;                 mTexCoords[7]=FIXED_ONE*h_scale;
+
+        // 若没有 reverse_axis, 且 mBMPWidth 等于 mTexWidth, mBMPHeight 等于 mTexHeight, 则 : 
+        // mTexCoords 的内容是 :
+        // {
+        //      0, 0    // texture_coordinate_space 中, 左下角
+        //      1, 0    // 右下角
+        //      1, 1    // 右上角
+        //      0, 1    // 左上角
+        // }
 	}
-}
-
-
-
-void BootAnimation::playMusic()
-{
-    status_t ret = 0;        // dummy_ret.
-
-    sp<MediaPlayer> mp = new MediaPlayer();
-    int fd = -1;
-    const int64_t offset = 0;
-    int64_t length = 0;
-    
-    if ( NULL == mp.get() )
-    {
-        SET_ERROR_AND_JUMP("fail to new media_player", ret, -1, EXIT);
-    }
-    if ( 0 != access(BOOTMUSIC_FILE, F_OK) )
-    {
-        W("'%s' is not accessible.", BOOTMUSIC_FILE);
-        ret = -1;
-        goto EXIT;
-    }
-    
-    fd = open(BOOTMUSIC_FILE, O_RDONLY);
-    if ( -1 == fd )
-    {
-        SET_ERROR_AND_JUMP("fail to open '%s'. err : '%s'.", ret, -1, EXIT,
-                           BOOTMUSIC_FILE,
-                           strerror(errno) );
-    }
-
-    length = getFileSize(fd);
-   
-    CHECK_FUNC_CALL( mp->setDataSource(fd, offset, length) , ret, EXIT);
-    CHECK_FUNC_CALL( mp->prepare() , ret, EXIT);
-    CHECK_FUNC_CALL( mp->start() , ret, EXIT);
-
-EXIT:
-    return;
 }
 
 bool BootAnimation::android()
 {
-    initTexture(&mAndroid[0], mAssets, "images/android-logo-mask.png");
+    initTexture(&mAndroid[0], mAssets, "images/android-logo-mask.png"); // texture_object_mask
     initTexture(&mAndroid[1], mAssets, "images/android-logo-shine.png");
     mBMPWidth = mTexWidth = mBMPHeight = mTexHeight = 1;
     getTexCoordinate();
-
-    // to add startup music
-    #ifdef BOOTMUSIC_FILE
-    playMusic();
-    #endif
 
     // clear screen
     glShadeModel(GL_FLAT);
@@ -530,10 +493,10 @@ bool BootAnimation::android()
     }
 
 	const GLfloat mask_vertices[] = {
-			xc, yc, 0,
-			xc+mAndroid[0].w, yc, 0,
-			xc+mAndroid[0].w, yc+mAndroid[0].h, 0,
-			xc, yc+mAndroid[0].h, 0
+			xc, yc, 0,                  // 在 gl_coordinate_space 中, 左下角
+			xc+mAndroid[0].w, yc, 0,    // 右下角
+			xc+mAndroid[0].w, yc+mAndroid[0].h, 0,  // 右上角
+			xc, yc+mAndroid[0].h, 0     // 左上角
 	};
 
 	const GLfloat shine_vertices[] = {
@@ -543,7 +506,11 @@ bool BootAnimation::android()
 			xc, yc+mAndroid[1].h, 0
 	};
 
-	const GLushort indices[] = { 0, 1, 2,  0, 2, 3 };
+	const GLushort indices[] = 
+    { 
+        0, 1, 2,    // triangle
+        0, 2, 3 
+    };
 	int nelem = sizeof(indices)/sizeof(indices[0]);
 
     const Rect updateRect(xc, yc, xc + mAndroid[0].w, yc + mAndroid[0].h);
@@ -569,8 +536,8 @@ bool BootAnimation::android()
 
         glMatrixMode(GL_TEXTURE);
         glLoadIdentity();
-        glMatrixMode(GL_MODELVIEW);
 
+        glMatrixMode(GL_MODELVIEW); // 之后的变换将作用在 视图模型变换.
 
         glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -582,10 +549,17 @@ bool BootAnimation::android()
         } else {
             glTranslatef(-offset, 0, 0);
         }
+
         glDisable(GL_BLEND);
         glBindTexture(GL_TEXTURE_2D, mAndroid[1].name);
-        glVertexPointer(3, GL_FLOAT, 0, shine_vertices);
-        glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
+        glVertexPointer(3,                  // size
+                        GL_FLOAT,           // type
+                        0,                  // stride
+                        shine_vertices);    // pointer
+        glTexCoordPointer(2,        // size, 二维纹理. 
+                          GL_FLOAT,
+                          0,
+                          mTexCoords);
         glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
 
         if (mReverseAxis) {
@@ -595,17 +569,26 @@ bool BootAnimation::android()
         }
         glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
 
-        if (mReverseAxis) {
+        /*-----------------------------------*/
+
+        /* 回退之前两次的 位移变换. */
+        if (mReverseAxis) { 
             glTranslatef(0, offset - mAndroid[1].h, 0);
         } else {
             glTranslatef(offset - mAndroid[1].w, 0, 0);
         }
 
         glEnable(GL_BLEND);
+        /* 将 texture_object_mask 作为 current texture. */
         glBindTexture(GL_TEXTURE_2D, mAndroid[0].name);
         glVertexPointer(3, GL_FLOAT, 0, mask_vertices);
         glTexCoordPointer(2, GL_FLOAT, 0, mTexCoords);
-        glDrawElements(GL_TRIANGLES, nelem, GL_UNSIGNED_SHORT, indices);
+        glDrawElements(GL_TRIANGLES,        // mode
+                       nelem,               // count
+                       GL_UNSIGNED_SHORT,   // type
+                       indices);            // indices 
+
+        /*-----------------------------------*/
 
         EGLBoolean res = eglSwapBuffers(mDisplay, mSurface);
         if (res == EGL_FALSE)

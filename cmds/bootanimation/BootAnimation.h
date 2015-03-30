@@ -89,7 +89,6 @@ private:
     bool movie();
     void getTexCoordinate();
     void checkExit();
-    void playMusic();
     
     /**
      * 返回给定 fd 的文件的大小.
