@@ -454,6 +454,13 @@ public final class SystemServer {
                 Slog.e(TAG, "Failure starting Account Manager", e);
             }
 
+			try{
+				Slog.i(TAG, "Start SimStateChange Service");
+				startSimStateChangeService(context);
+			} catch (Throwable e) {
+				Slog.e(TAG, "Failure Start SimStatechange Service", e);
+			}
+			
             Slog.i(TAG, "Content Manager");
             contentService = ContentService.main(context,
                     mFactoryTestMode == FactoryTest.FACTORY_TEST_LOW_LEVEL);
@@ -1223,4 +1230,11 @@ public final class SystemServer {
         //Slog.d(TAG, "Starting service: " + intent);
         context.startServiceAsUser(intent, UserHandle.OWNER);
     }
+
+	static final void startSimStateChangeService(Context context) {
+		Intent intent = new Intent();
+		intent.setComponent(new ComponentName("com.android.contacts",
+			"com.android.contacts.SimStateChangedService"));
+		context.startServiceAsUser(intent, UserHandle.OWNER);
+	}
 }
