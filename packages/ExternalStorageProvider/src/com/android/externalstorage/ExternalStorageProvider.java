@@ -83,7 +83,7 @@ public class ExternalStorageProvider extends DocumentsProvider {
     }
 
     private static final String ROOT_ID_PRIMARY_EMULATED = "primary";
-
+    private static final String DEFAULT_EXT_STORAGE_TITLE = "SD Card";
     private StorageManager mStorageManager;
     private Handler mHandler;
 
@@ -160,7 +160,9 @@ public class ExternalStorageProvider extends DocumentsProvider {
                     if (!TextUtils.isEmpty(userLabel)) {
                         root.title = userLabel;
                     } else {
-                        root.title = volume.getDescription(getContext());
+                        //root.title = volume.getDescription(getContext());
+			root.title = TextUtils.isEmpty(volume.getDescription(getContext()))?
+                                DEFAULT_EXT_STORAGE_TITLE : volume.getDescription(getContext());
                     }
                 }
                 root.docId = getDocIdForFile(path);
