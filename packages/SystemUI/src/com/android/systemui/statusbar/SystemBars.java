@@ -25,7 +25,7 @@ import com.android.systemui.SystemUI;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-
+import android.os.SystemProperties;
 /**
  * Ensure a single status bar service implementation is running at all times.
  *
@@ -86,7 +86,10 @@ public class SystemBars extends SystemUI implements ServiceMonitor.Callbacks {
 
     private void createStatusBarFromConfig() {
         if (DEBUG) Log.d(TAG, "createStatusBarFromConfig");
-        final String clsName = mContext.getString(R.string.config_statusBarComponent);
+        String clsName = mContext.getString(R.string.config_statusBarComponent);
+        if ("box".equals(SystemProperties.get("ro.target.product", "tablet"))){
+            clsName = "com.android.systemui.statusbar.tv.TvStatusBar";
+        }
         if (clsName == null || clsName.length() == 0) {
             throw andLog("No status bar component configured", null);
         }
