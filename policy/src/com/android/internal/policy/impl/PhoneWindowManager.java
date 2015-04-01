@@ -4783,6 +4783,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                                                 isKeyguardShowingAndNotOccluded() :
                                                 mKeyguardDelegate.isShowing()));
 
+		//ADD BY LJH START
+		if (down && ((keyCode == KeyEvent.KEYCODE_HOME)||(keyCode == KeyEvent.KEYCODE_MENU)||(keyCode == KeyEvent.KEYCODE_BACK)))
+		{
+			performHapticFeedbackLw(null, HapticFeedbackConstants.VIRTUAL_KEY, false);
+		}
+		//END 
         if (DEBUG_INPUT) {
             Log.d(TAG, "interceptKeyTq keycode=" + keyCode
                     + " interactive=" + interactive + " keyguardActive=" + keyguardActive
