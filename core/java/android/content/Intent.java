@@ -741,6 +741,11 @@ public class Intent implements Parcelable, Cloneable {
 	/**
      * @hide
      */
+	public static final String ACTION_RECEIVED_SMS = "android.intent.action.RECEIVED_SMS";
+
+	/**
+     * @hide
+     */
 	public static final String ACTION_UNREAD_CHANGED = "android.intent.action.UNREAD_CHANGED";
 	/**
      * @hide
