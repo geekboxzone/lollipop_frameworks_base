@@ -53,6 +53,7 @@ public class DisplayOutputManager {
 	public final int DISPLAY_OVERSCAN_RIGHT = 3;
 	public final int DISPLAY_OVERSCAN_TOP = 4;
 	public final int DISPLAY_OVERSCAN_BOTTOM = 5;
+	public final int DISPLAY_OVERSCAN_ALL = 6;
 
 	public final int DISPLAY_3D_NONE = -1;
 	public final int DISPLAY_3D_FRAME_PACKING = 0;
