@@ -100,6 +100,9 @@ public class PhoneStatusBarPolicy {
             else if (action.equals(TelecomManager.ACTION_CURRENT_TTY_MODE_CHANGED)) {
                 updateTTY(intent);
             }
+			else if (action.equals(Intent.ACTION_HEADSET_PLUG)) {
+		        updateHeadset(intent);
+		    }
             else if (action.equals(Intent.ACTION_USER_SWITCHED)) {
                 updateAlarm();
             }
@@ -123,6 +126,7 @@ public class PhoneStatusBarPolicy {
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TelecomManager.ACTION_CURRENT_TTY_MODE_CHANGED);
         filter.addAction(Intent.ACTION_USER_SWITCHED);
+		filter.addAction(Intent.ACTION_HEADSET_PLUG);
         mContext.registerReceiver(mIntentReceiver, filter, null, mHandler);
 
         // TTY status
@@ -163,12 +167,21 @@ public class PhoneStatusBarPolicy {
         mService.setIcon(SLOT_HOTSPOT, R.drawable.stat_sys_hotspot, 0, null);
         mService.setIconVisibility(SLOT_HOTSPOT, mHotspot.isHotspotEnabled());
         mHotspot.addCallback(mHotspotCallback);
+
+		//headset
+		mService.setIcon("headset", R.drawable.stat_sys_headset, 0, null);
+		mService.setIconVisibility("headset", false ); 
     }
 
     public void setZenMode(int zen) {
         mZen = zen;
         updateVolumeZen();
     }
+
+	private final void updateHeadset(Intent intent) {
+		Log.v(TAG, "updateHeadset: state=" + intent.getIntExtra("state" , 0));
+		mService.setIconVisibility("headset", (intent.getIntExtra("state" , 0 ) == 1 )?true :false ); 
+	}
 
     private void updateAlarm() {
         AlarmManager alarmManager = (AlarmManager) mContext.getSystemService(Context.ALARM_SERVICE);
