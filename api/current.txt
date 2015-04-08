@@ -21716,6 +21716,7 @@ package android.os {
     field public final int DISPLAY_IFACE_TV;
     field public final int DISPLAY_IFACE_VGA;
     field public final int DISPLAY_IFACE_YPbPr;
+    field public final int DISPLAY_OVERSCAN_ALL;
     field public final int DISPLAY_OVERSCAN_BOTTOM;
     field public final int DISPLAY_OVERSCAN_LEFT;
     field public final int DISPLAY_OVERSCAN_RIGHT;
