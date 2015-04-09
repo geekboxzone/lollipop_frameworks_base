@@ -451,13 +451,29 @@ static pid_t ForkAndSpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArra
     }
 
     DropCapabilitiesBoundingSet(env);
-
+    #ifdef WITH_HOUDINI
+    bool use_native_bridge = !is_system_server && android::NativeBridgeAvailable();
+    #else 
     bool use_native_bridge = !is_system_server && (instructionSet != NULL)
         && android::NativeBridgeAvailable();
+    #endif
+	
     if (use_native_bridge) {
+	
+	#ifdef WITH_HOUDINI
+	instructionSet = (instructionSet != NULL) ? (instructionSet) : (env->NewStringUTF("arm"
+	#ifdef __LP64__
+          "64"
+	#endif
+          ));
+	#endif
+
       ScopedUtfChars isa_string(env, instructionSet);
       use_native_bridge = android::NeedsNativeBridge(isa_string.c_str());
     }
+    
+    #ifdef WITH_HOUDINI
+    #else
     if (use_native_bridge && dataDir == NULL) {
       // dataDir should never be null if we need to use a native bridge.
       // In general, dataDir will never be null for normal applications. It can only happen in
@@ -466,6 +482,7 @@ static pid_t ForkAndSpecializeCommon(JNIEnv* env, uid_t uid, gid_t gid, jintArra
       use_native_bridge = false;
       ALOGW("Native bridge will not be used because dataDir == NULL.");
     }
+    #endif
 
     if (!MountEmulatedStorage(uid, mount_external, use_native_bridge)) {
       ALOGW("Failed to mount emulated storage: %s", strerror(errno));
