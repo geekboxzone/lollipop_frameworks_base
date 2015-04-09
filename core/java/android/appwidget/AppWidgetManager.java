@@ -876,6 +876,15 @@ public class AppWidgetManager {
         }
         return bindAppWidgetIdIfAllowed(appWidgetId, UserHandle.myUserId(), provider, options);
     }
+	
+	/** {@hide} */
+	public boolean bindAppWidgetIdSkipBindPermission(int appWidgetId, ComponentName provider,
+            Bundle options,boolean skipBindPermission) {
+        if (mService == null) {
+            return false;
+        }
+        return bindAppWidgetIdSkipBindPermission(appWidgetId, UserHandle.myUserId(), provider, options, skipBindPermission);
+    }
 
     /**
      * Set the provider for a given appWidgetId if the caller has a permission.
@@ -1066,6 +1075,22 @@ public class AppWidgetManager {
             throw new RuntimeException("system server dead?", e);
         }
     }
+	
+	/** {@hide} */
+	private boolean bindAppWidgetIdSkipBindPermission(int appWidgetId, int profileId,
+            ComponentName provider, Bundle options,boolean skipBindPermission) {
+        if (mService == null) {
+            return false;
+        }
+        try {
+            return mService.bindAppWidgetIdSkipBindPermission(mPackageName, appWidgetId,
+                    profileId, provider, options ,skipBindPermission);
+        }
+        catch (RemoteException e) {
+            throw new RuntimeException("system server dead?", e);
+        }
+    }
+
 
     private void convertSizesToPixels(AppWidgetProviderInfo info) {
         // Converting complex to dp.

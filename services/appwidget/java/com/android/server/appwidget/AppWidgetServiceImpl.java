@@ -830,6 +830,118 @@ class AppWidgetServiceImpl extends IAppWidgetService.Stub implements WidgetBacku
         return true;
     }
 
+	@Override
+	/** {@hide} */
+    public boolean bindAppWidgetIdSkipBindPermission(String callingPackage, int appWidgetId,
+            int providerProfileId, ComponentName providerComponent, Bundle options ,boolean skipBindPermission) {
+        final int userId = UserHandle.getCallingUserId();
+
+        if (DEBUG) {
+            Slog.i(TAG, "bindAppWidgetId() " + userId);
+        }
+
+        // Make sure the package runs under the caller uid.
+        mSecurityPolicy.enforceCallFromPackage(callingPackage);
+
+        // Check that if a cross-profile binding is attempted, it is allowed.
+        if (!mSecurityPolicy.isEnabledGroupProfile(providerProfileId)) {
+            return false;
+        }
+
+        // If the provider is not under the calling user, make sure this
+        // provider is white listed for access from the parent.
+        if (!mSecurityPolicy.isProviderInCallerOrInProfileAndWhitelListed(
+                providerComponent.getPackageName(), providerProfileId)) {
+            return false;
+        }
+
+        synchronized (mLock) {
+            ensureGroupStateLoadedLocked(userId);
+
+            // A special permission or white listing is required to bind widgets.
+            if (!skipBindPermission && !mSecurityPolicy.hasCallerBindPermissionOrBindWhiteListedLocked(
+                    callingPackage)) {
+                return false;
+            }
+
+            // NOTE: The lookup is enforcing security across users by making
+            // sure the caller can only access widgets it hosts or provides.
+            Widget widget = lookupWidgetLocked(appWidgetId,
+                    Binder.getCallingUid(), callingPackage);
+
+            if (widget == null) {
+                Slog.e(TAG, "Bad widget id " + appWidgetId);
+                return false;
+            }
+
+            if (widget.provider != null) {
+                Slog.e(TAG, "Widget id " + appWidgetId
+                        + " already bound to: " + widget.provider.id);
+                return false;
+            }
+
+            final int providerUid = getUidForPackage(providerComponent.getPackageName(),
+                    providerProfileId);
+            if (providerUid < 0) {
+                Slog.e(TAG, "Package " + providerComponent.getPackageName() + " not installed "
+                        + " for profile " + providerProfileId);
+                return false;
+            }
+
+            // NOTE: The lookup is enforcing security across users by making
+            // sure the provider is in the already vetted user profile.
+            ProviderId providerId = new ProviderId(providerUid, providerComponent);
+            Provider provider = lookupProviderLocked(providerId);
+
+            if (provider == null) {
+                Slog.e(TAG, "No widget provider " + providerComponent + " for profile "
+                        + providerProfileId);
+                return false;
+            }
+
+            if (provider.zombie) {
+                Slog.e(TAG, "Can't bind to a 3rd party provider in"
+                        + " safe mode " + provider);
+                return false;
+            }
+
+            widget.provider = provider;
+            widget.options = (options != null) ? cloneIfLocalBinder(options) : new Bundle();
+
+            // We need to provide a default value for the widget category if it is not specified
+            if (!widget.options.containsKey(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY)) {
+                widget.options.putInt(AppWidgetManager.OPTION_APPWIDGET_HOST_CATEGORY,
+                        AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN);
+            }
+
+            provider.widgets.add(widget);
+
+            final int widgetCount = provider.widgets.size();
+            if (widgetCount == 1) {
+                // Tell the provider that it's ready.
+                sendEnableIntentLocked(provider);
+            }
+
+            // Send an update now -- We need this update now, and just for this appWidgetId.
+            // It's less critical when the next one happens, so when we schedule the next one,
+            // we add updatePeriodMillis to its start time. That time will have some slop,
+            // but that's okay.
+            sendUpdateIntentLocked(provider, new int[] {appWidgetId});
+
+            // Schedule the future updates.
+            registerForBroadcastsLocked(provider, getWidgetIds(provider.widgets));
+
+            saveGroupStateAsync(userId);
+
+            if (DEBUG) {
+                Slog.i(TAG, "Bound widget " + appWidgetId + " to provider " + provider.id);
+            }
+        }
+
+        return true;
+    }
+
+
     @Override
     public int[] getAppWidgetIds(ComponentName componentName) {
         final int userId = UserHandle.getCallingUserId();

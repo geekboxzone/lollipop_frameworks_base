@@ -61,6 +61,8 @@ interface IAppWidgetService {
     void setBindAppWidgetPermission(in String packageName, int userId, in boolean permission);
     boolean bindAppWidgetId(in String callingPackage, int appWidgetId,
             int providerProfileId, in ComponentName providerComponent, in Bundle options);
+    boolean bindAppWidgetIdSkipBindPermission(in String callingPackage, int appWidgetId,
+            int providerProfileId, in ComponentName providerComponent, in Bundle options ,in boolean skipBindPermission);
     void bindRemoteViewsService(String callingPackage, int appWidgetId, in Intent intent,
             in IBinder connection);
     void unbindRemoteViewsService(String callingPackage, int appWidgetId, in Intent intent);
