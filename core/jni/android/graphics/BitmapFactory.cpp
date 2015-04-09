@@ -459,10 +459,10 @@ static jobject doDecode(JNIEnv* env, SkStreamRewindable* stream, jobject padding
 }
 
 // Need to buffer enough input to be able to rewind as much as might be read by a decoder
-// trying to determine the stream's format. Currently the most is 64, read by
+// trying to determine the stream's format. Currently the most is 8192, read by
 // SkImageDecoder_libwebp.
 // FIXME: Get this number from SkImageDecoder
-#define BYTES_TO_BUFFER 64
+#define BYTES_TO_BUFFER 8192
 
 static jobject nativeDecodeStream(JNIEnv* env, jobject clazz, jobject is, jbyteArray storage,
         jobject padding, jobject options) {
