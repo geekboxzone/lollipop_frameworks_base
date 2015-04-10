@@ -28,9 +28,20 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import android.view.View;
+import android.widget.TextView;
+import android.provider.Settings;
+import android.util.Log;
+
+import com.android.systemui.R;
+
 public class BatteryController extends BroadcastReceiver {
     private static final String TAG = "BatteryController";
     private static final boolean DEBUG = Log.isLoggable(TAG, Log.DEBUG);
+
+	private TextView mBatteryPercentageView;
+    private boolean mIsShowPercentage = true;
+    private String mPercentage = "100%";
 
     private final ArrayList<BatteryStateChangeCallback> mChangeCallbacks = new ArrayList<>();
     private final PowerManager mPowerManager;
@@ -41,13 +52,22 @@ public class BatteryController extends BroadcastReceiver {
     private boolean mCharged;
     private boolean mPowerSave;
 
+	public void setPercentageView(TextView v) {
+        mBatteryPercentageView = v;
+    }
+
     public BatteryController(Context context) {
+		mIsShowPercentage = (Settings.Secure.getInt(context.getContentResolver(), 
+                    Settings.Secure.BATTERY_PERCENTAGE, 0) != 0);
+   
+
         mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         filter.addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED);
         filter.addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGING);
+		filter.addAction(BatteryManager.ACTION_SHOW_BATTERY_PERCENTAGE);
         context.registerReceiver(this, filter);
 
         updatePowerSave();
@@ -85,12 +105,34 @@ public class BatteryController extends BroadcastReceiver {
             mCharging = mCharged || status == BatteryManager.BATTERY_STATUS_CHARGING;
 
             fireBatteryLevelChanged();
+
+			int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100);
+            mPercentage = String.valueOf(mLevel * 100 / scale) + "%";
+            refreshBatteryPercentage();
+        } else if (action.equals(BatteryManager.ACTION_SHOW_BATTERY_PERCENTAGE)) {
+            mIsShowPercentage = (intent.getIntExtra("state",0) == 1);
+            refreshBatteryPercentage();
         } else if (action.equals(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)) {
             updatePowerSave();
         } else if (action.equals(PowerManager.ACTION_POWER_SAVE_MODE_CHANGING)) {
             setPowerSave(intent.getBooleanExtra(PowerManager.EXTRA_POWER_SAVE_MODE, false));
         }
     }
+
+	private void refreshBatteryPercentage() {
+        if (mBatteryPercentageView == null) {
+            Log.d(TAG, "mBatteryPercentageView == null");
+            return;
+        }
+
+        if (mIsShowPercentage) {
+            mBatteryPercentageView.setText(mPercentage);
+            mBatteryPercentageView.setVisibility(View.VISIBLE);
+        } else {
+            mBatteryPercentageView.setVisibility(View.GONE);
+        }
+    }
+
 
     public boolean isPowerSave() {
         return mPowerSave;

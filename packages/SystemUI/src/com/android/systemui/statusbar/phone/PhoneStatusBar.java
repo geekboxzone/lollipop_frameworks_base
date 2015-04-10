@@ -925,6 +925,7 @@ final Object mScreenshotLock = new Object();
         // Other icons
         mLocationController = new LocationControllerImpl(mContext); // will post a notification
         mBatteryController = new BatteryController(mContext);
+		mBatteryController.setPercentageView((TextView) mStatusBarWindow.findViewById(R.id.battery_percentage));
         mBatteryController.addStateChangedCallback(new BatteryStateChangeCallback() {
             @Override
             public void onPowerSaveChanged() {

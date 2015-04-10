@@ -3540,6 +3540,12 @@ public final class Settings {
             return putStringForUser(cr, name, Float.toString(value), userHandle);
         }
 
+		 /**
+         * turn on/off the battery percentage show in status bar
+         * @hide
+         */
+        public static final String BATTERY_PERCENTAGE = "battery_percentage";
+
         /**
          * @deprecated Use {@link android.provider.Settings.Global#DEVELOPMENT_SETTINGS_ENABLED}
          * instead

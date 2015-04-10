@@ -99,6 +99,11 @@ public class BatteryManager {
      */
     public static final String EXTRA_INVALID_CHARGER = "invalid_charger";
 
+	/**
+     * {@hide}
+     */
+	public static final String ACTION_SHOW_BATTERY_PERCENTAGE = "intent.action.SHOW_BATTERY_PERCENTAGE";
+
     // values for "status" field in the ACTION_BATTERY_CHANGED Intent
     public static final int BATTERY_STATUS_UNKNOWN = 1;
     public static final int BATTERY_STATUS_CHARGING = 2;
