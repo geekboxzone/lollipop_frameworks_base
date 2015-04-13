@@ -29,12 +29,13 @@ import android.provider.Settings.Secure;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.android.internal.telephony.PhoneConstants;
+
 import com.android.systemui.R;
 import com.android.systemui.qs.QSTile;
 import com.android.systemui.qs.tiles.AirplaneModeTile;
 import com.android.systemui.qs.tiles.BluetoothTile;
 import com.android.systemui.qs.tiles.CastTile;
-import com.android.systemui.qs.tiles.CellularTile;
 import com.android.systemui.qs.tiles.CellularTileForSlot;
 import com.android.systemui.qs.tiles.ColorInversionTile;
 import com.android.systemui.qs.tiles.FlashlightTile;
@@ -258,8 +259,8 @@ public class QSTileHost implements QSTile.Host {
         if (tileSpec.equals("wifi")) return new WifiTile(this);
         else if (tileSpec.equals("bt")) return new BluetoothTile(this);
         else if (tileSpec.equals("inversion")) return new ColorInversionTile(this);
-        else if (tileSpec.equals("cell")) return new CellularTile(this);
-        else if (tileSpec.equals("cell2")) return new CellularTileForSlot(this, 1);
+        else if (tileSpec.equals("cell")) return new CellularTileForSlot(this, PhoneConstants.SIM_ID_1);
+        else if (tileSpec.equals("cell2")) return new CellularTileForSlot(this, PhoneConstants.SIM_ID_2);
         else if (tileSpec.equals("airplane")) return new AirplaneModeTile(this);
         else if (tileSpec.equals("rotation")) return new RotationLockTile(this);
         else if (tileSpec.equals("flashlight")) return new FlashlightTile(this);

@@ -79,7 +79,9 @@ public interface NetworkController {
         boolean isMobileDataSupported();
         boolean isMobileDataSupported(int slotId);
         boolean isMobileDataEnabled();
+        boolean isMobileDataEnabled(int slotId);
         void setMobileDataEnabled(boolean enabled);
+        void setMobileDataEnabled(int slotId, boolean enabled);
         DataUsageInfo getDataUsageInfo();
         DataUsageInfo getDataUsageInfo(int slotId);
 
