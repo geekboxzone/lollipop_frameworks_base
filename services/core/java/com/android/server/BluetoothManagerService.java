@@ -648,7 +648,7 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
         }
 
         @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
+        public synchronized void onServiceConnected(ComponentName className, IBinder service) {
             // remove timeout message
             mHandler.removeMessages(MESSAGE_BIND_PROFILE_SERVICE, this);
             mService = service;
@@ -658,6 +658,7 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
             } catch (RemoteException e) {
                 Log.e(TAG, "Unable to linkToDeath", e);
             }
+            Log.d(TAG, className.getPackageName()+":"+className.getClassName() + ":onServiceConnected() ");
             int n = mProxies.beginBroadcast();
             for (int i = 0; i < n; i++) {
                 try {
@@ -670,13 +671,14 @@ class BluetoothManagerService extends IBluetoothManager.Stub {
         }
 
         @Override
-        public void onServiceDisconnected(ComponentName className) {
+        public synchronized void onServiceDisconnected(ComponentName className) {
             if (mService == null) {
                 return;
             }
             mService.unlinkToDeath(this, 0);
             mService = null;
             mClassName = null;
+            Log.d(TAG, className.getPackageName()+":"+className.getClassName() +":onServiceDisconnected()");
             int n = mProxies.beginBroadcast();
             for (int i = 0; i < n; i++) {
                 try {
