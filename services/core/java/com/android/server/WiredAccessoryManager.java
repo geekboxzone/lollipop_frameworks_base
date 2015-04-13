@@ -433,6 +433,16 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
             } catch (NumberFormatException e) {
                 Slog.e(TAG, "Could not parse switch state from event " + event);
             }
+	   try {
+                String devPath = event.get("DEVPATH");
+                String name = event.get("NAME");
+                int state = Integer.parseInt(event.get("STATE"));
+                synchronized (mLock) {
+                    updateStateLocked(devPath, name, state);
+                }
+            } catch (NumberFormatException e) {
+                Slog.e(TAG, "Could not parse extcon state from event " + event);
+            }
         }
 
         private void updateStateLocked(String devPath, String name, int state) {
@@ -447,12 +457,20 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
 
         private final class UEventInfo {
             private final String mDevName;
+            private final String mClassName;
             private final int mState1Bits;
             private final int mState2Bits;
             private final int mStateNbits;
 
             public UEventInfo(String devName, int state1Bits, int state2Bits, int stateNbits) {
                 mDevName = devName;
+                /* Check if the kernel is using EXTCON class */
+                File f_extcon = new File(String.format(Locale.US, "/sys/class/extcon/%s/state", mDevName));
+                if (f_extcon.exists()) {
+                    mClassName = "extcon";
+                } else {
+                    mClassName = "switch";
+                }
                 mState1Bits = state1Bits;
                 mState2Bits = state2Bits;
                 mStateNbits = stateNbits;
@@ -461,11 +479,11 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
             public String getDevName() { return mDevName; }
 
             public String getDevPath() {
-                return String.format(Locale.US, "/devices/virtual/switch/%s", mDevName);
+		return String.format(Locale.US, "/devices/virtual/%s/%s", mClassName, mDevName);
             }
 
             public String getSwitchStatePath() {
-                return String.format(Locale.US, "/sys/class/switch/%s/state", mDevName);
+		return String.format(Locale.US, "/sys/class/%s/%s/state", mClassName, mDevName);
             }
 
             public boolean checkSwitchExists() {
