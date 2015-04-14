@@ -275,7 +275,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 				// reboot
 				mItems.add(
 					new SinglePressAction(
-						com.android.internal.R.drawable.ic_lock_power_off,
+						com.android.internal.R.drawable.ic_lock_reboot,
 						R.string.global_action_reboot) {      
 		
 					public void onPress() { 
@@ -434,7 +434,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
     }
 
     private Action getSettingsAction() {
-        return new SinglePressAction(com.android.internal.R.drawable.ic_settings,
+        return new SinglePressAction(com.android.internal.R.drawable.ic_lock_settings,
                 R.string.global_action_settings) {
 
             @Override

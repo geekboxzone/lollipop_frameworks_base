@@ -2603,5 +2603,8 @@
     <java-symbol type="string" name="reboot_confirm" />
     <java-symbol type="string" name="reboot_progress" />
 	<java-symbol type="string" name="global_action_reboot" />
-
+	<java-symbol type="drawable" name="ic_settings_alpha" />  
+	<java-symbol type="drawable" name="ic_lock_reboot_alpha" />
+	<java-symbol type="drawable" name="ic_lock_reboot" />
+	<java-symbol type="drawable" name="ic_lock_settings" />
 </resources>
