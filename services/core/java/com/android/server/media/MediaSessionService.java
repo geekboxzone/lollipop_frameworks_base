@@ -51,6 +51,7 @@ import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.ResultReceiver;
 import android.os.ServiceManager;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.speech.RecognizerIntent;
@@ -832,13 +833,21 @@ public class MediaSessionService extends SystemService implements Monitor {
 
             }
             boolean preferSuggestedStream = false;
+
+            if (SystemProperties.get("fm.on", "false").equals("true")) {
+                suggestedStream = AudioManager.STREAM_MUSIC;
+                preferSuggestedStream = true;
+            }
+
             if (isValidLocalStreamType(suggestedStream)
                     && AudioSystem.isStreamActive(suggestedStream, 0)) {
                 preferSuggestedStream = true;
             }
+
             if (session == null || preferSuggestedStream) {
                 if ((flags & AudioManager.FLAG_ACTIVE_MEDIA_ONLY) != 0
-                        && !AudioSystem.isStreamActive(AudioManager.STREAM_MUSIC, 0)) {
+                        && !AudioSystem.isStreamActive(AudioManager.STREAM_MUSIC, 0)
+                        && SystemProperties.get("fm.on", "false").equals("false")) {
                     if (DEBUG) {
                         Log.d(TAG, "No active session to adjust, skipping media only volume event");
                     }
