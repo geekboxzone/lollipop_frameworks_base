@@ -33,6 +33,7 @@ import com.android.systemui.statusbar.policy.SecurityController;
 
 import java.util.ArrayList;
 import java.util.List;
+import android.graphics.PorterDuff;
 
 // Intimately tied to the design of res/layout/signal_cluster_view.xml
 public class SignalClusterView
@@ -162,7 +163,7 @@ public class SignalClusterView
     @Override
     public void setMobileDataIndicators(boolean visible, int strengthIcon, int typeIcon,
             String contentDescription, String typeContentDescription, boolean isTypeIconWide,
-            int subId) {
+            int subId, int slotId) {
         PhoneState state = getOrInflateState(subId);
         state.mMobileVisible = visible;
         state.mMobileStrengthId = strengthIcon;
@@ -170,7 +171,7 @@ public class SignalClusterView
         state.mMobileDescription = contentDescription;
         state.mMobileTypeDescription = typeContentDescription;
         state.mIsMobileTypeIconWide = isTypeIconWide;
-
+		state.mSlotId = slotId;
         apply();
     }
 
@@ -343,6 +344,9 @@ public class SignalClusterView
         private ViewGroup mMobileGroup;
         private ImageView mMobile, mMobileType;
 
+		private int mSlotId;
+        private int[] mColor = {0xFFFF6600, 0xFF0066FF};
+
         public PhoneState(int subId, Context context) {
             ViewGroup root = (ViewGroup) LayoutInflater.from(context)
                     .inflate(R.layout.mobile_signal_group, null);
@@ -359,7 +363,9 @@ public class SignalClusterView
         public boolean apply(boolean isSecondaryIcon) {
             if (mMobileVisible && !mIsAirplaneMode) {
                 mMobile.setImageResource(mMobileStrengthId);
+				mMobile.setColorFilter(mColor[mSlotId], PorterDuff.Mode.MULTIPLY);
                 mMobileType.setImageResource(mMobileTypeId);
+				mMobileType.setColorFilter(mColor[mSlotId], PorterDuff.Mode.MULTIPLY);
                 mMobileGroup.setContentDescription(mMobileTypeDescription
                         + " " + mMobileDescription);
                 mMobileGroup.setVisibility(View.VISIBLE);

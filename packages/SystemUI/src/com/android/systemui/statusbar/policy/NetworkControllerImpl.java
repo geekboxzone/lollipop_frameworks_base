@@ -1268,7 +1268,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
                         dataContentDescription,
                         // Only wide if actually showing something.
                         icons.mIsWide && typeIcon != 0,
-                        mSubscriptionInfo.getSubscriptionId());
+                        mSubscriptionInfo.getSubscriptionId(),
+                        mSubscriptionInfo.getSimSlotIndex());
             }
         }
 
@@ -1838,7 +1839,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
         void setMobileDataIndicators(boolean visible, int strengthIcon, int typeIcon,
                 String contentDescription, String typeContentDescription, boolean isTypeIconWide,
-                int subId);
+                int subId, int slotId);
         void setSubs(List<SubscriptionInfo> subs);
         void setNoSims(boolean show);
 

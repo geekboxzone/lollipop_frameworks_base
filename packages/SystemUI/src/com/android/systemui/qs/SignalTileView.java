@@ -25,6 +25,7 @@ import android.widget.ImageView;
 
 import com.android.systemui.R;
 import com.android.systemui.qs.QSTile.SignalState;
+import android.graphics.PorterDuff;
 
 /** View that represents a custom quick settings tile for displaying signal info (wifi/cell). **/
 public final class SignalTileView extends QSTileView {
@@ -123,6 +124,17 @@ public final class SignalTileView extends QSTileView {
         final boolean shown = isShown();
         setVisibility(mIn, shown, s.activityIn);
         setVisibility(mOut, shown, s.activityOut);
+        if (s.slotID == 0) {
+            mSignal.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
+            mOverlay.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
+            mIn.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
+            mOut.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
+        } else if (s.slotID == 1) {
+            mSignal.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
+            mOverlay.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
+            mIn.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
+            mOut.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
+        }
     }
 
     private void setVisibility(View view, boolean shown, boolean visible) {
