@@ -26,6 +26,10 @@ import android.content.pm.PackageManager;
 import android.content.res.CompatibilityInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.content.pm.ApplicationInfo;  
+import android.content.ComponentName;  
+import android.content.DialogInterface;  
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.Canvas;
 import android.graphics.Matrix;
 import android.graphics.Paint;
@@ -87,7 +91,11 @@ import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
-
+import android.app.Activity; 
+import android.app.ActivityManager;  
+import java.util.List; 
+import android.content.Context;  
+import java.util.Iterator;
 /**
  * The top of a view hierarchy, implementing the needed protocol between View
  * and the WindowManager.  This is for the most part an internal implementation
@@ -690,10 +698,36 @@ public final class ViewRootImpl implements ViewParent,
         }
     }
 
+    public String getAppNameByPID(int pID)
+    {
+        String processName = "";
+        ActivityManager am = (ActivityManager)mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        List l = am.getRunningAppProcesses();
+        Iterator i = l.iterator();
+        PackageManager pm = mContext.getPackageManager();
+        while(i.hasNext()) 
+        {
+            ActivityManager.RunningAppProcessInfo info = (ActivityManager.RunningAppProcessInfo)(i.next());
+            try {
+                if(info.pid == pID)
+                {
+                    CharSequence c = pm.getApplicationLabel(pm.getApplicationInfo(info.processName, PackageManager.GET_META_DATA));
+                    Log.d("Process", "Id: "+ info.pid +" ProcessName: "+ info.processName +"  Label: "+c.toString());
+                    //processName = c.toString();
+                    processName = info.processName;
+                } 
+            }
+            catch(Exception e) 
+            {
+                //Log.d("Process", "Error>> :"+ e.toString());
+            }
+        }
+        return processName;
+    }
     private void enableHardwareAcceleration(WindowManager.LayoutParams attrs) {
+        String callerPackage = getAppNameByPID(Binder.getCallingPid());
         mAttachInfo.mHardwareAccelerated = false;
         mAttachInfo.mHardwareAccelerationRequested = false;
-
         // Don't enable hardware acceleration when the application is in compatibility mode
         if (mTranslator != null) return;
 
@@ -705,7 +739,10 @@ public final class ViewRootImpl implements ViewParent,
             if (!HardwareRenderer.isAvailable()) {
                 return;
             }
-
+            if(callerPackage.equals("com.eebbk.draftpaper")) {
+                Log.d(TAG,"force software draw");
+                return;
+            }
             // Persistent processes (including the system) should not do
             // accelerated rendering on low-end devices.  In that case,
             // sRendererDisabled will be set.  In addition, the system process
