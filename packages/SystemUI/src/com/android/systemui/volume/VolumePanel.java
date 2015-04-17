@@ -272,6 +272,7 @@ public class VolumePanel extends Handler implements DemoMode {
     // Synchronize when accessing this
     private ToneGenerator mToneGenerators[];
     private Vibrator mVibrator;
+    private static int mDismissDelay;
     private boolean mHasVibrator;
 
     private static AlertDialog sSafetyWarning;
@@ -363,6 +364,9 @@ public class VolumePanel extends Handler implements DemoMode {
 
         // For now, only show master volume if master volume is supported
         final Resources res = context.getResources();
+
+	mDismissDelay = res.getInteger(com.android.systemui.R.integer.volume_panel_dismiss_delay);
+
         final boolean useMasterVolume = res.getBoolean(R.bool.config_useMasterVolume);
         if (useMasterVolume) {
             for (int i = 0; i < STREAMS.length; i++) {
@@ -385,7 +389,7 @@ public class VolumePanel extends Handler implements DemoMode {
             public boolean onTouchEvent(MotionEvent event) {
                 if (isShowing() && event.getAction() == MotionEvent.ACTION_OUTSIDE &&
                         sSafetyWarning == null) {
-                    forceTimeout(0);
+                    forceTimeout(mDismissDelay);
                     return true;
                 }
                 return false;
