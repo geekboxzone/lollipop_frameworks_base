@@ -296,6 +296,10 @@ public class WindowManagerService extends IWindowManager.Stub
     /** Maximum value for attachStack and resizeStack weight value */
     public static final float STACK_WEIGHT_MAX = 0.8f;
 
+	/*add to indicate now is monkey test,assign by AMS, no lock*/
+ 	public static boolean mUserIsMonkey = false;
+    public static boolean mHasController = false;
+	
     static final int UPDATE_FOCUS_NORMAL = 0;
     static final int UPDATE_FOCUS_WILL_ASSIGN_LAYERS = 1;
     static final int UPDATE_FOCUS_PLACING_SURFACES = 2;
@@ -10767,6 +10771,13 @@ public class WindowManagerService extends IWindowManager.Stub
             return;
         }
 
+
+		if(mUserIsMonkey || mHasController)
+       	{
+			 // No need to freeze the screen when the system is running monkey
+			Log.d(TAG,"--- startFreezingDisplayLocked catch running monkey---");
+ 			return;
+       	}
         mScreenFrozenLock.acquire();
 
         mDisplayFrozen = true;
@@ -10843,6 +10854,12 @@ public class WindowManagerService extends IWindowManager.Stub
             return;
         }
 
+
+		if(mUserIsMonkey || mHasController){
+			Log.d(TAG,"---stopFreezingDisplayLocked catch running monkey---");             
+			return;
+        }
+		
         mDisplayFrozen = false;
         mLastDisplayFreezeDuration = (int)(SystemClock.elapsedRealtime() - mDisplayFreezeTime);
         StringBuilder sb = new StringBuilder(128);

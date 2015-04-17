@@ -2906,6 +2906,7 @@ final class ActivityStack {
                     resumeOK = controller.activityResuming(next.packageName);
                 } catch (RemoteException e) {
                     mService.mController = null;
+					mService.mWindowManager.mHasController = false;
                     Watchdog.getInstance().setActivityController(null);
                 }
 
@@ -3552,6 +3553,7 @@ final class ActivityStack {
                     moveOK = mService.mController.activityResuming(next.packageName);
                 } catch (RemoteException e) {
                     mService.mController = null;
+					mService.mWindowManager.mHasController = false;
                     Watchdog.getInstance().setActivityController(null);
                 }
                 if (!moveOK) {

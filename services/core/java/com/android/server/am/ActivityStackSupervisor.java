@@ -1467,7 +1467,8 @@ public final class ActivityStackSupervisor implements DisplayListener {
                         aInfo.applicationInfo.packageName);
             } catch (RemoteException e) {
                 mService.mController = null;
-            }
+				mService.mWindowManager.mHasController = false;
+            }	
         }
 
         if (abort) {

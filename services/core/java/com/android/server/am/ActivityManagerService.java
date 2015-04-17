@@ -4304,6 +4304,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                         resumeOK = mController.activityResuming(next.packageName);
                     } catch (RemoteException e) {
                         mController = null;
+						mWindowManager.mHasController = false;
+						Log.d("monkey","---mWindowManager.mHasController = false;1");
                         Watchdog.getInstance().setActivityController(null);
                     }
 
@@ -4941,6 +4943,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
             } catch (RemoteException e) {
                 mController = null;
+				mWindowManager.mHasController = false;
+				Log.d("monkey","---mWindowManager.mHasController = false;2");
                 Watchdog.getInstance().setActivityController(null);
             }
         }
@@ -5053,6 +5057,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
             } catch (RemoteException e) {
                 mController = null;
+				mWindowManager.mHasController = false;
+				Log.d("monkey","---mWindowManager.mHasController = false;3");
                 Watchdog.getInstance().setActivityController(null);
             }
         }
@@ -10319,6 +10325,14 @@ public final class ActivityManagerService extends ActivityManagerNative
                 "setActivityController()");
         synchronized (this) {
             mController = controller;
+			if(mController == null){
+				mWindowManager.mHasController = false;
+				Log.d("monkey","---mWindowManager.mHasController = false;5");
+		    }else{
+				mWindowManager.mHasController = true;
+				Log.d("monkey","---mWindowManager.mHasController = true;6");
+			}
+			
             Watchdog.getInstance().setActivityController(controller);
         }
     }
@@ -10338,6 +10352,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
             }
             mUserIsMonkey = userIsMonkey;
+			mWindowManager.mUserIsMonkey = userIsMonkey;
+	    	Log.d("monkey","mWindowManager.mUserIsMonkey = "+userIsMonkey);
         }
     }
 
@@ -12055,6 +12071,8 @@ public final class ActivityManagerService extends ActivityManagerNative
                     }
                 } catch (RemoteException e) {
                     mController = null;
+					mWindowManager.mHasController = false;
+					Log.d("monkey","---mWindowManager.mHasController = false;4");
                     Watchdog.getInstance().setActivityController(null);
                 }
             }
