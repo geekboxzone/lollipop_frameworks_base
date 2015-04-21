@@ -258,7 +258,9 @@ public class AudioCommon {
             
 		case SND_DEV_TYPE_HDMI_PASSTHROUGH:
 			if(streamType == SND_PCM_STREAM_PLAYBACK){
-				setDeviceConnectionState(ctx,AudioManager.DEVICE_OUT_SPDIF, 0);		
+				setDeviceConnectionState(ctx,AudioManager.DEVICE_OUT_SPDIF, 0);
+				setDeviceConnectionState(ctx,
+						AudioManager.DEVICE_OUT_AUX_DIGITAL, 1);
 				setLastSocPlayback(state);
 
 			}			
@@ -267,6 +269,8 @@ public class AudioCommon {
 		case SND_DEV_TYPE_HDMI_MULTILPCM:
 			if(streamType == SND_PCM_STREAM_PLAYBACK){
 				setDeviceConnectionState(ctx,AudioManager.DEVICE_OUT_SPDIF, 0);
+				setDeviceConnectionState(ctx,
+						AudioManager.DEVICE_OUT_AUX_DIGITAL, 1);
 				setLastSocPlayback(state);
 
 			}
@@ -281,6 +285,8 @@ public class AudioCommon {
 				}
 
 				setDeviceConnectionState(ctx,AudioManager.DEVICE_OUT_SPDIF, connected);
+				setDeviceConnectionState(ctx,
+						AudioManager.DEVICE_OUT_AUX_DIGITAL, 1);
 				setLastSocPlayback(state);
 
 			}
