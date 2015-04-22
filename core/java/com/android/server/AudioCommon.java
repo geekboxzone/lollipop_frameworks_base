@@ -259,8 +259,7 @@ public class AudioCommon {
 		case SND_DEV_TYPE_HDMI_PASSTHROUGH:
 			if(streamType == SND_PCM_STREAM_PLAYBACK){
 				setDeviceConnectionState(ctx,AudioManager.DEVICE_OUT_SPDIF, 0);
-				setDeviceConnectionState(ctx,
-						AudioManager.DEVICE_OUT_AUX_DIGITAL, 1);
+				setDeviceConnectionState(ctx,AudioManager.DEVICE_OUT_AUX_DIGITAL, 1);
 				setLastSocPlayback(state);
 
 			}			
@@ -277,6 +276,7 @@ public class AudioCommon {
 		break;
 		
 		default:
+			Slog.i(TAG, "Default");
 			if (streamType == SND_PCM_STREAM_PLAYBACK) {
 				int connected = 0;
 				if(hasSpdif()){

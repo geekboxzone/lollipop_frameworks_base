@@ -4664,7 +4664,7 @@ public class AudioService extends IAudioService.Stub {
             boolean isConnected = (mConnectedDevices.containsKey(device) &&
                     (params.isEmpty() || mConnectedDevices.get(device).equals(params)));
 	
-	    boolean isSpdifOrHdmi = ((device == AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET) ||
+	    boolean isSpdifOrHdmi = ((device == AudioSystem.DEVICE_OUT_SPDIF) ||
                                         (device == AudioSystem.DEVICE_OUT_AUX_DIGITAL));
             if (isSpdifOrHdmi) {
                 if (!connected) {
@@ -4765,7 +4765,8 @@ public class AudioService extends IAudioService.Stub {
             connType = AudioRoutesInfo.MAIN_HEADPHONES;
             intent.setAction(Intent.ACTION_HEADSET_PLUG);
             intent.putExtra("microphone", 0);
-        } else if (device == AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET) {
+        } else if ((device == AudioSystem.DEVICE_OUT_ANLG_DOCK_HEADSET)
+		  || (device == AudioSystem.DEVICE_OUT_SPDIF)) {
             connType = AudioRoutesInfo.MAIN_DOCK_SPEAKERS;
             intent.setAction(AudioManager.ACTION_ANALOG_AUDIO_DOCK_PLUG);
         } else if (device == AudioSystem.DEVICE_OUT_DGTL_DOCK_HEADSET) {
