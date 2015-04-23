@@ -92,6 +92,20 @@ LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_PATH := $(TARGET_OUT)/fonts
 include $(BUILD_PREBUILT)
 droidsans_fallback_src :=
+else
+
+ifeq ($(SOFIA3GR_FORCE_FONT),true)
+droidsans_fallback_src := DroidSansFallback.ttf
+include $(CLEAR_VARS)
+LOCAL_MODULE := DroidSansFallback.ttf
+LOCAL_SRC_FILES := $(droidsans_fallback_src)
+LOCAL_MODULE_CLASS := ETC
+LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE_PATH := $(TARGET_OUT)/fonts
+include $(BUILD_PREBUILT)
+droidsans_fallback_src :=
+
+endif
 
 endif  # !EXTENDED_FONT_FOOTPRINT
 
