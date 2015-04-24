@@ -40,6 +40,7 @@ import java.util.regex.Pattern;
 import com.android.i18n.phonenumbers.PhoneNumberMatch;
 import com.android.i18n.phonenumbers.PhoneNumberUtil;
 import com.android.i18n.phonenumbers.PhoneNumberUtil.Leniency;
+import android.os.SystemProperties;
 
 /**
  *  Linkify take a piece of text and a regular expression and turns all of the
@@ -229,11 +230,11 @@ public class Linkify {
         if ((mask & PHONE_NUMBERS) != 0) {
             gatherTelLinks(links, text);
         }
-
-        if ((mask & MAP_ADDRESSES) != 0) {
-            gatherMapLinks(links, text);
+        if(SystemProperties.get("ro.sms.address_enable", "false").equals("true")){       
+         if ((mask & MAP_ADDRESSES) != 0) {
+             gatherMapLinks(links, text);
+         }
         }
-
         pruneOverlaps(links);
 
         if (links.size() == 0) {
