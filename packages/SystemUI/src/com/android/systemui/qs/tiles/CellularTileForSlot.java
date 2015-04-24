@@ -33,6 +33,7 @@ import com.android.systemui.statusbar.policy.NetworkController;
 import com.android.systemui.statusbar.policy.NetworkController.MobileDataController;
 import com.android.systemui.statusbar.policy.NetworkController.MobileDataController.DataUsageInfo;
 import com.android.systemui.statusbar.policy.NetworkController.NetworkSignalChangedCallback;
+import android.telephony.SubscriptionInfo;
 
 /** Quick settings tile: Cellular **/
 public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
@@ -42,6 +43,7 @@ public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
     private final NetworkController mController;
     private final MobileDataController mDataController;
     private final CellularDetailAdapter mDetailAdapter;
+	private SubscriptionManager mSubscriptionManager;
 
     private int mSlotId = 0;
 
@@ -51,6 +53,8 @@ public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
         mDataController = mController.getMobileDataController();
         mDetailAdapter = new CellularDetailAdapter();
         this.mSlotId = slotId;
+		mSubscriptionManager = (SubscriptionManager) mContext.getSystemService(
+                Context.TELEPHONY_SUBSCRIPTION_SERVICE);
     }
 
     @Override
@@ -120,7 +124,13 @@ public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
                 R.string.accessibility_quick_settings_mobile,
                 signalContentDesc, dataContentDesc,
                 state.label);
-		state.slotID = mSlotId;
+				
+        SubscriptionInfo info = mSubscriptionManager.getActiveSubscriptionInfoForSimSlotIndex(mSlotId);
+        if (info != null) {
+            state.iconTint = info.getIconTint();
+        } else {
+            state.iconTint = 0xFFFFFFFF;
+        }
     }
 
     // Remove the period from the network name

@@ -124,16 +124,11 @@ public final class SignalTileView extends QSTileView {
         final boolean shown = isShown();
         setVisibility(mIn, shown, s.activityIn);
         setVisibility(mOut, shown, s.activityOut);
-        if (s.slotID == 0) {
-            mSignal.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
-            mOverlay.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
-            mIn.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
-            mOut.setColorFilter(0xFFFF6600, PorterDuff.Mode.MULTIPLY);
-        } else if (s.slotID == 1) {
-            mSignal.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
-            mOverlay.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
-            mIn.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
-            mOut.setColorFilter(0xFF0066FF, PorterDuff.Mode.MULTIPLY);
+        if (s.iconTint != -1) {
+            mSignal.setColorFilter(s.iconTint, PorterDuff.Mode.MULTIPLY);
+            mOverlay.setColorFilter(s.iconTint, PorterDuff.Mode.MULTIPLY);
+            mIn.setColorFilter(s.iconTint, PorterDuff.Mode.MULTIPLY);
+            mOut.setColorFilter(s.iconTint, PorterDuff.Mode.MULTIPLY);
         }
     }
 

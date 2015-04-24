@@ -327,6 +327,11 @@ public class TelephonyIntents {
      */
     public static final String ACTION_SUBINFO_CONTENT_CHANGE
             = "android.intent.action.ACTION_SUBINFO_CONTENT_CHANGE";
+	/**
+	 * @hide
+	 */
+	public static final String ACTION_SUBINFO_ICON_TINT_CHANGE
+            = "android.intent.action.ACTION_SUBINFO_ICON_TINT_CHANGE";
 
     /**
      * <p>Broadcast Action: It indicates subinfo record update is completed

@@ -254,7 +254,7 @@ public class NetworkControllerBaseTest extends AndroidTestCase {
                 ArgumentCaptor.forClass(String.class).capture(),
                 ArgumentCaptor.forClass(String.class).capture(),
                 ArgumentCaptor.forClass(Boolean.class).capture(),
-                ArgumentCaptor.forClass(Integer.class).capture(), 0);
+                ArgumentCaptor.forClass(Integer.class).capture());
 
         assertEquals("Signal icon in status bar", icon, (int) iconArg.getValue());
         assertEquals("Data icon in status bar", typeIcon, (int) typeIconArg.getValue());

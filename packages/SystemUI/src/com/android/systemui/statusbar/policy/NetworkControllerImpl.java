@@ -207,6 +207,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
         filter.addAction(TelephonyIntents.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED);
         filter.addAction(TelephonyIntents.ACTION_DEFAULT_VOICE_SUBSCRIPTION_CHANGED);
+		filter.addAction(TelephonyIntents.ACTION_SUBINFO_ICON_TINT_CHANGE);
         filter.addAction(TelephonyIntents.SPN_STRINGS_UPDATED_ACTION);
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION_IMMEDIATE);
         filter.addAction(ConnectivityManager.INET_CONDITION_ACTION);
@@ -1268,8 +1269,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
                         dataContentDescription,
                         // Only wide if actually showing something.
                         icons.mIsWide && typeIcon != 0,
-                        mSubscriptionInfo.getSubscriptionId(),
-                        mSubscriptionInfo.getSimSlotIndex());
+                        mSubscriptionInfo.getSubscriptionId());
             }
         }
 
@@ -1329,6 +1329,8 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 notifyListenersIfNecessary();
             } else if (action.equals(TelephonyIntents.ACTION_DEFAULT_DATA_SUBSCRIPTION_CHANGED)) {
                 updateDataSim();
+			} else if (action.equals(TelephonyIntents.ACTION_SUBINFO_ICON_TINT_CHANGE)) {
+                notifyListeners();
             }
         }
 
@@ -1839,7 +1841,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
 
         void setMobileDataIndicators(boolean visible, int strengthIcon, int typeIcon,
                 String contentDescription, String typeContentDescription, boolean isTypeIconWide,
-                int subId, int slotId);
+                int subId);
         void setSubs(List<SubscriptionInfo> subs);
         void setNoSims(boolean show);
 

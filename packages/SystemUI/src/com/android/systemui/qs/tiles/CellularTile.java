@@ -116,7 +116,6 @@ public class CellularTile extends QSTile<QSTile.SignalState> {
                 R.string.accessibility_quick_settings_mobile,
                 signalContentDesc, dataContentDesc,
                 state.label);
-		state.slotID = 0;
     }
 
     // Remove the period from the network name

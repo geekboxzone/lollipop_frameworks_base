@@ -34,6 +34,7 @@ import com.android.systemui.statusbar.policy.SecurityController;
 import java.util.ArrayList;
 import java.util.List;
 import android.graphics.PorterDuff;
+import android.telephony.SubscriptionManager;
 
 // Intimately tied to the design of res/layout/signal_cluster_view.xml
 public class SignalClusterView
@@ -163,7 +164,7 @@ public class SignalClusterView
     @Override
     public void setMobileDataIndicators(boolean visible, int strengthIcon, int typeIcon,
             String contentDescription, String typeContentDescription, boolean isTypeIconWide,
-            int subId, int slotId) {
+            int subId) {
         PhoneState state = getOrInflateState(subId);
         state.mMobileVisible = visible;
         state.mMobileStrengthId = strengthIcon;
@@ -171,7 +172,6 @@ public class SignalClusterView
         state.mMobileDescription = contentDescription;
         state.mMobileTypeDescription = typeContentDescription;
         state.mIsMobileTypeIconWide = isTypeIconWide;
-		state.mSlotId = slotId;
         apply();
     }
 
@@ -344,14 +344,15 @@ public class SignalClusterView
         private ViewGroup mMobileGroup;
         private ImageView mMobile, mMobileType;
 
-		private int mSlotId;
-        private int[] mColor = {0xFFFF6600, 0xFF0066FF};
+		private SubscriptionManager mSubscriptionManager;
 
         public PhoneState(int subId, Context context) {
             ViewGroup root = (ViewGroup) LayoutInflater.from(context)
                     .inflate(R.layout.mobile_signal_group, null);
             setViews(root);
             mSubId = subId;
+			mSubscriptionManager = (SubscriptionManager) context.getSystemService(
+                    Context.TELEPHONY_SUBSCRIPTION_SERVICE);
         }
 
         public void setViews(ViewGroup root) {
@@ -362,10 +363,15 @@ public class SignalClusterView
 
         public boolean apply(boolean isSecondaryIcon) {
             if (mMobileVisible && !mIsAirplaneMode) {
+				SubscriptionInfo info = mSubscriptionManager.getActiveSubscriptionInfo(mSubId);
+                int iconTint = 0xFFFFFFFF;
+                if (info != null) {
+                    iconTint = info.getIconTint();
+                }
                 mMobile.setImageResource(mMobileStrengthId);
-				mMobile.setColorFilter(mColor[mSlotId], PorterDuff.Mode.MULTIPLY);
+				mMobile.setColorFilter(iconTint, PorterDuff.Mode.MULTIPLY);
                 mMobileType.setImageResource(mMobileTypeId);
-				mMobileType.setColorFilter(mColor[mSlotId], PorterDuff.Mode.MULTIPLY);
+				mMobileType.setColorFilter(iconTint, PorterDuff.Mode.MULTIPLY);
                 mMobileGroup.setContentDescription(mMobileTypeDescription
                         + " " + mMobileDescription);
                 mMobileGroup.setVisibility(View.VISIBLE);
