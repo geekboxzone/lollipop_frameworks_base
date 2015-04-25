@@ -4709,6 +4709,11 @@ public final class ActivityManagerService extends ActivityManagerNative
                 Slog.i(TAG, "Process " + app.processName + " (pid " + pid
                         + ") has died");
                 mAllowLowerMemLevel = true;
+                if("android.process.media".equals(app.processName))//add by xzj to prevent database stale when android.process.media been killed
+                {
+                	SystemProperties.set("service.media_oncekilled", "true");
+                	Slog.i(TAG, "---oopos android.process.media has been killed,set property service.media_oncekilled to indicated mediaprovider---");
+                }
             } else {
                 // Note that we always want to do oom adj to update our state with the
                 // new number of procs.
