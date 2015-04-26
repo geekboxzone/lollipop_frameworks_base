@@ -174,4 +174,8 @@
     <color name="Pink_800">#ffad1457</color>
     <color name="Red_700">#ffc53929</color>
     <color name="Red_800">#ffb93221</color>
+	<color name="Orange_700">#ffff6600</color>
+	<color name="Orange_800">#ffff6600</color>
+	<color name="White_700">#ffe1e1e1</color>
+	<color name="White_800">#ffe1e1e1</color>
 </resources>
