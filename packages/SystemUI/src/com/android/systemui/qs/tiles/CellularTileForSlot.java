@@ -232,7 +232,7 @@ public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
         @Override
         public Boolean getToggleState() {
             return mDataController.isMobileDataSupported(mSlotId)
-                    ? mDataController.isMobileDataEnabled(mSlotId)
+                    ? mDataController.isMobileDataEnabled()
                     : null;
         }
 
@@ -245,7 +245,7 @@ public class CellularTileForSlot extends QSTile<QSTile.SignalState> {
 
         @Override
         public void setToggleState(boolean state) {
-            mDataController.setMobileDataEnabled(mSlotId, state);
+            mDataController.setMobileDataEnabled(state);
         }
 
         @Override

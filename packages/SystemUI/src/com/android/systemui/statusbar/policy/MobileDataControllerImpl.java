@@ -57,7 +57,7 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
     private final ConnectivityManager mConnectivityManager;
     private final INetworkStatsService mStatsService;
     private final NetworkPolicyManager mPolicyManager;
-    private final SubscriptionManager mSubscriptionManager;
+
     private INetworkStatsSession mSession;
     private Callback mCallback;
     private NetworkControllerImpl mNetworkController;
@@ -66,7 +66,6 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
         mContext = context;
         mTelephonyManager = TelephonyManager.from(context);
         mConnectivityManager = ConnectivityManager.from(context);
-        mSubscriptionManager = SubscriptionManager.from(context);
         mStatsService = INetworkStatsService.Stub.asInterface(
                 ServiceManager.getService(Context.NETWORK_STATS_SERVICE));
         mPolicyManager = NetworkPolicyManager.from(mContext);
@@ -211,19 +210,6 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
         }
     }
 
-    public void setMobileDataEnabled(int slotId, boolean enabled) {
-        Log.d(TAG, "setMobileDataEnabled(sim " + slotId + "): enabled=" + enabled);
-        if (mSubscriptionManager.getDefaultDataPhoneId() == slotId) {
-            mTelephonyManager.setDataEnabled(enabled);
-        } else {
-            int subId = getSubId(slotId);
-            mSubscriptionManager.setDefaultDataSubId(subId);
-        }
-        if (mCallback != null) {
-            mCallback.onMobileDataEnabled(enabled);
-        }
-    }
-
     public boolean isMobileDataSupported() {
         // require both supported network and ready SIM
         return mConnectivityManager.isNetworkSupported(TYPE_MOBILE)
@@ -233,17 +219,12 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
     public boolean isMobileDataSupported(int slotId) {
         // require both supported network and ready SIM
         return mConnectivityManager.isNetworkSupported(TYPE_MOBILE)
-                && mTelephonyManager.getSimState(slotId) == SIM_STATE_READY;
+                && mTelephonyManager.getSimState(slotId) == SIM_STATE_READY
+                && SubscriptionManager.getDefaultDataPhoneId() == slotId;
     }
 
     public boolean isMobileDataEnabled() {
         return mTelephonyManager.getDataEnabled();
-    }
-
-    public boolean isMobileDataEnabled(int slotId) {
-        int subId = getSubId(slotId);
-        return mTelephonyManager.getDataEnabled(subId)
-                && mSubscriptionManager.getDefaultDataSubId() == subId;
     }
 
     private static String getActiveSubscriberId(int subId, Context context) {
@@ -253,7 +234,7 @@ public class MobileDataControllerImpl implements NetworkController.MobileDataCon
     }
 
     private int getSubId(int slotId) {
-        final int[] subIds = mSubscriptionManager.getSubId(slotId);
+        final int[] subIds = SubscriptionManager.getSubId(slotId);
         final int subId = (subIds != null && subIds.length > 0) ? subIds[0] : SubscriptionManager.DEFAULT_SUBSCRIPTION_ID;
         return subId;
     }
