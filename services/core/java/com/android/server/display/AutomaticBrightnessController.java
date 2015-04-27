@@ -64,13 +64,13 @@ class AutomaticBrightnessController {
     // brightness changes occur in response to an observed change in light level that exceeds the
     // hysteresis threshold.
     private static final long BRIGHTENING_LIGHT_DEBOUNCE = 4000;
-    private static final long DARKENING_LIGHT_DEBOUNCE = 8000;
+    private static final long DARKENING_LIGHT_DEBOUNCE = 4000;
 
     // Hysteresis constraints for brightening or darkening.
     // The recent lux must have changed by at least this fraction relative to the
     // current ambient lux before a change will be considered.
-    private static final float BRIGHTENING_LIGHT_HYSTERESIS = 0.10f;
-    private static final float DARKENING_LIGHT_HYSTERESIS = 0.20f;
+    private static final float BRIGHTENING_LIGHT_HYSTERESIS = 0.05f;
+    private static final float DARKENING_LIGHT_HYSTERESIS = 0.10f;
 
     // The intercept used for the weighting calculation. This is used in order to keep all possible
     // weighting values positive.
@@ -350,7 +350,7 @@ class AutomaticBrightnessController {
         return earliestValidTime + BRIGHTENING_LIGHT_DEBOUNCE;
     }
 
-    private long nextAmbientLightDarkeningTransition(long time) {
+    private long nextAmbientLightDarkeningTransition(long time) {		
         final int N = mAmbientLightRingBuffer.size();
         long earliestValidTime = time;
         for (int i = N - 1; i >= 0; i--) {
