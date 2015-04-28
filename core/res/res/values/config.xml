@@ -2046,4 +2046,6 @@
     <bool name="config_secondVolumeStorageRemovable" product="default">true</bool>
     <!--$_rbox_$_modify_$_end-->
 
+    <!--Whether non-data sim can(true) send mms or not(false)-->
+    <bool name="config_non_data_sim_mms_supported">true</bool>
 </resources>
