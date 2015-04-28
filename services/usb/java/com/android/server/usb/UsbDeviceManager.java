@@ -313,6 +313,7 @@ public class UsbDeviceManager {
 
         // current USB state
         private boolean mConnected;
+        private boolean mLocaleChanged = false;
         private boolean mConfigured;
         private String mCurrentFunctions;
         private String mDefaultFunctions;
@@ -336,6 +337,18 @@ public class UsbDeviceManager {
                 mHandler.obtainMessage(MSG_USER_SWITCHED, userId, 0).sendToTarget();
             }
         };
+
+        //add by huangjc:update AdbNotification's language when Locale Changed. 
+		private final BroadcastReceiver mLocaleChangedReceiver = new BroadcastReceiver() {
+			 @Override
+		     public void onReceive(Context context, Intent intent) {
+			    if (DEBUG) Slog.d(TAG, "-------Locale Changed for adb-----");
+				mLocaleChanged = true;
+                            updateUsbNotification();
+			    updateAdbNotification();
+			}
+		};
+        //add-end
 
         public UsbHandler(Looper looper) {
             super(looper);
@@ -386,6 +399,8 @@ public class UsbDeviceManager {
                 mContext.registerReceiver(mBootCompletedReceiver, filter);
                 mContext.registerReceiver(
                         mUserSwitchedReceiver, new IntentFilter(Intent.ACTION_USER_SWITCHED));
+                mContext.registerReceiver(
+                        mLocaleChangedReceiver, new IntentFilter(Intent.ACTION_LOCALE_CHANGED));
             } catch (Exception e) {
                 Slog.e(TAG, "Error initializing UsbHandler", e);
             }
@@ -722,6 +737,14 @@ public class UsbDeviceManager {
                     //    Slog.e(TAG, "No known USB function in updateUsbNotification");
                     //}
                 }
+
+                if(mLocaleChanged){
+                  if (mUsbNotificationId != 0) {
+                    mNotificationManager.cancelAsUser(null, mUsbNotificationId,
+                            UserHandle.ALL);
+                    mUsbNotificationId = 0;
+                  }
+                }
             }
             if (id != mUsbNotificationId) {
                 // clear notification if title needs changing
@@ -767,6 +790,10 @@ public class UsbDeviceManager {
             if (mAdbEnabled && mConnected) {
                 if ("0".equals(SystemProperties.get("persist.adb.notify"))) return;
 
+                if (mLocaleChanged) {
+					mAdbNotificationShown = false;
+				    mNotificationManager.cancelAsUser(null, id, UserHandle.ALL);
+				}
                 if (!mAdbNotificationShown) {
                     Resources r = mContext.getResources();
                     CharSequence title = r.getText(id);
@@ -795,6 +822,7 @@ public class UsbDeviceManager {
                     mAdbNotificationShown = true;
                     mNotificationManager.notifyAsUser(null, id, notification,
                             UserHandle.ALL);
+					mLocaleChanged = false;
                 }
             } else if (mAdbNotificationShown) {
                 mAdbNotificationShown = false;
