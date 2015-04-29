@@ -147,6 +147,10 @@ public final class MediaFormat {
      */
     public static final String KEY_CHANNEL_COUNT = "channel-count";
 
+    //$_media_$_modify_$_Martin.Cheng@rock-chips.com   
+    public static final String KEY_SOURCE_TYPE="source-type";
+    //$_media_$_modify_$_end
+
     /**
      * A key describing the width of the content in a video format.
      * The associated value is an integer

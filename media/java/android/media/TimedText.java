@@ -385,6 +385,15 @@ public final class TimedText
         return mTextBounds;
     }
 
+    //$_media_$_modify_$_Martin.Cheng@rock-chips.com
+    public Style getFontStyle(){
+        if( mStyleList != null ){
+            return mStyleList.get(0);
+        }
+        return null;
+    }
+    //$_media_$_modify_$_end
+
     /*
      * Go over all the records, collecting metadata keys and fields in the
      * Parcel. These are stored in mKeyObjectMap for application to retrieve.
