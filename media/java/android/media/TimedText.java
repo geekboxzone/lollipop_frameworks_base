@@ -166,7 +166,6 @@ public final class TimedText
     /**
      * Helper class to hold the style information to display the text.
      * The member variables in this class are read-only.
-     * {@hide}
      */
     public static final class Style {
         /**
