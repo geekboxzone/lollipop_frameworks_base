@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 import android.graphics.PorterDuff;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 
 // Intimately tied to the design of res/layout/signal_cluster_view.xml
 public class SignalClusterView
@@ -365,7 +366,7 @@ public class SignalClusterView
             if (mMobileVisible && !mIsAirplaneMode) {
 				SubscriptionInfo info = mSubscriptionManager.getActiveSubscriptionInfo(mSubId);
                 int iconTint = 0xFFFFFFFF;
-                if (info != null) {
+                if (info != null && TelephonyManager.getDefault().isMultiSimEnabled()) {
                     iconTint = info.getIconTint();
                 }
                 mMobile.setImageResource(mMobileStrengthId);
