@@ -196,7 +196,7 @@ public final class Call {
         private final int mCallCapabilities;
         private final int mCallProperties;
         private final DisconnectCause mDisconnectCause;
-        private final long mConnectTimeMillis;
+        private long mConnectTimeMillis;
         private final GatewayInfo mGatewayInfo;
         private final int mVideoState;
         private final StatusHints mStatusHints;
@@ -347,6 +347,10 @@ public final class Call {
          */
         public long getConnectTimeMillis() {
             return mConnectTimeMillis;
+        }
+
+		public void setConnectTimeMillis(long timeMillis) {
+           mConnectTimeMillis=timeMillis;
         }
 
         /**
