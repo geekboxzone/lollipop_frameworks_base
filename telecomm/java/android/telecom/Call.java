@@ -348,7 +348,9 @@ public final class Call {
         public long getConnectTimeMillis() {
             return mConnectTimeMillis;
         }
-
+		/**
+		 * {@hide}
+		 */
 		public void setConnectTimeMillis(long timeMillis) {
            mConnectTimeMillis=timeMillis;
         }
