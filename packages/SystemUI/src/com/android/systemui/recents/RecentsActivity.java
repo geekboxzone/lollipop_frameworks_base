@@ -57,6 +57,13 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 
+import android.util.Log;
+import android.view.View.OnClickListener;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.FrameLayout;
+import android.content.res.Resources;
+
 /**
  * The main Recents activity that is started from AlternateRecentsComponent.
  */
@@ -74,6 +81,10 @@ public class RecentsActivity extends Activity implements RecentsView.RecentsView
     ViewStub mDebugOverlayStub;
     View mEmptyView;
     DebugOverlayView mDebugOverlay;
+
+	ImageView mDismissAllTaskButton;
+	LinearLayout mDismissAllTaskLinearLayout;
+	boolean mHasNavigationBar = false;
 
     // Search AppWidget
     RecentsAppWidgetHost mAppWidgetHost;
@@ -383,6 +394,26 @@ public class RecentsActivity extends Activity implements RecentsView.RecentsView
         mScrimViews = new SystemBarScrimViews(this, mConfig);
         mStatusBar = ((SystemUIApplication) getApplication())
                 .getComponent(PhoneStatusBar.class);
+		 
+		final Resources res = this.getResources();
+		mHasNavigationBar = res.getBoolean(com.android.internal.R.bool.config_showNavigationBar);
+		mDismissAllTaskLinearLayout = (LinearLayout) findViewById(R.id.close_all_lay);		
+		FrameLayout.LayoutParams layoutParams =(FrameLayout.LayoutParams)mDismissAllTaskLinearLayout.getLayoutParams();
+		if(mHasNavigationBar){
+			layoutParams.bottomMargin=48;
+		}else{
+			layoutParams.bottomMargin=0;
+		}
+		mDismissAllTaskLinearLayout.setLayoutParams(layoutParams);
+
+		mDismissAllTaskButton = (ImageView) findViewById(R.id.close_icon);
+        mDismissAllTaskButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mRecentsView.dismissAllTask();
+                dismissRecentsToHome(true);
+            }
+        });
         inflateDebugOverlay();
 
         // Bind the search app widget when we first start up

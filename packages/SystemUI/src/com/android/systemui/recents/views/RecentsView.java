@@ -605,4 +605,20 @@ public class RecentsView extends FrameLayout implements TaskStackView.TaskStackV
             }
         }
     }
+
+	public void dismissAllTask() {
+        if (mStacks == null)
+            return;
+
+        int numStacks = mStacks.size();
+        for (int i = 0; i < numStacks; i++) {
+            TaskStack stack = mStacks.get(i);
+            ArrayList<Task> tasks = stack.getTasks();
+            int numTasks = tasks.size();
+            for (int j = 0; j < numTasks; j++) {
+                Task task = tasks.get(j);
+                onTaskViewDismissed(task);
+            }
+        }
+    }
 }

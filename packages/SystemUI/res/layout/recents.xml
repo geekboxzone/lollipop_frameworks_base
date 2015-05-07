@@ -44,6 +44,22 @@
            android:layout="@layout/recents_debug_overlay"
            android:layout_width="match_parent"
            android:layout_height="match_parent" />
+	
+	<LinearLayout
+			android:id="@+id/close_all_lay"
+			android:layout_width="match_parent"
+			android:layout_height="60dp"				
+			android:fitsSystemWindows="true"
+			android:layout_gravity="bottom"
+			android:gravity="center"
+			android:background="@drawable/close_recent_bg">
+			<ImageView
+					android:id="@+id/close_icon"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:gravity="center"
+					android:background="@drawable/close_all_recent"/>
+		</LinearLayout>
 
     <!-- Nav Bar Scrim View -->
     <ImageView
