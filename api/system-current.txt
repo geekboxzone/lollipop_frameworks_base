@@ -16014,7 +16014,6 @@ package android.media {
     field public static final java.lang.String KEY_PUSH_BLANK_BUFFERS_ON_STOP = "push-blank-buffers-on-shutdown";
     field public static final java.lang.String KEY_REPEAT_PREVIOUS_FRAME_AFTER = "repeat-previous-frame-after";
     field public static final java.lang.String KEY_SAMPLE_RATE = "sample-rate";
-    field public static final java.lang.String KEY_SOURCE_TYPE = "source-type";
     field public static final java.lang.String KEY_TEMPORAL_LAYERING = "ts-schema";
     field public static final java.lang.String KEY_WIDTH = "width";
     field public static final java.lang.String MIMETYPE_AUDIO_AAC = "audio/mp4a-latm";
@@ -16222,19 +16221,12 @@ package android.media {
     method public void setOnTimedTextListener(android.media.MediaPlayer.OnTimedTextListener);
     method public void setOnVideoSizeChangedListener(android.media.MediaPlayer.OnVideoSizeChangedListener);
     method public void setScreenOnWhilePlaying(boolean);
-    method public boolean setSubDisplay(android.view.SurfaceHolder);
-    method public boolean setSubPath(java.lang.String);
-    method public void setSubtitleChaset(int);
-    method public void setSubtitleColor(int);
-    method public void setSubtitlePosition(int);
-    method public void setSubtitleSize(int);
     method public void setSurface(android.view.Surface);
     method public void setVideoScalingMode(int);
     method public void setVolume(float, float);
     method public void setWakeMode(android.content.Context, int);
     method public void start() throws java.lang.IllegalStateException;
     method public void stop() throws java.lang.IllegalStateException;
-    method public boolean useFrameworkSubtitle();
     field public static final int MEDIA_ERROR_IO = -1004; // 0xfffffc14
     field public static final int MEDIA_ERROR_MALFORMED = -1007; // 0xfffffc11
     field public static final int MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK = 200; // 0xc8
@@ -16300,7 +16292,6 @@ package android.media {
     field public static final int MEDIA_TRACK_TYPE_TIMEDTEXT = 3; // 0x3
     field public static final int MEDIA_TRACK_TYPE_UNKNOWN = 0; // 0x0
     field public static final int MEDIA_TRACK_TYPE_VIDEO = 1; // 0x1
-    field public int mTrackIndex;
   }
 
   public class MediaRecorder {
@@ -16744,20 +16735,7 @@ package android.media {
 
   public final class TimedText {
     method public android.graphics.Rect getBounds();
-    method public android.media.TimedText.Style getFontStyle();
     method public java.lang.String getText();
-  }
-
-  public static final class TimedText.Style {
-    ctor public TimedText.Style(int, int, int, boolean, boolean, boolean, int, int);
-    field public final int colorRGBA;
-    field public final int endChar;
-    field public final int fontID;
-    field public final int fontSize;
-    field public final boolean isBold;
-    field public final boolean isItalic;
-    field public final boolean isUnderlined;
-    field public final int startChar;
   }
 
   public class ToneGenerator {

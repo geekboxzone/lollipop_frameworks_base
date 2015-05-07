@@ -403,9 +403,7 @@ LOCAL_INTERMEDIATE_SOURCES := \
 
 LOCAL_NO_STANDARD_LIBRARIES := true
 LOCAL_JAVA_LIBRARIES := core-libart conscrypt okhttp core-junit bouncycastle ext
-#$_media_$_modify_$_Martin.Cheng@rock-chips.com
-LOCAL_STATIC_JAVA_LIBRARIES := libsubtitle
-#$_media_$_modify_$_end
+
 LOCAL_MODULE := framework
 
 LOCAL_DX_FLAGS := --core-library --multi-dex
@@ -414,14 +412,6 @@ LOCAL_RMTYPEDEFS := true
 
 include $(BUILD_JAVA_LIBRARY)
 framework_module := $(LOCAL_INSTALLED_MODULE)
-
-#$_media_$_modify_$_Martin.Cheng@rock-chips.com
-include $(CLEAR_VARS)
-LOCAL_MODULE :=
-LOCAL_MODULE_CLASS :=
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := libsubtitle:third-party/subtitle.jar
-include $(BUILD_MULTI_PREBUILT)
-#$_media_$_modify_$_end
 
 # Make sure that R.java and Manifest.java are built before we build
 # the source for this library.
