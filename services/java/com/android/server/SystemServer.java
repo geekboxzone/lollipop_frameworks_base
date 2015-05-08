@@ -102,6 +102,7 @@ import com.android.server.wm.WindowManagerService;
 import dalvik.system.VMRuntime;
 
 import java.io.File;
+import java.io.*;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -273,6 +274,64 @@ public final class SystemServer {
         Looper.loop();
         throw new RuntimeException("Main thread loop unexpectedly exited");
     }
+
+    private boolean setCpuMaxFreq(int freq) {
+        String cpuFreqPath = "/sys/devices/system/cpu/cpu";
+        String cpuFreqNode = "/cpufreq/thermal_scaling_max_freq";
+        int i;
+
+        Slog.d(TAG, "ctrlCpuFreq:" + freq);
+        for (i = 0; i < 4; i++) {
+            String CpuFreqNode = "";
+            CpuFreqNode += cpuFreqPath;
+            CpuFreqNode += String.valueOf(i);
+            CpuFreqNode += cpuFreqNode;
+            Slog.d(TAG, "ctrl freq node:" + CpuFreqNode);
+
+            File file = new File(CpuFreqNode);
+            if (!file.exists()) {
+                Slog.e(TAG, "file '"+ CpuFreqNode + "' isn't exist!");
+                return false;
+            }
+
+            try {
+                FileWriter fw = new FileWriter(CpuFreqNode);
+                String sfreq = String.valueOf(freq);
+                fw.write(sfreq);
+                fw.flush();
+                fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                Slog.e(TAG, "ctrlCpuFreq(): error;");
+                return false;
+            }
+        }
+        Slog.d(TAG, "ctrlCpuFreq(): success;");
+        return true;
+    }
+
+/*
+    private int getCpuMaxFreq() {
+        int freq = -1;
+        String Cpu0MaxFreqNode = "/sys/devices/system/cpu/cpu0/cpufreq/thermal_scaling_max_freq";
+
+        File file = new File(Cpu0MaxFreqNode);
+        if (!file.exists()) {
+            Slog.e(TAG, "file '"+ Cpu0MaxFreqNode+ "' isn't exist!");
+            return freq;
+        }
+
+        try {
+            FileReader fw = new FileReader(Cpu0MaxFreqNode);
+            freq = fw.read();
+            Slog.e(TAG, "getCpuMaxFreq() = " + freq);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return freq;
+    }
+*/
 
     private void reportWtf(String msg, Throwable e) {
         Slog.w(TAG, "***********************************************");
@@ -1095,6 +1154,14 @@ public final class SystemServer {
             @Override
             public void run() {
                 Slog.i(TAG, "Making services ready");
+                //limit cpu freq to 900M avoid overcurrent (for sofia3gr).
+                if ("sofia3gr".equals(SystemProperties.get("ro.board.platform", "unknown"))) {
+                    if (setCpuMaxFreq(900000)) {
+                        Slog.d(TAG, "success to set cpu freq!");
+                    } else {
+                        Slog.e(TAG, "faild to set cpu freq!");
+                    }
+                }
                 mSystemServiceManager.startBootPhase(
                         SystemService.PHASE_ACTIVITY_MANAGER_READY);
 
