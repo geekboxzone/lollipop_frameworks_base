@@ -957,7 +957,7 @@ public class WindowManagerService extends IWindowManager.Stub
         updateCircularDisplayMaskIfNeeded();
         showEmulatorDisplayOverlayIfNeeded();
 	        //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
-        if (!SystemProperties.getBoolean("ro.config.low_ram_256",false)) {
+        if (SystemProperties.getBoolean("ro.config.enable.remotecontrol",false)) {
             RCManager = new RemoteControlManager(context, this);
             RCManager.startListener();
         } else {
