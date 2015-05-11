@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Process;
 import android.os.RemoteException;
@@ -60,7 +61,10 @@ public final class WebViewFactory {
             "/data/misc/shared_relro/libwebviewchromium32.relro";
     private static final String CHROMIUM_WEBVIEW_NATIVE_RELRO_64 =
             "/data/misc/shared_relro/libwebviewchromium64.relro";
-
+    private static final String CHROMIUM_WEBVIEW_NATIVE_RELRO_32_SOFIA =
+            "/data/misc/system_relro/libwebviewchromium32.relro";
+    private static final String CHROMIUM_WEBVIEW_NATIVE_RELRO_64_SOFIA =
+            "/data/misc/system_relro/libwebviewchromium64.relro";
     public static final String CHROMIUM_WEBVIEW_VMSIZE_SIZE_PROPERTY =
             "persist.sys.webview.vmsize";
     private static final long CHROMIUM_WEBVIEW_DEFAULT_VMSIZE_BYTES = 100 * 1024 * 1024;
@@ -332,10 +336,16 @@ public final class WebViewFactory {
                 throw new IllegalArgumentException(
                         "Native library paths to the WebView RelRo process must not be null!");
             }
-            int pid = LocalServices.getService(ActivityManagerInternal.class).startIsolatedProcess(
+            if(SystemProperties.get("ro.board.platform").equals("sofia3gr")){
+              CreateRelroFileTask task=new CreateRelroFileTask();
+              task.execute(); 
+            }else{
+              int pid = LocalServices.getService(ActivityManagerInternal.class).startIsolatedProcess(
                     RelroFileCreator.class.getName(), nativeLibraryPaths, "WebViewLoader-" + abi, abi,
                     Process.SHARED_RELRO_UID, crashHandler);
-            if (pid <= 0) throw new Exception("Failed to start the relro file creator process");
+              if (pid <= 0) throw new Exception("Failed to start the relro file creator process");
+            }
+            
         } catch (Throwable t) {
             // Log and discard errors as we must not crash the system server.
             Log.e(LOGTAG, "error starting relro file creator for abi " + abi, t);
@@ -343,6 +353,33 @@ public final class WebViewFactory {
         }
     }
 
+    private static class CreateRelroFileTask extends AsyncTask<Void, Void, String[]>{
+
+		@Override
+		protected String[] doInBackground(Void... params) {
+			// TODO Auto-generated method stub
+                      boolean result=false;
+                      try{ 
+			String[] path=getWebViewNativeLibraryPaths();
+                        result=nativeCreateRelroFile(path[0],path[1],CHROMIUM_WEBVIEW_NATIVE_RELRO_32_SOFIA,CHROMIUM_WEBVIEW_NATIVE_RELRO_64_SOFIA);
+		      }catch(Throwable t){
+
+                      }	
+                      return new String[]{String.valueOf(result)};
+		}
+    	
+		@Override
+		protected void onPostExecute(String[] result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+			try {
+                getUpdateService().notifyRelroCreationCompleted(false, result[0].equals("true"));
+            } catch (RemoteException e) {
+                Log.e(LOGTAG, "error notifying update service", e);
+            }
+		}
+    }
+    
     private static class RelroFileCreator {
         // Called in an unprivileged child process to create the relro file.
         public static void main(String[] args) {
@@ -395,10 +432,11 @@ public final class WebViewFactory {
 
         try {
             String[] args = getWebViewNativeLibraryPaths();
+            boolean isSofia3gr=SystemProperties.get("ro.board.platform").equals("sofia3gr");
             boolean result = nativeLoadWithRelroFile(args[0] /* path32 */,
                                                      args[1] /* path64 */,
-                                                     CHROMIUM_WEBVIEW_NATIVE_RELRO_32,
-                                                     CHROMIUM_WEBVIEW_NATIVE_RELRO_64);
+                                                     isSofia3gr?CHROMIUM_WEBVIEW_NATIVE_RELRO_32_SOFIA:CHROMIUM_WEBVIEW_NATIVE_RELRO_32,
+                                                     isSofia3gr?CHROMIUM_WEBVIEW_NATIVE_RELRO_64_SOFIA:CHROMIUM_WEBVIEW_NATIVE_RELRO_64);
             if (!result) {
                 Log.w(LOGTAG, "failed to load with relro file, proceeding without");
             } else if (DEBUG) {
