@@ -25,7 +25,7 @@ package com.android.internal.telephony;
  */
 
 import android.os.SystemProperties;
-
+import android.telephony.TelephonyManager;
 /**
  * {@hide}
  */
@@ -88,9 +88,10 @@ public interface RILConstants {
     int NETWORK_MODE_LTE_CDMA_EVDO_GSM_WCDMA = 10; /* LTE, CDMA, EvDo, GSM/WCDMA */
     int NETWORK_MODE_LTE_ONLY       = 11; /* LTE Only mode. */
     int NETWORK_MODE_LTE_WCDMA      = 12; /* LTE/WCDMA */
-    int PREFERRED_NETWORK_MODE      = SystemProperties.getInt("ro.telephony.default_network",
-            NETWORK_MODE_WCDMA_PREF);
-    int PREFERRED_NETWORK_MODE_SIM2 =NETWORK_MODE_GSM_ONLY;
+    int PREFERRED_NETWORK_MODE      = TelephonyManager
+            .getDefaultPreferredNetworkType(0, NETWORK_MODE_WCDMA_PREF);
+    int PREFERRED_NETWORK_MODE_SIM2 = TelephonyManager
+            .getDefaultPreferredNetworkType(1, NETWORK_MODE_GSM_ONLY);
     int CDMA_CELL_BROADCAST_SMS_DISABLED = 1;
     int CDMA_CELL_BROADCAST_SMS_ENABLED  = 0;
 
