@@ -425,6 +425,10 @@ public final class CameraManager {
         public void onCameraUnavailable(String cameraId) {
             // default empty implementation
         }
+
+		public void onCameraRequestDisconnect(String cameraId) {
+			// default empty implementation
+		}
     }
 
     /**
@@ -695,6 +699,7 @@ public final class CameraManager {
                 case STATUS_PRESENT:
                 case STATUS_ENUMERATING:
                 case STATUS_NOT_AVAILABLE:
+				case 0x80000001:
                     return true;
                 default:
                     return false;
@@ -703,7 +708,16 @@ public final class CameraManager {
 
         private void postSingleUpdate(final AvailabilityCallback callback, final Handler handler,
                 final String id, final int status) {
-            if (isAvailable(status)) {
+            Log.d("mmk", "postSingleUpdate.+++++++++ status = " + status);
+			if(status == 0x80000001) {
+				handler.post(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onCameraRequestDisconnect(id);
+                        }
+                    });
+			} else if (isAvailable(status)) {
                 handler.post(
                     new Runnable() {
                         @Override
@@ -727,6 +741,7 @@ public final class CameraManager {
          * the listener's knowledge of camera state.
          */
         private void updateCallbackLocked(AvailabilityCallback callback, Handler handler) {
+        	Log.d("mmk", "updateCallbackLocked.+++++++");
             for (int i = 0; i < mDeviceStatus.size(); i++) {
                 String id = mDeviceStatus.keyAt(i);
                 Integer status = mDeviceStatus.valueAt(i);
@@ -735,8 +750,9 @@ public final class CameraManager {
         }
 
         private void onStatusChangedLocked(int status, String id) {
-            if (DEBUG) {
-                Log.v(TAG,
+			Log.d("mmk", "onStatusChangedLocked.+++++++");
+            if (true) {
+                Log.e(TAG,
                         String.format("Camera id %s has status changed to 0x%x", id, status));
             }
 
@@ -770,7 +786,7 @@ public final class CameraManager {
             // Translate all the statuses to either 'available' or 'not available'
             //  available -> available         => no new update
             //  not available -> not available => no new update
-            if (oldStatus != null && isAvailable(status) == isAvailable(oldStatus)) {
+            if (oldStatus != null && status != 0x80000001 && isAvailable(status) == isAvailable(oldStatus)) {
                 if (DEBUG) {
                     Log.v(TAG,
                             String.format(

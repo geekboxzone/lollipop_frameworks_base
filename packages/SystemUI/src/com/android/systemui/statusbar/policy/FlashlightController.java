@@ -361,10 +361,19 @@ public class FlashlightController {
             }
         }
 
+		@Override
+		public void onCameraRequestDisconnect(String cameraId) {
+			if (DEBUG) Log.d(TAG, "onCameraRequestDisconnect(" + cameraId + ")");
+
+			if (cameraId.equals(mCameraId)) {
+				killFlashlight();
+			}
+		}
+
         private void setCameraAvailable(boolean available) {
             boolean changed;
             synchronized (FlashlightController.this) {
-                changed = mCameraAvailable != available;
+                changed = (mCameraAvailable != available) || (mCameraAvailable == false && available == false);
                 mCameraAvailable = available;
             }
             if (changed) {
