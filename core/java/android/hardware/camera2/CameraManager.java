@@ -426,6 +426,7 @@ public final class CameraManager {
             // default empty implementation
         }
 
+		/** @hide */
 		public void onCameraRequestDisconnect(String cameraId) {
 			// default empty implementation
 		}
