@@ -220,7 +220,7 @@ public class MediaFile {
         addFileType("RM", FILE_TYPE_RM, "video/rmvb");
 	    addFileType("AVI", FILE_TYPE_AVI, "video/avi");
 	    addFileType("MPG", FILE_TYPE_MPG, "video/mpg"); 
-        addFileType("DAT", FILE_TYPE_MPG, "video/mpg");
+        //addFileType("DAT", FILE_TYPE_MPG, "video/mpg");
         addFileType("VOB", FILE_TYPE_MPG, "video/mpg");
         addFileType("MPEG", FILE_TYPE_MPG, "video/mpg");
         addFileType("MKV", FILE_TYPE_MKV, "video/x-matroska");
