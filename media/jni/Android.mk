@@ -68,6 +68,10 @@ LOCAL_CFLAGS +=
 
 LOCAL_MODULE:= libmedia_jni
 
+ifeq ($(strip $(TARGET_BOARD_PLATFORM_PRODUCT)),box)
+	LOCAL_CFLAGS += -DBOX
+endif
+
 include $(BUILD_SHARED_LIBRARY)
 
 # build libsoundpool.so

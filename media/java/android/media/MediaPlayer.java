@@ -73,6 +73,9 @@ import java.util.Set;
 import java.util.Vector;
 import java.lang.ref.WeakReference;
 
+import android.os.SystemProperties;
+import android.media.iso.ISOManager;
+
 /**
  * MediaPlayer class can be used to control playback
  * of audio/video files and streams. An example on how to use the methods in
@@ -1010,8 +1013,23 @@ public class MediaPlayer implements SubtitleController.Listener
         }
 
         Log.d(TAG, "Couldn't open file on client side, trying server side");
-
-        setDataSource(uri.toString(), headers);
+        // just in box platform
+	if("box".equals(SystemProperties.get("ro.target.product",  "unknown")))
+	{
+		String bdpath = ISOManager.isBDDirectory(context,uri);
+		if(bdpath != null)
+		{
+			nativeSetDataSource(null,bdpath,null,null);
+		}
+		else
+		{
+			setDataSource(uri.toString(), headers);
+		}
+	}
+	else
+	{
+		setDataSource(uri.toString(), headers);
+	}
     }
 
     /**
@@ -1074,6 +1092,16 @@ public class MediaPlayer implements SubtitleController.Listener
                 keys,
                 values);
             return;
+        }else{
+        	if("box".equals(SystemProperties.get("ro.target.product",  "unknown")))
+		{
+			boolean isBD = ISOManager.isBDDirectory(path);
+			if(isBD)
+			{
+				nativeSetDataSource(null,path,keys,values);
+				return;
+			}
+		}
         }
 
         final File file = new File(path);
@@ -1546,6 +1574,61 @@ public class MediaPlayer implements SubtitleController.Listener
      * {@hide}
      */
     private native boolean setParameter(int key, Parcel value);
+
+	/**
+     * Sets the parameter indicated by key.
+     * @param key key indicates the parameter to be set.
+     * @param value value of the parameter to be set.
+     * @return true if the parameter is set successfully, false otherwise
+     * {@hide}
+     */
+    public boolean setParameter(int key, int value) {
+        Parcel p = Parcel.obtain();
+        p.writeInt(value);
+        boolean ret = setParameter(key, p);
+        p.recycle();
+        return ret;
+    }
+
+	/*
+     * Gets the value of the parameter indicated by key.
+     * @param key key indicates the parameter to get.
+     * @param reply value of the parameter to get.
+     */
+    private native void getParameter(int key, Parcel reply);
+
+	public Parcel getParcelParameter(int key) {
+        Parcel p = Parcel.obtain();
+        getParameter(key, p);
+        return p;
+    }
+    /**
+     * Gets the value of the parameter indicated by key.
+     * @param key key indicates the parameter to get.
+     * @return value of the parameter.
+     * {@hide}
+     */
+    public String getStringParameter(int key) {
+        Parcel p = Parcel.obtain();
+        getParameter(key, p);
+        String ret = p.readString();
+        p.recycle();
+        return ret;
+    }
+
+    /**
+     * Gets the value of the parameter indicated by key.
+     * @param key key indicates the parameter to get.
+     * @return value of the parameter.
+     * {@hide}
+     */
+    public int getIntParameter(int key) {
+        Parcel p = Parcel.obtain();
+        getParameter(key, p);
+        int ret = p.readInt();
+        p.recycle();
+        return ret;
+    }
 
     /**
      * Sets the audio attributes for this MediaPlayer.

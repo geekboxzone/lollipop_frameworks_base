@@ -16187,6 +16187,7 @@ package android.media {
     method public int getAudioSessionId();
     method public int getCurrentPosition();
     method public int getDuration();
+    method public android.os.Parcel getParcelParameter(int);
     method public int getSelectedTrack(int) throws java.lang.IllegalStateException;
     method public android.media.MediaPlayer.TrackInfo[] getTrackInfo() throws java.lang.IllegalStateException;
     method public int getVideoHeight();
@@ -17332,6 +17333,168 @@ package android.media.effect {
 
   public abstract interface EffectUpdateListener {
     method public abstract void onEffectUpdated(android.media.effect.Effect, java.lang.Object);
+  }
+
+}
+
+package android.media.iso {
+
+  public class ISOAudioInfor implements android.os.Parcelable {
+    method public int describeContents();
+    method public void tostring();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final int Audio_Channel_Mono = 1; // 0x1
+    field public static final int Audio_Channel_MultiChannel = 6; // 0x6
+    field public static final int Audio_Channel_Stereo = 3; // 0x3
+    field public static final int Audio_Channel_Stereo_Plus_MultiChannel = 12; // 0xc
+    field public static final int Audio_Code_AC3 = 129; // 0x81
+    field public static final int Audio_Code_AC3_PLUS = 132; // 0x84
+    field public static final int Audio_Code_AC3_PLUS_SECONDARY = 161; // 0xa1
+    field public static final int Audio_Code_AC3_TRUE_HD = 131; // 0x83
+    field public static final int Audio_Code_DTS = 130; // 0x82
+    field public static final int Audio_Code_DTS_HD = 133; // 0x85
+    field public static final int Audio_Code_DTS_HD_MASTER = 134; // 0x86
+    field public static final int Audio_Code_DTS_HD_SECONDARY = 162; // 0xa2
+    field public static final int Audio_Code_LPCM = 128; // 0x80
+    field public static final int Audio_Code_MPEG1 = 3; // 0x3
+    field public static final int Audio_Code_MPEG2 = 4; // 0x4
+    field public static final int Audio_Sample_192k = 5; // 0x5
+    field public static final int Audio_Sample_48_192k = 12; // 0xc
+    field public static final int Audio_Sample_48_96k = 14; // 0xe
+    field public static final int Audio_Sample_48k = 1; // 0x1
+    field public static final int Audio_Sample_96k = 4; // 0x4
+    field public static final android.os.Parcelable.Creator<android.media.iso.ISOAudioInfor> CREATOR;
+    field public int mChannel;
+    field public int mCodeType;
+    field public int mIndex;
+    field public java.lang.String mLang;
+    field public int mPid;
+    field public int mSample;
+  }
+
+  public class ISOManager {
+    ctor public ISOManager(android.media.MediaPlayer);
+    method public static boolean existInBackUp(java.lang.String, java.lang.String, boolean);
+    method public android.media.iso.ISOAudioInfor getAudioInfor();
+    method public android.media.iso.ISOAudioInfor[] getAudioTrack();
+    method public int getCurrentAngle();
+    method public int getCurrentChapter();
+    method public int getCurrentTitle();
+    method public int getIGSurfaceVisible();
+    method public int getNumberOfAngle();
+    method public int getNumberOfChapter();
+    method public int getNumberOfTitle();
+    method public android.media.iso.ISOSubtitleInfor getSubtitleInfor();
+    method public int getSubtitleSurfaceVisible();
+    method public android.media.iso.ISOSubtitleInfor[] getSubtitleTrack();
+    method public android.media.iso.ISOVideoInfor getVideoInfor();
+    method public static java.lang.String isBDDirectory(android.content.Context, android.net.Uri);
+    method public static boolean isBDDirectory(java.lang.String);
+    method public boolean moveNavigationButton(int);
+    method public boolean playAngle(int);
+    method public boolean playChapter(int);
+    method public boolean playNextContent();
+    method public boolean playTitle(int);
+    method public boolean playTopTitle();
+    method public int queryNavigationMenu();
+    method public boolean setAudioTrack(int);
+    method public boolean setIGSurfaceVisible(int);
+    method public boolean setSubtitleSurfaceVisible(int);
+    method public boolean setSubtitleTrack(int);
+    field public static final int BUTTON_ACTIVATE = 4; // 0x4
+    field public static final int BUTTON_MOVE_DOWN = 1; // 0x1
+    field public static final int BUTTON_MOVE_LEFT = 2; // 0x2
+    field public static final int BUTTON_MOVE_RIGHT = 3; // 0x3
+    field public static final int BUTTON_MOVE_UP = 0; // 0x0
+    field public static final int GET_AUDIO_INFOR = 7001; // 0x1b59
+    field public static final int GET_AUDIO_TRACK = 7003; // 0x1b5b
+    field public static final int GET_CHAPTER = 7012; // 0x1b64
+    field public static final int GET_CURRENT_ANGLE = 7016; // 0x1b68
+    field public static final int GET_CURRENT_CHAPTER = 7014; // 0x1b66
+    field public static final int GET_CURRENT_TITLE = 7019; // 0x1b6b
+    field public static final int GET_IG_VISIBLE = 7008; // 0x1b60
+    field public static final int GET_NUMBER_OF_ANGLE = 7015; // 0x1b67
+    field public static final int GET_NUMBER_OF_TITLE = 7018; // 0x1b6a
+    field public static final int GET_SUBITTLE_VISIBLE = 7010; // 0x1b62
+    field public static final int GET_SUBTITLE_INFOR = 7002; // 0x1b5a
+    field public static final int GET_SUBTITLE_TRACK = 7004; // 0x1b5c
+    field public static final int GET_VIDEO_INFOR = 7000; // 0x1b58
+    field public static final int MEDIA_ISO_MOUNT_END = 8001; // 0x1f41
+    field public static final int MEDIA_ISO_MOUNT_FAIL = 8004; // 0x1f44
+    field public static final int MEDIA_ISO_MOUNT_START = 8000; // 0x1f40
+    field public static final int MEDIA_ISO_PLAY_START = 8006; // 0x1f46
+    field public static final int MEDIA_ISO_UNMOUNT_END = 8003; // 0x1f43
+    field public static final int MEDIA_ISO_UNMOUNT_START = 8002; // 0x1f42
+    field public static final int MEDIA_ISO_UNSUPPORT_FORMAT = 8005; // 0x1f45
+    field public static final int MEDIA_PLAY_NEXT = 8007; // 0x1f47
+    field public static final int OPERATION_FAIL = 1; // 0x1
+    field public static final int OPERATION_FAIL_BDJ = 3; // 0x3
+    field public static final int OPERATION_FAIL_OPEATION_DISABLE = 2; // 0x2
+    field public static final int OPERATION_FAIL_PARAMETER_ERROR = 3; // 0x3
+    field public static final int OPERATION_SUCCESS = 0; // 0x0
+    field public static final int PLAY_ANGLE = 7017; // 0x1b69
+    field public static final int PLAY_CHAPTER = 7013; // 0x1b65
+    field public static final int PLAY_QUERY_NAVIGATION_MENU = 7024; // 0x1b70
+    field public static final int PLAY_SEEK_TIME_PLAY = 7023; // 0x1b6f
+    field public static final int PLAY_TITLE = 7020; // 0x1b6c
+    field public static final int PLAY_TOP_TITLE = 7021; // 0x1b6d
+    field public static final int SET_AUDIO_TRACK = 7005; // 0x1b5d
+    field public static final int SET_IG_OPERATION = 7011; // 0x1b63
+    field public static final int SET_IG_VISIBLE = 7007; // 0x1b5f
+    field public static final int SET_SUBTITLE_TRACK = 7006; // 0x1b5e
+    field public static final int SET_SUBTITLE_VISIBLE = 7009; // 0x1b61
+    field public static final int SKIP_CURRENT_CONTEXT = 7022; // 0x1b6e
+    field public static final int SURFACE_HIDE = 0; // 0x0
+    field public static final int SURFACE_SHOW = 1; // 0x1
+  }
+
+  public class ISOSubtitleInfor implements android.os.Parcelable {
+    method public int describeContents();
+    method public void tostring();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final android.os.Parcelable.Creator<android.media.iso.ISOSubtitleInfor> CREATOR;
+    field public static final int Sutitle_Character_BIG5 = 7; // 0x7
+    field public static final int Sutitle_Character_GB18030 = 5; // 0x5
+    field public static final int Sutitle_Character_GB2312 = 6; // 0x6
+    field public static final int Sutitle_Character_KSC = 4; // 0x4
+    field public static final int Sutitle_Character_Shirf_JIS = 3; // 0x3
+    field public static final int Sutitle_Character_UTF16BE = 2; // 0x2
+    field public static final int Sutitle_Character_UTF8 = 1; // 0x1
+    field public static final int Sutitle_Code_PG = 144; // 0x90
+    field public static final int Sutitle_Code_TEXT = 146; // 0x92
+    field public int mCharacter;
+    field public int mIndex;
+    field public java.lang.String mLang;
+    field public int mPid;
+    field public int mType;
+  }
+
+  public class ISOVideoInfor implements android.os.Parcelable {
+    method public int describeContents();
+    method public void tostring();
+    method public void writeToParcel(android.os.Parcel, int);
+    field public static final android.os.Parcelable.Creator<android.media.iso.ISOVideoInfor> CREATOR;
+    field public static final int VIDEO_Code_AVC = 234; // 0xea
+    field public static final int VIDEO_Code_MPEG1 = 1; // 0x1
+    field public static final int VIDEO_Code_MPEG2 = 2; // 0x2
+    field public static final int VIDEO_Code_MVC = 32; // 0x20
+    field public static final int VIDEO_Code_VC1 = 27; // 0x1b
+    field public static final int VIDEO_Format_1080i = 4; // 0x4
+    field public static final int VIDEO_Format_1080p = 6; // 0x6
+    field public static final int VIDEO_Format_480i = 1; // 0x1
+    field public static final int VIDEO_Format_480p = 3; // 0x3
+    field public static final int VIDEO_Format_576i = 2; // 0x2
+    field public static final int VIDEO_Format_576p = 7; // 0x7
+    field public static final int VIDEO_Format_720p = 5; // 0x5
+    field public static final int VIDEO_FrameRate_23 = 1; // 0x1
+    field public static final int VIDEO_FrameRate_24 = 2; // 0x2
+    field public static final int VIDEO_FrameRate_25 = 3; // 0x3
+    field public static final int VIDEO_FrameRate_30 = 4; // 0x4
+    field public static final int VIDEO_FrameRate_50 = 6; // 0x6
+    field public static final int VIDEO_FrameRate_60 = 7; // 0x7
+    field public int mCodeType;
+    field public int mFormat;
+    field public int mFrameRate;
   }
 
 }

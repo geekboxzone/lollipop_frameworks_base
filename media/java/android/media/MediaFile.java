@@ -24,6 +24,7 @@ import android.mtp.MtpConstants;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import android.os.SystemProperties;
 
 /**
  * MediaScanner helper class.
@@ -229,6 +230,10 @@ public class MediaFile {
 		addFileType("TP", FILE_TYPE_MP2TS, "video/mp2ts");
 		addFileType("TRP", FILE_TYPE_MP2TS, "video/mp2ts");
  		addFileType("M2TS", FILE_TYPE_MP2TS, "video/mp2ts");
+	if("box".equals(SystemProperties.get("ro.target.product",  "unknown")))
+	{
+		addFileType("ISO", FILE_TYPE_MP2TS, "video/iso");
+	}
        	//if (isWMVEnabled()) {
             addFileType("WMV", FILE_TYPE_WMV, "video/wmv", MtpConstants.FORMAT_WMV);
             addFileType("ASF", FILE_TYPE_ASF, "video/wmv");

@@ -512,6 +512,72 @@ public class MediaScanner
 
             return entry;
         }
+	
+	//just when define BOX using this function to scan bd directory to database	
+	public void scanBDDirectory(String path,long lastModified, long fileSize)
+	{
+		if("box".equals(SystemProperties.get("ro.target.product",  "unknown")))
+		{
+			mMimeType = "video/iso";
+			mFileType = MediaFile.getFileTypeForMimeType(mMimeType);;
+			mFileSize = fileSize;
+
+			FileEntry entry = makeEntryFor(path);
+			// add some slack to avoid a rounding error
+			long delta = (entry != null) ? (lastModified - entry.mLastModified) : 0;
+			boolean wasModified = delta > 1 || delta < -1;
+
+		//	Log.d(TAG,"scanBDDirectory(): path = "+path+",fileSize = "+fileSize+",mMimeType = "+mMimeType+",mFileType = "+mFileType+",wasModified = "+wasModified);
+
+			if (entry == null || wasModified) 
+			{
+				if (wasModified) 
+				{
+				    entry.mLastModified = lastModified;
+				} 
+				else 
+				{
+				    entry = new FileEntry(0, path, lastModified,MtpConstants.FORMAT_ASSOCIATION);
+				}
+				entry.mLastModifiedChanged = true;
+			}
+
+			// clear all the metadata
+			mArtist = null;
+			mAlbumArtist = null;
+			mAlbum = null;
+			mTitle = null;
+			mComposer = null;
+			mGenre = null;
+			mTrack = 0;
+			mYear = 0;
+			mDuration = 0;
+			mPath = path;
+			mLastModified = lastModified;
+			mWriter = null;
+			mCompilation = 0;
+			mIsDrm = false;
+			mWidth = 0;
+			mHeight = 0;
+
+			// (even though it already exists in the database), to trigger
+			// the correct code path for updating its entry
+			if (mMtpObjectHandle != 0) 
+			{
+				entry.mRowId = 0;
+			}
+			try
+			{
+				if (entry != null && (entry.mLastModifiedChanged))
+				{
+					endFile(entry,false,false,false,false,false);
+				}
+			}
+			catch (RemoteException e)
+			{
+			}
+		}
+	}
 
         @Override
         public void scanFile(String path, long lastModified, long fileSize,
