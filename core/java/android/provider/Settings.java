@@ -1786,7 +1786,11 @@ public final class Settings {
           * @hide
           */
         public static final String SCREENSHOT_BUTTON_SHOW="screenshot_button_show";
-
+        /**
+         * launcher app start  add by lly
+         * @hide
+         */
+        public static final String LAUNCHER_CLICK_APP ="launcher.click.app";
         /**
          * @deprecated Use {@link android.provider.Settings.Global#AIRPLANE_MODE_ON} instead
          */

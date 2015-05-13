@@ -3464,6 +3464,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     }
                     Slog.v(TAG, "Loaded animation " + a + " for " + atoken, e);
                 }
+                a.setDuration(100);
                 atoken.mAppAnimator.setAnimation(a, width, height);
             }
         } else {
