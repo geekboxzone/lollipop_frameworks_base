@@ -9256,7 +9256,8 @@ public class PackageManagerService extends IPackageManager.Stub {
                  */
                 final int requiredUid = mRequiredVerifierPackage == null ? -1
                         : getPackageUid(mRequiredVerifierPackage, userIdentifier);
-                if (!origin.existing && requiredUid != -1
+		boolean skipVerification =  "true".equals(SystemProperties.get("ro.config.enable.skipverify","false"));
+                if (!skipVerification && !origin.existing && requiredUid != -1
                         && isVerificationEnabled(userIdentifier, installFlags)) {
                     final Intent verification = new Intent(
                             Intent.ACTION_PACKAGE_NEEDS_VERIFICATION);
