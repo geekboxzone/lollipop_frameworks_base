@@ -16191,6 +16191,7 @@ package android.media {
     method public int getSelectedTrack(int) throws java.lang.IllegalStateException;
     method public android.media.MediaPlayer.TrackInfo[] getTrackInfo() throws java.lang.IllegalStateException;
     method public int getVideoHeight();
+    method public int getVideoStreamNum();
     method public int getVideoWidth();
     method public boolean isLooping();
     method public boolean isPlaying();
@@ -16201,6 +16202,7 @@ package android.media {
     method public void reset();
     method public void seekTo(int) throws java.lang.IllegalStateException;
     method public void selectTrack(int) throws java.lang.IllegalStateException;
+    method public int set3DMode(int);
     method public void setAudioAttributes(android.media.AudioAttributes) throws java.lang.IllegalArgumentException;
     method public void setAudioSessionId(int) throws java.lang.IllegalArgumentException, java.lang.IllegalStateException;
     method public void setAudioStreamType(int);
@@ -16246,6 +16248,12 @@ package android.media {
     field public static final int MEDIA_INFO_VIDEO_RENDERING_START = 3; // 0x3
     field public static final int MEDIA_INFO_VIDEO_TRACK_LAGGING = 700; // 0x2bc
     field public static final java.lang.String MEDIA_MIMETYPE_TEXT_SUBRIP = "application/x-subrip";
+    field public static final int MODE_2D = 0; // 0x0
+    field public static final int MODE_MVC_3D = 1; // 0x1
+    field public static final int MODE_SIDE_BY_SIDE_TO_2D = 4; // 0x4
+    field public static final int MODE_SIDE_BY_SIDE_TO_3D = 2; // 0x2
+    field public static final int MODE_TOP_BOTTOM_TO_2D = 5; // 0x5
+    field public static final int MODE_TOP_BOTTOM_TO_3D = 3; // 0x3
     field public static final int VIDEO_SCALING_MODE_SCALE_TO_FIT = 1; // 0x1
     field public static final int VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING = 2; // 0x2
   }

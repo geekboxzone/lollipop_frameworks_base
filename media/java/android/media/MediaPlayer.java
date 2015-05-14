@@ -656,6 +656,10 @@ public class MediaPlayer implements SubtitleController.Listener
     private static final int INVOKE_ID_SET_VIDEO_SCALE_MODE = 6;
     private static final int INVOKE_ID_GET_SELECTED_TRACK = 7;
 
+    // add by hh@rock-chips for box
+    private static final int INVOKE_ID_SET_VIDEO_MODE = 8;
+    private static final int INVOKE_ID_GET_VIDEO_STREAM_NUMBER = 9;
+
     /**
      * Create a request parcel which can be routed to the native media
      * player using {@link #invoke(Parcel, Parcel)}. The Parcel
@@ -2492,6 +2496,47 @@ public class MediaPlayer implements SubtitleController.Listener
 
         selectOrDeselectInbandTrack(index, select);
     }
+
+    //$_media_$_modify_$_hh@rock-chips.com for BOX
+    public int getVideoStreamNum()
+    {
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(INVOKE_ID_GET_VIDEO_STREAM_NUMBER);
+            invoke(request, reply);
+	      int number = reply.readInt();
+	      return number;
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+    }
+
+    public static final int MODE_2D = 0;
+    public static final int MODE_MVC_3D = 1;
+    public static final int MODE_SIDE_BY_SIDE_TO_3D = 2;
+    public static final int MODE_TOP_BOTTOM_TO_3D = 3;
+    public static final int MODE_SIDE_BY_SIDE_TO_2D = 4;
+    public static final int MODE_TOP_BOTTOM_TO_2D = 5;
+    public int set3DMode(int mode)
+    {
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(INVOKE_ID_SET_VIDEO_MODE);
+            request.writeInt(mode);
+            invoke(request, reply);
+	      int result = reply.readInt();
+            return result;
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+    }
+    //$_media_$_modify_$_end
 
     private void selectOrDeselectInbandTrack(int index, boolean select)
             throws IllegalStateException {
