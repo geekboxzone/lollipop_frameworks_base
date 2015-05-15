@@ -751,7 +751,8 @@ public final class SystemServer {
                     mSystemServiceManager.startService(ETHERNET_SERVICE_CLASS);
                 }
 //add by blb
-                if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_PPPOE)) {
+                String isCts = SystemProperties.get("net.pppoe.cts");
+                if (mPackageManager.hasSystemFeature(PackageManager.FEATURE_PPPOE) && !"true".equals(isCts)) {
                     try {
                         Slog.i(TAG, "PppoeService");
                         mSystemServiceManager.startService(PPPOE_SERVICE_CLASS);

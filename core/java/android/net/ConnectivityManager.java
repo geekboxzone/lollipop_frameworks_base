@@ -45,6 +45,7 @@ import android.util.Log;
 import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.util.Protocol;
+import android.os.SystemProperties;
 
 import java.net.InetAddress;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -411,7 +412,7 @@ public class ConnectivityManager {
     public static final int TYPE_PPPOE=18;
 
     /** {@hide} */
-    public static final int MAX_RADIO_TYPE   = TYPE_VPN;
+    public static final int MAX_RADIO_TYPE   = TYPE_PPPOE;
 
     /** {@hide} */
     public static final int MAX_NETWORK_TYPE = TYPE_PPPOE;
@@ -459,7 +460,16 @@ public class ConnectivityManager {
      * @return a boolean.  {@code true} if the type is valid, else {@code false}
      */
     public static boolean isNetworkTypeValid(int networkType) {
-        return networkType >= 0 && networkType <= MAX_NETWORK_TYPE;
+     /**
+      *  #$_rbox_$_modify_$_blb_20150514_for_pppoe_pass_cts
+      */
+ 
+        String isCts = SystemProperties.get("net.pppoe.cts");
+        if("true".equals(isCts)) {
+            return networkType >= 0 && networkType <= TYPE_VPN;
+        } else {
+            return networkType >= 0 && networkType <= MAX_NETWORK_TYPE;
+        }
     }
 
     /**
