@@ -89,6 +89,7 @@ import android.provider.Settings;
 import android.security.Credentials;
 import android.security.KeyStore;
 import android.telephony.TelephonyManager;
+import android.telephony.SubscriptionManager;
 import android.text.TextUtils;
 import android.util.Slog;
 import android.util.SparseArray;
@@ -4098,7 +4099,23 @@ public class ConnectivityService extends IConnectivityManager.Stub
                     newNetwork.addRequest(nri.request);
                     continue;
                 }
-
+                if (mDefaultRequest.requestId == nri.request.requestId) {
+                    final int dds = SubscriptionManager.getDefaultDataSubId();
+                    final String subscriberId = newNetwork.networkMisc.subscriberId;
+                    final int networkType = newNetwork.networkInfo.getType();
+                    // if mobile data is disabled or newNetwork works on non-data SIM, we ignore default request
+                    if (!(networkType == ConnectivityManager.TYPE_MOBILE &&
+                            subscriberId != null &&
+                            subscriberId.equals(mTelephonyManager.getSubscriberId(dds)) &&
+                            mTelephonyManager.getDataEnabled())) {
+                            loge("ignore default request, networkType=" + networkType
+                                    + ", dds=" + dds
+                                    + ", newNetwork subscriberId=" + subscriberId
+                                    + ", dds subscriberId=" + mTelephonyManager.getSubscriberId(dds)
+                                    + ", data enabled=" + mTelephonyManager.getDataEnabled());
+                        continue;
+                    }
+                }
                 // next check if it's better than any current network we're using for
                 // this request
                 if (VDBG) {
