@@ -38,6 +38,13 @@ import com.android.internal.widget.LockPatternUtils;
 
 import java.util.Locale;
 
+import android.graphics.Typeface;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.AbsoluteSizeSpan;
+import android.text.style.StyleSpan;
+import android.text.style.TypefaceSpan;
+
 public class KeyguardStatusView extends GridLayout {
     private static final boolean DEBUG = KeyguardConstants.DEBUG;
     private static final String TAG = "KeyguardStatusView";
@@ -216,7 +223,7 @@ public class KeyguardStatusView extends GridLayout {
     // This is an optimization to ensure we only recompute the patterns when the inputs change.
     private static final class Patterns {
         static String dateView;
-        static String clockView12;
+        static CharSequence clockView12;
         static String clockView24;
         static String cacheKey;
 
@@ -233,20 +240,43 @@ public class KeyguardStatusView extends GridLayout {
 
             dateView = DateFormat.getBestDateTimePattern(locale, dateViewSkel);
 
-            clockView12 = DateFormat.getBestDateTimePattern(locale, clockView12Skel);
+            //clockView12 = DateFormat.getBestDateTimePattern(locale, clockView12Skel);
             // CLDR insists on adding an AM/PM indicator even though it wasn't in the skeleton
             // format.  The following code removes the AM/PM indicator if we didn't want it.
-            if (!clockView12Skel.contains("a")) {
-                clockView12 = clockView12.replaceAll("a", "").trim();
-            }
+            //if (!clockView12Skel.contains("a")) {
+            //    clockView12 = clockView12.replaceAll("a", "").trim();
+            //}
 
             clockView24 = DateFormat.getBestDateTimePattern(locale, clockView24Skel);
 
             // Use fancy colon.
             clockView24 = clockView24.replace(':', '\uee01');
-            clockView12 = clockView12.replace(':', '\uee01');
+            clockView12 = get12ModeFormat(clockView12Skel,32);
 
             cacheKey = key;
         }
+    }
+
+	public static CharSequence get12ModeFormat(String skeleton, int amPmFontSize) {
+        String pattern = DateFormat.getBestDateTimePattern(Locale.getDefault(), skeleton);
+        // Remove the am/pm
+        if (amPmFontSize <= 0) {
+            pattern.replaceAll("a", "").trim();
+        }
+        // Replace spaces with "Hair Space"
+        pattern = pattern.replaceAll(" ", "\u200A");
+        // Build a spannable so that the am/pm will be formatted
+        int amPmPos = pattern.indexOf('a');
+        if (amPmPos == -1) {
+            return pattern;
+        }
+        Spannable sp = new SpannableString(pattern);
+        sp.setSpan(new StyleSpan(Typeface.NORMAL), amPmPos, amPmPos + 1,
+                Spannable.SPAN_POINT_MARK);
+        sp.setSpan(new AbsoluteSizeSpan(amPmFontSize), amPmPos, amPmPos + 1,
+                Spannable.SPAN_POINT_MARK);
+        sp.setSpan(new TypefaceSpan("sans-serif"), amPmPos, amPmPos + 1,
+                Spannable.SPAN_POINT_MARK);
+        return sp;
     }
 }
