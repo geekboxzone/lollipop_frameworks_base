@@ -234,6 +234,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import android.app.KeyguardManager;
 
 public final class ActivityManagerService extends ActivityManagerNative
         implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
@@ -400,6 +401,9 @@ public final class ActivityManagerService extends ActivityManagerNative
     // Convenient for easy iteration over the queues. Foreground is first
     // so that dispatch of foreground broadcasts gets precedence.
     final BroadcastQueue[] mBroadcastQueues = new BroadcastQueue[2];
+
+
+	private KeyguardManager mKeyguardManager;
 
     BroadcastQueue broadcastQueueForIntent(Intent intent) {
         final boolean isFg = (intent.getFlags() & Intent.FLAG_RECEIVER_FOREGROUND) != 0;
@@ -16786,7 +16790,13 @@ public final class ActivityManagerService extends ActivityManagerNative
                 starting = mainStack.topRunningActivityLocked(null);
             }
 
+			 mKeyguardManager =(KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
+
             if (starting != null) {
+				if(mKeyguardManager.isKeyguardLocked()){
+					Slog.d("ljh","--------------------------");
+					starting.forceNewConfig = true;
+				}
                 kept = mainStack.ensureActivityConfigurationLocked(starting, changes);
                 // And we need to make sure at this point that all other activities
                 // are made visible with the correct configuration.
