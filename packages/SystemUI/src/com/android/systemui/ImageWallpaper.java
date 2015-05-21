@@ -221,7 +221,11 @@ public class ImageWallpaper extends WallpaperService {
                 // Used a fixed size surface, because we are special.  We can do
                 // this because we know the current design of window animations doesn't
                 // cause this to break.
-                surfaceHolder.setFixedSize(surfaceWidth, surfaceHeight);
+					if(surfaceWidth>surfaceHeight){
+						surfaceHolder.setFixedSize(surfaceWidth, surfaceWidth);
+					}else{
+						surfaceHolder.setFixedSize(surfaceHeight, surfaceHeight);
+					}	
             } else {
                 surfaceHolder.setSizeFromLayout();
             }
