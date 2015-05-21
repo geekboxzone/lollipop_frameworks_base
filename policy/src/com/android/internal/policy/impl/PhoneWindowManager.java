@@ -5404,7 +5404,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             mScreenOnFully = false;
             mWindowManagerDrawComplete = false;
             mScreenOnListener = screenOnListener;
-            updateOrientationListenerLp();
+            //updateOrientationListenerLp();
         }
 
         mWindowManagerInternal.waitForAllWindowsDrawn(mWindowManagerDrawCallback,
@@ -5420,7 +5420,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
             mWindowManagerDrawComplete = true;
         }
-
+        mHandler.postDelayed(new Runnable() {
+               public void run() {
+                       updateOrientationListenerLp();
+               }    
+        },300);
         finishScreenTurningOn();
     }
 
