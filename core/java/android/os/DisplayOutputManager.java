@@ -80,7 +80,7 @@ public class DisplayOutputManager {
 			// Get main display interface
 			String[] display_iface = mService.listInterfaces(MAIN_DISPLAY);
 			if(DBG) Log.d(TAG, "main display iface num is " + display_iface.length);
-			if(display_iface.length > 0) {
+			if(display_iface != null && display_iface.length > 0) {
 				m_main_iface = new int[display_iface.length];
 				for(int i = 0; i < m_main_iface.length; i++) {
 					if(DBG) Log.d(TAG, display_iface[i]);
@@ -89,11 +89,15 @@ public class DisplayOutputManager {
 			}
 			else
 				m_main_iface = null;
+		} catch (Exception e) {
+	            Log.e(TAG, "Error listing main interfaces :" + e);
+	        }
 
+	        try {
 			// Get aux display interface
-			display_iface = mService.listInterfaces(AUX_DISPLAY);
+			String[] display_iface = mService.listInterfaces(AUX_DISPLAY);
 			if(DBG) Log.d(TAG, "aux display iface num is " + display_iface.length);
-			if(display_iface.length > 0) {
+			if(display_iface != null && display_iface.length > 0) {
 				m_aux_iface = new int[display_iface.length];
 				for(int i = 0; i < m_aux_iface.length; i++) {
 					if(DBG) Log.d(TAG, display_iface[i]);
@@ -102,11 +106,12 @@ public class DisplayOutputManager {
 			}
 			else
 				m_aux_iface = null;
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error listing Interfaces :" + e);
-            return;
-        }
+	        } catch (Exception e) {
+	            Log.e(TAG, "Error listing aux interfaces :" + e);
+	        }
+	        
+	        if (m_main_iface == null && m_aux_iface == null)
+			throw new IllegalArgumentException("There is no display interface.");
 	}
 
 	private int ifacetotype(String iface) {
@@ -149,10 +154,10 @@ public class DisplayOutputManager {
 		int number = 0;
 
 		if(m_main_iface != null)
-			number++;
+			number = 1;
 		if(m_aux_iface != null)
-			number++;
-
+			number = 2;
+	
 		return number;
 	}
 
