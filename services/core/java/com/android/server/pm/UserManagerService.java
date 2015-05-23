@@ -448,6 +448,10 @@ public class UserManagerService extends IUserManager.Stub {
             if (info.iconPath == null) {
                 return null;
             }
+            File file=new File(info.iconPath);
+            if (!file.exists()){
+                return null;
+            }
             return BitmapFactory.decodeFile(info.iconPath);
         }
     }
@@ -1307,6 +1311,19 @@ public class UserManagerService extends IUserManager.Stub {
             synchronized (mPackagesLock) {
                 user = mUsers.get(userHandle);
                 if (userHandle == 0 || user == null || mRemovingUserIds.get(userHandle)) {
+                    if(userHandle==0&&user!=null&&user.iconPath!=null)
+                    {
+                        try {
+                            File dir = new File(user.iconPath);
+                            if (dir.exists()) {
+                                dir.delete();
+                                sendUserInfoChangedBroadcast(0);
+                            }
+                        }
+                        catch(Exception ex){
+                            ex.printStackTrace();
+                        }
+                    }
                     return false;
                 }
 
