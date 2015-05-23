@@ -16794,8 +16794,13 @@ public final class ActivityManagerService extends ActivityManagerNative
 
             if (starting != null) {
 				if(mKeyguardManager.isKeyguardLocked()){
-					Slog.d("ljh","--------------------------");
-					starting.forceNewConfig = true;
+					Slog.d("ljh","-----------------------starting.info.screenOrientation="+starting.info.screenOrientation);
+					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+                        //Slog.d("ljh","do not change------------");
+				    }else{
+	                     //Slog.d("ljh","force change---------------");
+	                     starting.forceNewConfig = true;
+	                }
 				}
                 kept = mainStack.ensureActivityConfigurationLocked(starting, changes);
                 // And we need to make sure at this point that all other activities
