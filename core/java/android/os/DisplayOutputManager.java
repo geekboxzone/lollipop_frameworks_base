@@ -109,9 +109,10 @@ public class DisplayOutputManager {
 	        } catch (Exception e) {
 	            Log.e(TAG, "Error listing aux interfaces :" + e);
 	        }
-	        
-	        if (m_main_iface == null && m_aux_iface == null)
-			throw new IllegalArgumentException("There is no display interface.");
+
+		if (m_main_iface == null && m_aux_iface == null)
+	        	Log.e(TAG, "There is no display interface.");
+			//throw new IllegalArgumentException("There is no display interface.");
 	}
 
 	private int ifacetotype(String iface) {
