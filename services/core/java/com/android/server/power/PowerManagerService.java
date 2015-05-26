@@ -457,6 +457,7 @@ public final class PowerManagerService extends SystemService
     private static native void nativeSetAutoSuspend(boolean enable);
     private static native void nativeSendPowerHint(int hintId, int data);
     private static native void nativeCpuBoost(int duration);
+    private static native void nativeSetPerformanceMode(int mode);
 
     public PowerManagerService(Context context) {
         super(context);
@@ -3187,6 +3188,16 @@ public final class PowerManagerService extends SystemService
             final long ident = Binder.clearCallingIdentity();
             try {
                 return setLowPowerModeInternal(mode);
+            } finally {
+                Binder.restoreCallingIdentity(ident);
+            }
+        }
+
+        @Override // Binder call
+        public void setPerformanceMode(int mode) {
+            final long ident = Binder.clearCallingIdentity();
+            try {
+                nativeSetPerformanceMode(mode);
             } finally {
                 Binder.restoreCallingIdentity(ident);
             }

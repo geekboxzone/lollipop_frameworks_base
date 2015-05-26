@@ -375,7 +375,16 @@ public final class PowerManager {
      * @hide
      */
     public static final String REBOOT_RECOVERY = "recovery";
-    
+
+    /**
+     * @hide
+     */
+    public static final int PERFORMANCE_MODE_NORMAL = 0;
+    /**
+     * @hide
+     */
+    public static final int PERFORMANCE_MODE_PERFORMANCE = 1;
+
     final Context mContext;
     final IPowerManager mService;
     final Handler mHandler;
@@ -842,6 +851,20 @@ public final class PowerManager {
         }
     }
 
+    /**
+     * Set the current performance mode.
+     *
+     *
+     * @hide
+     */
+    public void setPerformanceMode(int mode) {
+        try {
+            if (mService != null) {
+                mService.setPerformanceMode(mode);
+            }
+        } catch (RemoteException e) {
+        }
+    }
 
     /**
      * Boost the CPU. Boosts the cpu for the given duration in microseconds.

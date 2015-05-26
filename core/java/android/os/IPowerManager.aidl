@@ -60,4 +60,6 @@ interface IPowerManager
     void setAttentionLight(boolean on, int color);
 
     void cpuBoost(int duration);
+
+    void setPerformanceMode(int mode);
 }

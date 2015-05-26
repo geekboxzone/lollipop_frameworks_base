@@ -56,6 +56,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.PowerManager;
 import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
@@ -1774,6 +1775,25 @@ final class ApplicationPackageManager extends PackageManager {
             }
         }
         return null;
+    }
+
+    @Override
+    public int getPackagePerformanceMode(String pkgName) {
+        try {
+            return mPM.getPackagePerformanceMode(pkgName);
+        } catch (RemoteException e) {
+            // Should never happen!
+        }
+        return PowerManager.PERFORMANCE_MODE_NORMAL;
+    }
+
+    @Override
+    public void setPackagePerformanceMode(String pkgName, int mode) {
+        try {
+            mPM.setPackagePerformanceMode(pkgName, mode);
+        } catch (RemoteException e) {
+            // Should never happen!
+        }
     }
 
     private final ContextImpl mContext;

@@ -49,6 +49,7 @@ import com.android.internal.os.BatteryStatsImpl;
 import com.android.server.Watchdog;
 import com.android.server.am.ActivityManagerService.ItemMatcher;
 import com.android.server.am.ActivityStackSupervisor.ActivityContainer;
+import com.android.server.power.DevicePerformanceTunner;
 import com.android.server.wm.AppTransition;
 import com.android.server.wm.TaskGroup;
 import com.android.server.wm.WindowManagerService;
@@ -77,6 +78,7 @@ import android.os.Message;
 import android.os.PersistableBundle;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.Trace;
 import android.os.UserHandle;
 import android.service.voice.IVoiceInteractionSession;
@@ -1569,6 +1571,8 @@ final class ActivityStack {
         mStackSupervisor.mWaitingVisibleActivities.remove(next);
 
         if (DEBUG_SWITCH) Slog.v(TAG, "Resuming " + next);
+
+        adjustPackagePerformanceMode();
 
         // If we are currently pausing an activity, then don't do anything
         // until that is done.
@@ -4125,5 +4129,19 @@ final class ActivityStack {
     public String toString() {
         return "ActivityStack{" + Integer.toHexString(System.identityHashCode(this))
                 + " stackId=" + mStackId + ", " + mTaskHistory.size() + " tasks}";
+    }
+
+    private void adjustPackagePerformanceMode() {
+        if (mService.mUsePerformanceTunner) {
+            int mode = mService.getFrontActivityPerformanceModeLocked(false);
+            mService.mDevicePerformanceTunner.setPerformanceMode(mode);
+        }
+
+    }
+
+    public void forcePerformanceMode(int mode) {
+        if (mService.mUsePerformanceTunner) {
+            mService.mDevicePerformanceTunner.setPerformanceMode(mode);
+        }
     }
 }

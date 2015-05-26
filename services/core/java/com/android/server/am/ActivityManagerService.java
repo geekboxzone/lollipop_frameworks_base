@@ -85,6 +85,7 @@ import com.android.server.am.ActivityStack.ActivityState;
 import com.android.server.firewall.IntentFirewall;
 import com.android.server.pm.Installer;
 import com.android.server.pm.UserManagerService;
+import com.android.server.power.DevicePerformanceTunner;
 import com.android.server.statusbar.StatusBarManagerInternal;
 import com.android.server.wm.AppTransition;
 import com.android.server.wm.WindowManagerService;
@@ -176,6 +177,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
+import android.os.PowerManager;
 import android.os.PowerManagerInternal;
 import android.os.Process;
 import android.os.RemoteCallbackList;
@@ -1189,6 +1191,9 @@ public final class ActivityManagerService extends ActivityManagerNative
 
     int mProcessLimit = ProcessList.MAX_CACHED_APPS;
     int mProcessLimitOverride = -1;
+
+    boolean mUsePerformanceTunner = false;
+    DevicePerformanceTunner mDevicePerformanceTunner;
 
     WindowManagerService mWindowManager;
 
@@ -3219,6 +3224,26 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
             }
         }
+    }
+
+    public int getFrontActivityPerformanceModeLocked(boolean systemAppLimited) {
+        int mode = PowerManager.PERFORMANCE_MODE_NORMAL;
+        final ActivityStack mainStack = mStackSupervisor.getFocusedStack();
+        ActivityRecord r = mainStack.topRunningActivityLocked(null);
+
+        if (r != null) {
+            try {
+                mode = AppGlobals.getPackageManager().getPackagePerformanceMode(
+                        r.realActivity.toString());
+            } catch (RemoteException e) {
+            }
+        }
+        return mode;
+    }
+
+    public void forcePerformanceMode(int mode) {
+        final ActivityStack mainStack = mStackSupervisor.getFocusedStack();
+        mainStack.forcePerformanceMode(mode);
     }
 
     CompatibilityInfo compatibilityInfoForPackageLocked(ApplicationInfo ai) {
@@ -11218,6 +11243,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                 if (goingCallback != null) {
                     goingCallback.run();
                 }
+
                 return;
             }
 
@@ -11257,6 +11283,12 @@ public final class ActivityManagerService extends ActivityManagerNative
             }
 
             mAppOpsService.systemReady();
+            String value = SystemProperties.get("ro.hardware", "rk30board");
+            if (value.equals("rk30board") || value.equals("rk2928board") || value.equals("rk29board")) {
+                Slog.d(TAG, "OK, system ready!");
+                mUsePerformanceTunner = true;
+                mDevicePerformanceTunner = DevicePerformanceTunner.getInstance(mContext);
+            }
             mSystemReady = true;
         }
 
