@@ -277,7 +277,7 @@ public final class SystemServer {
 
     private boolean setCpuMaxFreq(int freq) {
         String cpuFreqPath = "/sys/devices/system/cpu/cpu";
-        String cpuFreqNode = "/cpufreq/scaling_max_freq";
+        String cpuFreqNode = "/cpufreq/thermal_scaling_max_freq";
         int i;
 
         Slog.d(TAG, "ctrlCpuFreq:" + freq);
