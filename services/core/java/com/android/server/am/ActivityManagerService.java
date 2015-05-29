@@ -11367,7 +11367,17 @@ public final class ActivityManagerService extends ActivityManagerNative
             readGrantedUriPermissionsLocked();
         }
 
-        if (goingCallback != null) goingCallback.run();
+        //if (goingCallback != null) goingCallback.run();
+        new Thread("goingCallback thread") {
+                @Override
+                public void run() {
+			if (goingCallback != null)
+				goingCallback.run();
+                }
+        }.run();
+
+
+
 
         mBatteryStatsService.noteEvent(BatteryStats.HistoryItem.EVENT_USER_RUNNING_START,
                 Integer.toString(mCurrentUserId), mCurrentUserId);
