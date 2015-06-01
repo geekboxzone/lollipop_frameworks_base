@@ -325,6 +325,10 @@ public class PackageManagerService extends IPackageManager.Stub {
 
     private static final String VENDOR_OVERLAY_DIR = "/vendor/overlay";
 
+    private static final String VENDOR_3RD_APP_DIR = "/system/vendor/3rd-app";
+
+    private static final String VENDOR_3RD_APP_DISABLED_DIR = "/data/3rd-app-disabled";
+
     private static String sPreferredInstructionSet;
 
     final ServiceThread mHandlerThread;
@@ -1597,6 +1601,10 @@ public class PackageManagerService extends IPackageManager.Stub {
             final File oemAppDir = new File(Environment.getOemDirectory(), "app");
             scanDirLI(oemAppDir, PackageParser.PARSE_IS_SYSTEM
                     | PackageParser.PARSE_IS_SYSTEM_DIR, scanFlags, 0);
+
+            // Collect third app packages.
+            File vendor3rdAppDir = new File(VENDOR_3RD_APP_DIR);
+            scanDirLI(vendor3rdAppDir, 0, scanFlags, 0);
 
             if (DEBUG_UPGRADE) Log.v(TAG, "Running installd update commands");
             mInstaller.moveFiles();
@@ -4379,11 +4387,25 @@ public class PackageManagerService extends IPackageManager.Stub {
     }
 
     /*
+     * if VENDOR_3RD_APP_DISABLED_DIR contains the directory of package name,
+     * return true, otherwise return false.
+     */
+    private boolean isVendor3rdAppDisabled(String scanPath, String pkgName) {
+        if (scanPath.startsWith(VENDOR_3RD_APP_DIR)) {
+            final File filter = new File(VENDOR_3RD_APP_DISABLED_DIR, pkgName);
+            return filter.isDirectory();
+        }
+        return false;
+    }
+
+
+    /*
      *  Scan a package and return the newly parsed package.
      *  Returns null in case of errors and the error code is stored in mLastScanError
      */
     private PackageParser.Package scanPackageLI(File scanFile, int parseFlags, int scanFlags,
             long currentTime, UserHandle user) throws PackageManagerException {
+        String scanPath = scanFile.getPath();
         if (DEBUG_INSTALL) Slog.d(TAG, "Parsing: " + scanFile);
         parseFlags |= mDefParseFlags;
         PackageParser pp = new PackageParser();
@@ -4400,6 +4422,11 @@ public class PackageManagerService extends IPackageManager.Stub {
             pkg = pp.parsePackage(scanFile, parseFlags);
         } catch (PackageParserException e) {
             throw PackageManagerException.from(e);
+        }
+
+        if (isVendor3rdAppDisabled(scanPath, pkg.packageName)) {
+            Slog.w(TAG, "skip 3rd party apk: " + pkg.packageName);
+            return null;
         }
 
         PackageSetting ps = null;
@@ -11263,6 +11290,20 @@ public class PackageManagerService extends IPackageManager.Stub {
     }
 
     /*
+     * Update vendor 3rd party app filter
+     */
+    private void disableVendor3rdApp(PackageSetting ps) {
+        if (ps.pkg != null) {
+            String packageName = ps.name;
+            String packagePath = ps.pkg.codePath;
+            if (packagePath != null && packagePath.startsWith(VENDOR_3RD_APP_DIR)) {
+                final File filter = new File(VENDOR_3RD_APP_DISABLED_DIR, packageName);
+                filter.mkdirs();
+            }
+        }
+    }
+
+    /*
      * Tries to delete system package.
      */
     private boolean deleteSystemPackageLI(PackageSetting newPs,
@@ -11376,6 +11417,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                     getAppDexInstructionSets(ps));
             if (DEBUG_SD_INSTALL) Slog.i(TAG, "args=" + outInfo.args);
         }
+        disableVendor3rdApp(ps);
         return true;
     }
 
