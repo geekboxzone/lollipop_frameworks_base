@@ -166,7 +166,6 @@ public final class TimedText
     /**
      * Helper class to hold the style information to display the text.
      * The member variables in this class are read-only.
-     * {@hide}
      */
     public static final class Style {
         /**
@@ -384,6 +383,15 @@ public final class TimedText
     public Rect getBounds() {
         return mTextBounds;
     }
+
+    //$_media_$_modify_$_Martin.Cheng@rock-chips.com
+    public Style getFontStyle(){
+        if( mStyleList != null ){
+            return mStyleList.get(0);
+        }
+        return null;
+    }
+    //$_media_$_modify_$_end
 
     /*
      * Go over all the records, collecting metadata keys and fields in the
