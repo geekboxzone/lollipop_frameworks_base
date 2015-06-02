@@ -45,5 +45,7 @@ oneway interface IStatusBar
     void preloadRecentApps();
     void cancelPreloadRecentApps();
     void showScreenPinningRequest();
+    void showSimSwitchUi(int type);
+    void hideSimSwitchUi();
 }
 

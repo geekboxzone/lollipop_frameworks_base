@@ -119,7 +119,12 @@
             systemui:datePattern="eeeeMMMMd"
             />
     </FrameLayout>
-
+    <!-- add Dual SIM support start -->
+    <!--sim card switch ui -->
+    <include layout="@layout/sim_switch_view"
+        android:layout_width="match_parent"
+    />
+    <!-- add Dual SIM support end -->
     <include layout="@layout/split_clock_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

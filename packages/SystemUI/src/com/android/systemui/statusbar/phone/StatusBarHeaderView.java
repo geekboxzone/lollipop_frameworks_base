@@ -318,16 +318,38 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
     }
 
     private void updateVisibilities() {
-        mDateCollapsed.setVisibility(mExpanded && mAlarmShowing ? View.VISIBLE : View.INVISIBLE);
-        mDateExpanded.setVisibility(mExpanded && mAlarmShowing ? View.INVISIBLE : View.VISIBLE);
-        mAlarmStatus.setVisibility(mExpanded && mAlarmShowing ? View.VISIBLE : View.INVISIBLE);
-        mSettingsButton.setVisibility(mExpanded ? View.VISIBLE : View.INVISIBLE);
-        mQsDetailHeader.setVisibility(mExpanded && mShowingDetail? View.VISIBLE : View.INVISIBLE);
-        if (mSignalCluster != null) {
-            updateSignalClusterDetachment();
+        if ( PhoneStatusBar.getSimSwitch() ) {
+            int show = 0;
+            if(mExpanded) {
+                if(mAlarmShowing) {
+                    show = 2;
+                } else {
+                    show = 1;
+                }
+            }
+            mDateExpanded.setVisibility(show==1?View.VISIBLE:View.INVISIBLE);
+            mDateCollapsed.setVisibility(show==2?View.VISIBLE:View.INVISIBLE);
+            mAlarmStatus.setVisibility(show==2?View.VISIBLE:View.INVISIBLE);
+            mSettingsButton.setVisibility(View.INVISIBLE);
+            mQsDetailHeader.setVisibility(View.INVISIBLE);
+            mSystemIcons.setVisibility(View.INVISIBLE);
+            mEmergencyCallsOnly.setVisibility(View.GONE);
+            mBatteryLevel.setVisibility(View.GONE);
+            mMultiUserSwitch.setVisibility(View.INVISIBLE);
+        } else {
+            mDateCollapsed.setVisibility(mExpanded && mAlarmShowing ? View.VISIBLE : View.INVISIBLE);
+            mDateExpanded.setVisibility(mExpanded && mAlarmShowing ? View.INVISIBLE : View.VISIBLE);
+            mAlarmStatus.setVisibility(mExpanded && mAlarmShowing ? View.VISIBLE : View.INVISIBLE);
+            mSettingsButton.setVisibility(mExpanded ? View.VISIBLE : View.INVISIBLE);
+            mQsDetailHeader.setVisibility(mExpanded && mShowingDetail? View.VISIBLE : View.INVISIBLE);
+            mSystemIcons.setVisibility(View.VISIBLE);
+            if (mSignalCluster != null) {
+                updateSignalClusterDetachment();
+            }
+            mEmergencyCallsOnly.setVisibility(mExpanded && mShowEmergencyCallsOnly ? VISIBLE : GONE);
+            mBatteryLevel.setVisibility(mExpanded ? View.VISIBLE : View.GONE);
+            mMultiUserSwitch.setVisibility(View.VISIBLE);
         }
-        mEmergencyCallsOnly.setVisibility(mExpanded && mShowEmergencyCallsOnly ? VISIBLE : GONE);
-        mBatteryLevel.setVisibility(mExpanded ? View.VISIBLE : View.GONE);
     }
 
     private void updateSignalClusterDetachment() {
@@ -415,10 +437,11 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
     }
 
     private void updateClickTargets() {
-        mMultiUserSwitch.setClickable(mExpanded);
-        mMultiUserSwitch.setFocusable(mExpanded);
-        mSystemIconsSuperContainer.setClickable(mExpanded);
-        mSystemIconsSuperContainer.setFocusable(mExpanded);
+        boolean flag = mExpanded && !PhoneStatusBar.getSimSwitch();
+        mMultiUserSwitch.setClickable(flag);
+        mMultiUserSwitch.setFocusable(flag);
+        mSystemIconsSuperContainer.setClickable(flag);
+        mSystemIconsSuperContainer.setFocusable(flag);
         mAlarmStatus.setClickable(mNextAlarm != null && mNextAlarm.getShowIntent() != null);
     }
 

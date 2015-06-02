@@ -69,6 +69,10 @@ public class StatusBarManager {
     public static final int WINDOW_STATE_HIDING = 1;
     public static final int WINDOW_STATE_HIDDEN = 2;
 
+    public static final int SWITCH_VOICE_CALL = 0;
+    public static final int SWITCH_MESSAGE = 1;
+    public static final int SWITCH_VIDEO_CALL = 2;
+
     private Context mContext;
     private IStatusBarService mService;
     private IBinder mToken = new Binder();

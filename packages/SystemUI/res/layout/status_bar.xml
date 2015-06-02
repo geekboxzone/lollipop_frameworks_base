@@ -69,11 +69,31 @@
                     android:visibility="gone"
                     />
                 <com.android.systemui.statusbar.phone.IconMerger android:id="@+id/notificationIcons"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_alignParentStart="true"
                     android:gravity="center_vertical"
                     android:orientation="horizontal"/>
+                <!-- add Dual SIM support start -->
+                <!-- Sim card switch notification -->
+                <LinearLayout
+                    android:id="@+id/simSwitchNotification"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:visibility="gone" >
+
+                    <TextView
+                        android:id="@+id/simSwitchNotificationText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="2dip"
+                        android:maxWidth="100dip"
+                        android:singleLine="true"
+                        android:textAppearance="@style/TextAppearance.StatusBar.SimSwitchNotification" />
+                </LinearLayout>
+                <!-- add Dual SIM support end-->
             </com.android.keyguard.AlphaOptimizedLinearLayout>
         </com.android.systemui.statusbar.AlphaOptimizedFrameLayout>
 

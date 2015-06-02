@@ -64,4 +64,6 @@ interface IStatusBarService
     void toggleRecentApps();
     void preloadRecentApps();
     void cancelPreloadRecentApps();
+    void showSimSwitchUi(int type);
+    void hideSimSwitchUi();
 }

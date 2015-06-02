@@ -272,4 +272,9 @@
         <item name="android:backgroundDimEnabled">false</item>
         <item name="android:alertDialogTheme">@style/Theme.SystemUI.Dialog.Alert</item>
     </style>
+
+    <style name="TextAppearance.StatusBar.SimSwitchNotification"
+        parent="@*android:style/TextAppearance.StatusBar">
+        <item name="android:textSize">14dp</item>
+    </style>
 </resources>

@@ -29,6 +29,7 @@ import static com.android.systemui.statusbar.phone.BarTransitions.MODE_SEMI_TRAN
 import static com.android.systemui.statusbar.phone.BarTransitions.MODE_TRANSLUCENT;
 import static com.android.systemui.statusbar.phone.BarTransitions.MODE_TRANSPARENT;
 import static com.android.systemui.statusbar.phone.BarTransitions.MODE_WARNING;
+import com.android.systemui.statusbar.phone.PhoneCards.CardInfo;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -351,6 +352,19 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 
     private boolean mShowCarrierInPanel = false;
 
+    private PhoneCards mPhoneCards;
+    // SIM card switch notification and button
+    LinearLayout mSimSwitchNotification;
+    TextView mSimSwitchNotificationText;
+    private int mSwitchType;
+    private LinearLayout mSimSwitchContainer;
+    private LinearLayout mSim1Container;
+    private LinearLayout mSim2Container;
+    private LinearLayout mAskContainer;
+    private ImageView mSwitchSim1Button;
+    private ImageView mSwitchSim2Button;
+    private ImageView mSwitchAskButton;
+
     // position
     int[] mPositionTmp = new int[2];
     boolean mExpandedVisible;
@@ -638,6 +652,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         notifyUserAboutHiddenNotifications();
 
         mScreenPinningRequest = new ScreenPinningRequest(mContext);
+        mPhoneCards = PhoneCards.getInstance(mContext);
     }
 final Object mScreenshotLock = new Object();
     ServiceConnection mScreenshotConnection = null;
@@ -847,6 +862,22 @@ final Object mScreenshotLock = new Object();
         mMoreIcon = mStatusBarView.findViewById(R.id.moreIcon);
         mNotificationIcons.setOverflowIndicator(mMoreIcon);
         mStatusBarContents = (LinearLayout)mStatusBarView.findViewById(R.id.status_bar_contents);
+
+        mSimSwitchNotification = (LinearLayout) mStatusBarView.findViewById(
+                R.id.simSwitchNotification);
+        mSimSwitchNotificationText = (TextView) mStatusBarView.findViewById(
+                R.id.simSwitchNotificationText);
+        mSimSwitchContainer = (LinearLayout) mStatusBarWindow.findViewById(
+                R.id.sim_switch_container);
+        mSim1Container = (LinearLayout)mStatusBarWindow.findViewById(R.id.sim1_container);
+        mSim2Container = (LinearLayout)mStatusBarWindow.findViewById(R.id.sim2_container);
+        mAskContainer = (LinearLayout)mStatusBarWindow.findViewById(R.id.ask_container);
+        mSwitchSim1Button = (ImageView)mStatusBarWindow.findViewById(R.id.sim1_switch_button);
+        mSwitchSim2Button = (ImageView)mStatusBarWindow.findViewById(R.id.sim2_switch_button);
+        mSwitchAskButton = (ImageView)mStatusBarWindow.findViewById(R.id.ask_switch_button);
+        mSwitchSim1Button.setOnClickListener(mSimSwitchListener);
+        mSwitchSim2Button.setOnClickListener(mSimSwitchListener);
+        mSwitchAskButton.setOnClickListener(mSimSwitchListener);
 
         mStackScroller = (NotificationStackScrollLayout) mStatusBarWindow.findViewById(
                 R.id.notification_stack_scroller);
@@ -2648,7 +2679,6 @@ final Object mScreenshotLock = new Object();
         }
 
         mNotificationPanel.expand();
-
         if (false) postStartTracing();
     }
 
@@ -3089,7 +3119,8 @@ final Object mScreenshotLock = new Object();
         public void tickerStarting() {
             if (!mTickerEnabled) return;
             mTicking = true;
-            mStatusBarContents.setVisibility(View.GONE);
+            // make it has chance to layout status bar during many tickers
+            mStatusBarContents.setVisibility(View.INVISIBLE);
             mTickerView.setVisibility(View.VISIBLE);
             mTickerView.startAnimation(loadAnim(com.android.internal.R.anim.push_up_in, null));
             mStatusBarContents.startAnimation(loadAnim(com.android.internal.R.anim.push_up_out, null));
@@ -4603,4 +4634,98 @@ final Object mScreenshotLock = new Object();
             }
         }
     }
+
+    private View.OnClickListener mSimSwitchListener = new View.OnClickListener() {
+        public void onClick(View v) {
+            int value = 0;
+            if (v.getId() == mSwitchSim1Button.getId()) {
+                value = 0;
+            } else if (v.getId() == mSwitchSim2Button.getId()) {
+                value = 1;
+            } else if (v.getId() == mSwitchAskButton.getId()) {
+                value = -1;
+            }
+            switch (mSwitchType) {
+                case StatusBarManager.SWITCH_VOICE_CALL:
+                    mPhoneCards.setCall(value);
+                    break;
+                case StatusBarManager.SWITCH_MESSAGE:
+                    mPhoneCards.setSms(value);
+                    break;
+                case StatusBarManager.SWITCH_VIDEO_CALL:
+                default:
+                    break;
+            }
+
+            updateSimSwitchUi();
+            animateCollapsePanels();
+        }
+    };
+
+    // indicate the SimSwitch UI showing or not.
+    private static boolean mSimSwitchUi = false;
+
+    public static boolean getSimSwitch() {
+        return mSimSwitchUi;
+    }
+
+    @Override
+    public void showSimSwitchUi(int type) {
+        int num = mPhoneCards.getCardsNum();
+        if( num <= 1 ) {
+            hideSimSwitchUi();
+            return;
+        }
+        mSwitchType = type;
+
+        updateSimSwitchUi();
+        mSimSwitchUi = true;
+        mSimSwitchContainer.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideSimSwitchUi() {
+        mSimSwitchNotification.setVisibility(View.GONE);
+        mSimSwitchContainer.setVisibility(View.GONE);
+        mSimSwitchUi = false;
+    }
+
+    private void updateSimSwitchUi() {
+        boolean selected = false;
+        final CardInfo card = mPhoneCards.getDefault(mSwitchType);
+        final CardInfo sim1 = mPhoneCards.getVirtualCard(0);
+        final CardInfo sim2 = mPhoneCards.getVirtualCard(1);
+        if (sim1!=null) {
+            selected = (sim1.getId()==card.getId());
+            mSwitchSim1Button.setImageBitmap(PhoneCards.selectedIcon(sim1.getIcon(), selected));
+            mSwitchSim1Button.invalidate();
+            mSim1Container.setVisibility(View.VISIBLE);
+        } else {
+            mSim1Container.setVisibility(View.GONE);
+        }
+
+        if (sim2!=null) {
+            selected = (sim2.getId()==card.getId());
+            mSwitchSim2Button.setImageBitmap(PhoneCards.selectedIcon(sim2.getIcon(), selected));
+            mSwitchSim2Button.invalidate();
+            mSim2Container.setVisibility(View.VISIBLE);
+        } else {
+            mSim2Container.setVisibility(View.GONE);
+        }
+        if (sim1!=null||sim2!=null) {
+            final CardInfo ask = mPhoneCards.getVirtualCard(2);
+            selected = (ask.getId()==card.getId());
+            mSwitchAskButton.setImageBitmap(PhoneCards.selectedIcon(ask.getIcon(), selected));
+            mSwitchAskButton.invalidate();
+            mAskContainer.setVisibility(View.VISIBLE);
+        } else {
+            mAskContainer.setVisibility(View.GONE);
+        }
+
+        // Display the notification text and color
+        mSimSwitchNotificationText.setText(card.getName());
+        mSimSwitchNotificationText.setTextColor(card.getColor());
+        mSimSwitchNotification.setVisibility(View.VISIBLE);
+    }
+
 }

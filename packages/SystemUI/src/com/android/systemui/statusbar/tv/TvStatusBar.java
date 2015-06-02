@@ -186,4 +186,11 @@ public class TvStatusBar extends BaseStatusBar {
     @Override
     public void showScreenPinningRequest() {
     }
+
+    // add Dual SIM support
+    @Override
+    public void showSimSwitchUi(int type) {}
+
+    @Override
+    public void hideSimSwitchUi() {}
 }
