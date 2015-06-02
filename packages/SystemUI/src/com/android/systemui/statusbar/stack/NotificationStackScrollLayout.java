@@ -752,7 +752,7 @@ public class NotificationStackScrollLayout extends ViewGroup
             }
         }
         boolean scrollerWantsIt = false;
-        if (!mSwipingInProgress && !mExpandingNotification && !mDisallowScrollingInThisMotion) {
+        if (!mSwipingInProgress && !mExpandingNotification && !mDisallowScrollingInThisMotion&&mEmptyShadeView.getVisibility()!=View.VISIBLE) {
             scrollerWantsIt = onScrollTouch(ev);
         }
         boolean horizontalSwipeWantsIt = false;
