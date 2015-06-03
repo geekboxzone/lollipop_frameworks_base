@@ -280,7 +280,7 @@ final class Settings {
         // Deprecated: Needed for migration
         mStoppedPackagesFilename = new File(mSystemDir, "packages-stopped.xml");
         mBackupStoppedPackagesFilename = new File(mSystemDir, "packages-stopped-backup.xml");
-        File packagePerformanceInfoFile = new File(configureDir, "etc/performance_info.xml");
+        File packagePerformanceInfoFile = new File(configureDir, "etc/package_performance.xml");
 
         // Read packages defined in configure file
         if (!mSettingsFilename.exists()) {
