@@ -5315,6 +5315,12 @@ public final class Settings {
         public static final String AUTO_TIME_ZONE = "auto_time_zone";
 
         /**
+         * Value to specify if automatically set language according to SIM. 1=yes,0=no
+         * @hide
+         */
+        public static final String AUTO_LANGUAGE_BY_SIM = "auto_language_by_sim";
+
+        /**
          * URI for the car dock "in" event sound.
          * @hide
          */
