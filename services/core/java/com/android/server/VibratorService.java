@@ -179,6 +179,10 @@ public class VibratorService extends IVibratorService.Stub
             public void onLowPowerModeChanged(boolean enabled) {
                 updateInputDeviceVibrators();
             }
+            @Override
+            public void onLowPowerModeLimitedFunctionsChanged(int limitedFunctions) {
+                // TODO need control vibrate also?
+            }
         });
 
         mContext.getContentResolver().registerContentObserver(

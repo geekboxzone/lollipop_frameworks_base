@@ -251,6 +251,8 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
     volatile boolean mScreenOn;
     volatile boolean mRestrictBackground;
     volatile boolean mRestrictPower;
+    volatile boolean mLowPowerMode = false;
+    volatile boolean mLowPowerModeLimitNetwork = true;
 
     private final boolean mSuppressDefaultPolicy;
 
@@ -364,14 +366,31 @@ public class NetworkPolicyManagerService extends INetworkPolicyManager.Stub {
                 @Override
                 public void onLowPowerModeChanged(boolean enabled) {
                     synchronized (mRulesLock) {
-                        if (mRestrictPower != enabled) {
-                            mRestrictPower = enabled;
+                        mLowPowerMode = enabled;
+                        boolean restrict = mLowPowerMode && mLowPowerModeLimitNetwork;
+                        if (mRestrictPower != restrict) {
+                            mRestrictPower = restrict;
+                            updateRulesForGlobalChangeLocked(true);
+                        }
+                    }
+                }
+                @Override
+                public void onLowPowerModeLimitedFunctionsChanged(int limitedFunctions) {
+                    synchronized (mRulesLock) {
+                        mLowPowerModeLimitNetwork = (limitedFunctions & PowerManagerInternal.LOW_POWER_MODE_LIMIT_NETWORK) != 0;
+                        boolean restrict = mLowPowerMode && mLowPowerModeLimitNetwork;
+                        if (mRestrictPower != restrict) {
+                            mRestrictPower = restrict;
                             updateRulesForGlobalChangeLocked(true);
                         }
                     }
                 }
             });
-            mRestrictPower = mPowerManagerInternal.getLowPowerModeEnabled();
+
+            mLowPowerMode = mPowerManagerInternal.getLowPowerModeEnabled();
+            mLowPowerModeLimitNetwork = (mPowerManagerInternal.getLowPowerModeLimitedFunctions()
+                    & PowerManagerInternal.LOW_POWER_MODE_LIMIT_NETWORK) != 0;
+            mRestrictPower = mLowPowerMode && mLowPowerModeLimitNetwork;
 
             // read policy from disk
             readPolicyLocked();

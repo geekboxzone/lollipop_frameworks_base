@@ -57,6 +57,8 @@ public class PowerUI extends SystemUI {
 
     private long mScreenOffTime = -1;
 
+    private boolean mShowLowPowerModeIndicator;
+
     public void start() {
         mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
         mScreenOffTime = mPowerManager.isScreenOn() ? -1 : SystemClock.elapsedRealtime();
@@ -66,13 +68,18 @@ public class PowerUI extends SystemUI {
             @Override
             public void onChange(boolean selfChange) {
                 updateBatteryWarningLevels();
+                updateLowPowerModeIndicator();
             }
         };
         final ContentResolver resolver = mContext.getContentResolver();
         resolver.registerContentObserver(Settings.Global.getUriFor(
                 Settings.Global.LOW_POWER_MODE_TRIGGER_LEVEL),
                 false, obs, UserHandle.USER_ALL);
+        resolver.registerContentObserver(Settings.Global.getUriFor(
+                Settings.Global.SHOW_LOW_POWER_MODE_INDICATOR),
+                false, obs, UserHandle.USER_ALL);
         updateBatteryWarningLevels();
+        updateLowPowerModeIndicator();
         mReceiver.init();
     }
 
@@ -129,6 +136,16 @@ public class PowerUI extends SystemUI {
         throw new RuntimeException("not possible!");
     }
 
+    private void updateLowPowerModeIndicator() {
+        final ContentResolver resolver = mContext.getContentResolver();
+        boolean show = Settings.Global.getInt(resolver,
+                Settings.Global.SHOW_LOW_POWER_MODE_INDICATOR, 1) != 0;
+        if (mShowLowPowerModeIndicator != show) {
+            mShowLowPowerModeIndicator = show;
+            setSaverMode(mPowerManager.isPowerSaveMode() && mShowLowPowerModeIndicator);
+        }
+    }
+
     private final class Receiver extends BroadcastReceiver {
 
         public void init() {
@@ -145,7 +162,7 @@ public class PowerUI extends SystemUI {
         }
 
         private void updateSaverMode() {
-            setSaverMode(mPowerManager.isPowerSaveMode());
+            setSaverMode(mPowerManager.isPowerSaveMode() && mShowLowPowerModeIndicator);
         }
 
         @Override
@@ -213,7 +230,8 @@ public class PowerUI extends SystemUI {
             } else if (PowerManager.ACTION_POWER_SAVE_MODE_CHANGED.equals(action)) {
                 updateSaverMode();
             } else if (PowerManager.ACTION_POWER_SAVE_MODE_CHANGING.equals(action)) {
-                setSaverMode(intent.getBooleanExtra(PowerManager.EXTRA_POWER_SAVE_MODE, false));
+                setSaverMode(intent.getBooleanExtra(PowerManager.EXTRA_POWER_SAVE_MODE, false)
+                        && mShowLowPowerModeIndicator);
             } else {
                 Slog.w(TAG, "unknown intent: " + intent);
             }

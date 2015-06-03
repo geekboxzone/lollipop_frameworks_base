@@ -653,6 +653,9 @@ public class WindowManagerService extends IWindowManager.Stub
     float mWindowAnimationScaleBackup = 1.0f;
     float mTransitionAnimationScaleBackup = 1.0f;
 
+    boolean mLowPowerMode = false;
+    boolean mLowPowerModeLimitAnimation = true;
+
     final InputManagerService mInputManager;
     final DisplayManagerInternal mDisplayManagerInternal;
     final DisplayManager mDisplayManager;
@@ -885,14 +888,32 @@ public class WindowManagerService extends IWindowManager.Stub
             @Override
             public void onLowPowerModeChanged(boolean enabled) {
                 synchronized (mWindowMap) {
-                    if (mAnimationsDisabled != enabled) {
-                        mAnimationsDisabled = enabled;
+                    mLowPowerMode = enabled;
+                    boolean restrict = mLowPowerMode && mLowPowerModeLimitAnimation;
+                    if (mAnimationsDisabled != restrict) {
+                        mAnimationsDisabled = restrict;
                         dispatchNewAnimatorScaleLocked(null);
                     }
                 }
             }
+            @Override
+            public void onLowPowerModeLimitedFunctionsChanged(int limitedFunctions) {
+                synchronized (mWindowMap) {
+                    mLowPowerModeLimitAnimation = (limitedFunctions & PowerManagerInternal.LOW_POWER_MODE_LIMIT_ANIMATION) != 0;
+                    boolean restrict = mLowPowerMode && mLowPowerModeLimitAnimation;
+                    if (mAnimationsDisabled != restrict) {
+                        mAnimationsDisabled = restrict;
+                        dispatchNewAnimatorScaleLocked(null);
+                    }
+                }
+            }
+
         });
-        mAnimationsDisabled = mPowerManagerInternal.getLowPowerModeEnabled();
+
+        mLowPowerMode = mPowerManagerInternal.getLowPowerModeEnabled();
+        mLowPowerModeLimitAnimation = (mPowerManagerInternal.getLowPowerModeLimitedFunctions()
+                & PowerManagerInternal.LOW_POWER_MODE_LIMIT_ANIMATION) != 0;
+        mAnimationsDisabled = mLowPowerMode && mLowPowerModeLimitAnimation;
         mScreenFrozenLock = mPowerManager.newWakeLock(
                 PowerManager.PARTIAL_WAKE_LOCK, "SCREEN_FROZEN");
         mScreenFrozenLock.setReferenceCounted(false);

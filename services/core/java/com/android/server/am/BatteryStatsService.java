@@ -114,6 +114,11 @@ public final class BatteryStatsService extends IBatteryStats.Stub
         }
     }
 
+    @Override
+    public void onLowPowerModeLimitedFunctionsChanged(int limitedFunctions) {
+        // Nothing to do here
+    }
+
     /**
      * @return the current statistics object, which may be modified
      * to reflect events that affect battery usage.  You must lock the

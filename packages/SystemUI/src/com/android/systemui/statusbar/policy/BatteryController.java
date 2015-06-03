@@ -17,11 +17,16 @@
 package com.android.systemui.statusbar.policy;
 
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.database.ContentObserver;
 import android.os.BatteryManager;
+import android.os.Handler;
 import android.os.PowerManager;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.util.Log;
 
 import java.io.FileDescriptor;
@@ -52,16 +57,35 @@ public class BatteryController extends BroadcastReceiver {
     private boolean mCharged;
     private boolean mPowerSave;
 
+    private boolean mShowLowPowerModeIndicator;
+
+    private Context mContext;
+    private final Handler mHandler = new Handler();
 	public void setPercentageView(TextView v) {
         mBatteryPercentageView = v;
     }
 
     public BatteryController(Context context) {
-		mIsShowPercentage = (Settings.Secure.getInt(context.getContentResolver(), 
-                    Settings.Secure.BATTERY_PERCENTAGE, 0) != 0);
+        mContext = context;
+	    mIsShowPercentage = (Settings.Secure.getInt(context.getContentResolver(), 
+					Settings.Secure.BATTERY_PERCENTAGE, 0) != 0);
    
 
         mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+
+        ContentObserver obs = new ContentObserver(mHandler) {
+            @Override
+            public void onChange(boolean selfChange) {
+                updateLowPowerModeIndicator();
+            }
+        };
+
+        final ContentResolver resolver = context.getContentResolver();
+        resolver.registerContentObserver(Settings.Global.getUriFor(
+                Settings.Global.SHOW_LOW_POWER_MODE_INDICATOR),
+                false, obs, UserHandle.USER_ALL);
+
+        updateLowPowerModeIndicator();
 
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
@@ -115,7 +139,18 @@ public class BatteryController extends BroadcastReceiver {
         } else if (action.equals(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)) {
             updatePowerSave();
         } else if (action.equals(PowerManager.ACTION_POWER_SAVE_MODE_CHANGING)) {
-            setPowerSave(intent.getBooleanExtra(PowerManager.EXTRA_POWER_SAVE_MODE, false));
+            setPowerSave(intent.getBooleanExtra(PowerManager.EXTRA_POWER_SAVE_MODE, false)
+                    && mShowLowPowerModeIndicator);
+        }
+    }
+
+    private void updateLowPowerModeIndicator() {
+        final ContentResolver resolver = mContext.getContentResolver();
+        boolean show = Settings.Global.getInt(resolver,
+                Settings.Global.SHOW_LOW_POWER_MODE_INDICATOR, 1) != 0;
+        if (mShowLowPowerModeIndicator != show) {
+            mShowLowPowerModeIndicator = show;
+            updatePowerSave();
         }
     }
 
@@ -139,7 +174,7 @@ public class BatteryController extends BroadcastReceiver {
     }
 
     private void updatePowerSave() {
-        setPowerSave(mPowerManager.isPowerSaveMode());
+        setPowerSave(mPowerManager.isPowerSaveMode() && mShowLowPowerModeIndicator);
     }
 
     private void setPowerSave(boolean powerSave) {

@@ -125,11 +125,24 @@ public abstract class PowerManagerInternal {
     public abstract void setDozeOverrideFromDreamManager(
             int screenState, int screenBrightness);
 
+    public static final int LOW_POWER_MODE_LIMIT_CPU = 0x1;
+
+    public static final int LOW_POWER_MODE_LIMIT_BRIGHTNESS = 0x2;
+
+    public static final int LOW_POWER_MODE_LIMIT_LOCATION = 0x4;
+
+    public static final int LOW_POWER_MODE_LIMIT_NETWORK = 0x8;
+
+    public static final int LOW_POWER_MODE_LIMIT_ANIMATION = 0x10;
+
     public abstract boolean getLowPowerModeEnabled();
+
+    public abstract int getLowPowerModeLimitedFunctions();
 
     public abstract void registerLowPowerModeObserver(LowPowerModeListener listener);
 
     public interface LowPowerModeListener {
         public void onLowPowerModeChanged(boolean enabled);
+        public void onLowPowerModeLimitedFunctionsChanged(int limitedFunctions);
     }
 }

@@ -3737,6 +3737,12 @@ public final class Settings {
         public static final String LOCATION_PROVIDERS_ALLOWED = "location_providers_allowed";
 
         /**
+         * Limit location when in power save mode
+         * @hide
+         */
+        public static final String LOW_POWER_MODE_LIMIT_LOCATION = "batterySaverGpsMode";
+
+        /**
          * The degree of location access enabled by the user.
          * <p>
          * When used with {@link #putInt(ContentResolver, String, int)}, must be one of {@link
@@ -6561,6 +6567,36 @@ public final class Settings {
          * @hide
          */
         public static final String LOW_POWER_MODE_TRIGGER_LEVEL = "low_power_trigger_level";
+
+        /**
+         * Show indicator of power save mode
+         * @hide
+         */
+        public static final String SHOW_LOW_POWER_MODE_INDICATOR = "show_low_power_mode_indicator";
+
+        /**
+         * Limit CPU frequency when power save mode
+         * @hide
+         */
+        public static final String LOW_POWER_MODE_LIMIT_CPU = "low_power_mode_limit_cpu";
+
+        /**
+         * Limit location when power save mode
+         * @hide
+         */
+        public static final String LOW_POWER_MODE_LIMIT_BRIGHTNESS = "low_power_mode_limit_brightness";
+
+         /**
+         * Limit network when power save mode
+         * @hide
+         */
+        public static final String LOW_POWER_MODE_LIMIT_NETWORK = "low_power_mode_limit_network";
+
+        /**
+         * Limit network when power save mode
+         * @hide
+         */
+        public static final String LOW_POWER_MODE_LIMIT_ANIMATION = "low_power_mode_limit_animation";
 
          /**
          * If 1, the activity manager will aggressively finish activities and

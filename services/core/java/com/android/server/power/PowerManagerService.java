@@ -429,6 +429,9 @@ public final class PowerManagerService extends SystemService
     // The user turned off low power mode below the trigger level
     private boolean mAutoLowPowerModeSnoozing;
 
+    // Limit brightness when on lower power mode
+    private int mLowPowerModeLimitedFunctions;
+
     // True if the battery level is currently considered low.
     private boolean mBatteryLevelLow;
 
@@ -612,6 +615,23 @@ public final class PowerManagerService extends SystemService
                     Settings.System.BUTTON_LIGHTS_OFF_TIMEOUT),
                     false, mSettingsObserver, UserHandle.USER_ALL);
             //------modify end------
+            
+
+            resolver.registerContentObserver(Settings.Global.getUriFor(
+                     Settings.Global.LOW_POWER_MODE_LIMIT_CPU),
+                     false, mSettingsObserver, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.Global.getUriFor(
+                    Settings.Global.LOW_POWER_MODE_LIMIT_BRIGHTNESS),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.Secure.getUriFor(
+                    Settings.Secure.LOW_POWER_MODE_LIMIT_LOCATION),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.Global.getUriFor(
+                    Settings.Global.LOW_POWER_MODE_LIMIT_NETWORK),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
+             resolver.registerContentObserver(Settings.Global.getUriFor(
+                   Settings.Global.LOW_POWER_MODE_LIMIT_ANIMATION),
+                    false, mSettingsObserver, UserHandle.USER_ALL);
             resolver.registerContentObserver(Settings.Global.getUriFor(
                     Settings.Global.THEATER_MODE_ON),
                     false, mSettingsObserver, UserHandle.USER_ALL);
@@ -719,7 +739,34 @@ public final class PowerManagerService extends SystemService
             mAutoLowPowerModeConfigured = autoLowPowerModeConfigured;
             updateLowPowerModeLocked();
         }
+        int lowPowerModeLimitedFunctions = 0;
+        final boolean lowPowerModeLimitCPU = Settings.Global.getInt(resolver,
+                Settings.Global.LOW_POWER_MODE_LIMIT_CPU, 1) != 0;
+        if (lowPowerModeLimitCPU) {
+            lowPowerModeLimitedFunctions |= PowerManagerInternal.LOW_POWER_MODE_LIMIT_CPU;
+        }
+        final boolean lowPowerModeLimitBrightness = Settings.Global.getInt(resolver,
+                Settings.Global.LOW_POWER_MODE_LIMIT_BRIGHTNESS, 1) != 0;
+        if (lowPowerModeLimitBrightness) {
+            lowPowerModeLimitedFunctions |= PowerManagerInternal.LOW_POWER_MODE_LIMIT_BRIGHTNESS;
+        }
+        final boolean lowPowerModeLimitLocation = Settings.Secure.getInt(resolver,
+                Settings.Secure.LOW_POWER_MODE_LIMIT_LOCATION, 1) != 0;
+        if (lowPowerModeLimitLocation) {
+            lowPowerModeLimitedFunctions |= PowerManagerInternal.LOW_POWER_MODE_LIMIT_LOCATION;
+        }
+        final boolean lowPowerModeLimitNetwork = Settings.Global.getInt(resolver,
+                Settings.Global.LOW_POWER_MODE_LIMIT_NETWORK, 1) != 0;
+        if (lowPowerModeLimitNetwork) {
+            lowPowerModeLimitedFunctions |= PowerManagerInternal.LOW_POWER_MODE_LIMIT_NETWORK;
+        }
+        final boolean lowPowerModeLimitAnimation = Settings.Global.getInt(resolver,
+                Settings.Global.LOW_POWER_MODE_LIMIT_ANIMATION, 1) != 0;
+        if (lowPowerModeLimitAnimation) {
+            lowPowerModeLimitedFunctions |= PowerManagerInternal.LOW_POWER_MODE_LIMIT_ANIMATION;
+        }
 
+        updateLowPowerModeLimitedFunctionsLocked(lowPowerModeLimitedFunctions);
         mDirty |= DIRTY_SETTINGS;
 
 	//----------hdmi timeout -------------------
@@ -784,6 +831,25 @@ public final class PowerManagerService extends SystemService
                     intent = new Intent(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED);
                     intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
                     mContext.sendBroadcast(intent);
+                }
+            });
+        }
+    }
+
+    private void updateLowPowerModeLimitedFunctionsLocked(int limitedFunctions) {
+        if (limitedFunctions != mLowPowerModeLimitedFunctions) {
+            mLowPowerModeLimitedFunctions = limitedFunctions;
+            BackgroundThread.getHandler().post(new Runnable() {
+                @Override
+                public void run() {
+                    ArrayList<PowerManagerInternal.LowPowerModeListener> listeners;
+                    synchronized (mLock) {
+                        listeners = new ArrayList<PowerManagerInternal.LowPowerModeListener>(
+                                mLowPowerModeListeners);
+                    }
+                    for (int i=0; i<listeners.size(); i++) {
+                        listeners.get(i).onLowPowerModeLimitedFunctionsChanged(mLowPowerModeLimitedFunctions);
+                    }
                 }
             });
         }
@@ -1975,7 +2041,8 @@ public final class PowerManagerService extends SystemService
                     screenAutoBrightnessAdjustment;
             mDisplayPowerRequest.useAutoBrightness = autoBrightness;
             mDisplayPowerRequest.useProximitySensor = shouldUseProximitySensorLocked();
-            mDisplayPowerRequest.lowPowerMode = mLowPowerModeEnabled;
+            mDisplayPowerRequest.lowPowerMode = mLowPowerModeEnabled
+                    && (mLowPowerModeLimitedFunctions & PowerManagerInternal.LOW_POWER_MODE_LIMIT_BRIGHTNESS) != 0;
             mDisplayPowerRequest.boostScreenBrightness = mScreenBrightnessBoostInProgress;
 
             if (mDisplayPowerRequest.policy == DisplayPowerRequest.POLICY_DOZE) {
@@ -3453,6 +3520,13 @@ public final class PowerManagerService extends SystemService
         public boolean getLowPowerModeEnabled() {
             synchronized (mLock) {
                 return mLowPowerModeEnabled;
+            }
+        }
+
+        @Override
+        public int getLowPowerModeLimitedFunctions() {
+            synchronized (mLock) {
+                return mLowPowerModeLimitedFunctions;
             }
         }
 
