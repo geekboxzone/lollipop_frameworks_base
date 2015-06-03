@@ -2312,6 +2312,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
                 // there is hope for it to become one if it validated, then it is needed.
                 if (nri.isRequest && nai.satisfies(nri.request) &&
                         (nai.networkRequests.get(nri.request.requestId) != null ||
+                        (mNetworkForRequestId.get(nri.request.requestId) != null &&
                         // Note that this catches two important cases:
                         // 1. Unvalidated cellular will not be reaped when unvalidated WiFi
                         //    is currently satisfying the request.  This is desirable when
@@ -2320,7 +2321,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
                         //    is currently satsifying the request.  This is desirable when
                         //    WiFi ends up validating and out scoring cellular.
                         mNetworkForRequestId.get(nri.request.requestId).getCurrentScore() <
-                                nai.getCurrentScoreAsValidated())) {
+                                nai.getCurrentScoreAsValidated()))) {
                     unneeded = false;
                     break;
                 }
