@@ -2674,11 +2674,14 @@ public class MediaPlayer implements SubtitleController.Listener
             
             Log.e(TAG, "selectOrDeselectTrack index="+index + " ExternalIndex="+(index-trackCount));
         }else{
-            //make external subtitle invisible
-            if((mMediaPlayerSubTitle != null)&&select){
-				mMediaPlayerSubTitle.enableSubtitle(false);
+            if((trackInfo[index].getTrackType() == TrackInfo.MEDIA_TRACK_TYPE_SUBTITLE)||
+                       (trackInfo[index].getTrackType() == TrackInfo.MEDIA_TRACK_TYPE_TIMEDTEXT)){
+                //make external subtitle invisible
+                if((mMediaPlayerSubTitle != null)&&select){
+                    mMediaPlayerSubTitle.enableSubtitle(false);
+                }
+                setParameter(MEDIAPLAYER_SET_SUBTITLE_VISIBLE, 1);
             }
-            setParameter(MEDIAPLAYER_SET_SUBTITLE_VISIBLE, 1);
 			
             selectOrDeselectInbandTrack(index, select);
             Log.e(TAG, "selectOrDeselectTrack index="+index + " EmbeddedIndex="+index);
