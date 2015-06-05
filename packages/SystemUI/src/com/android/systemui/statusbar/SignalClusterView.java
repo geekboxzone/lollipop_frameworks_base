@@ -36,6 +36,9 @@ import java.util.List;
 import android.graphics.PorterDuff;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
+import android.os.AsyncTask;
+import java.util.HashMap;
+import java.util.Map;
 
 // Intimately tied to the design of res/layout/signal_cluster_view.xml
 public class SignalClusterView
@@ -60,6 +63,8 @@ public class SignalClusterView
     private boolean mEthernetVisible = false;
     private String mWifiDescription;
     private ArrayList<PhoneState> mPhoneStates = new ArrayList<PhoneState>();
+
+	private static Map<Integer,Integer>  mIconTint=new HashMap<>(2);
 
     ViewGroup mWifiGroup;
     ImageView mVpn, mWifi, mAirplane, mNoSims, mEthernet;
@@ -364,11 +369,35 @@ public class SignalClusterView
 
         public boolean apply(boolean isSecondaryIcon) {
             if (mMobileVisible && !mIsAirplaneMode) {
-				SubscriptionInfo info = mSubscriptionManager.getActiveSubscriptionInfo(mSubId);
-                int iconTint = 0xFFFFFFFF;
-                if (info != null && TelephonyManager.getDefault().isMultiSimEnabled()) {
-                    iconTint = info.getIconTint();
+				
+                if (!mIconTint.containsKey(mSubId)){
+                    mIconTint.put(mSubId,0xFFFFFFFF);
                 }
+
+				int iconTint = mIconTint.get(mSubId);
+
+                AsyncTask<Integer,Integer,Integer> task=new AsyncTask<Integer, Integer, Integer>() {
+                    @Override
+                    protected Integer doInBackground(Integer... params) {
+                        SubscriptionInfo info = mSubscriptionManager.getActiveSubscriptionInfo(mSubId);
+                        if (info != null && TelephonyManager.getDefault().isMultiSimEnabled()) {
+                            return info.getIconTint();
+                        }
+                        return params[0];
+                    }
+
+                    @Override
+                    protected void onPostExecute(Integer integer) {
+                        super.onPostExecute(integer);
+                        if (integer!=mIconTint.get(mSubId)){
+                            mMobile.setColorFilter(integer, PorterDuff.Mode.MULTIPLY);
+                            mMobileType.setColorFilter(integer, PorterDuff.Mode.MULTIPLY);
+                            mIconTint.put(mSubId,integer);
+                        }
+                    }
+                };
+                task.execute(iconTint);
+
                 mMobile.setImageResource(mMobileStrengthId);
 				mMobile.setColorFilter(iconTint, PorterDuff.Mode.MULTIPLY);
                 mMobileType.setImageResource(mMobileTypeId);
