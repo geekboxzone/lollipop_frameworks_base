@@ -580,6 +580,7 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
     char nativeBridgeLibrary[sizeof("-XX:NativeBridge=") + PROPERTY_VALUE_MAX];
 
     bool checkJni = false;
+    bool checkBoot = true;
     property_get("dalvik.vm.checkjni", propBuf, "");
     if (strcmp(propBuf, "true") == 0) {
         checkJni = true;
@@ -600,6 +601,11 @@ int AndroidRuntime::startVm(JavaVM** pJavaVM, JNIEnv** pEnv)
 
         /* with -Xcheck:jni, this provides a JNI function call trace */
         //addOption("-verbose:jni");
+    }
+
+    property_get("persist.sys.boot.check", propBuf, "");
+    if (strcmp(propBuf, "false") == 0) {
+        addOption("-Xcheckboot");
     }
 
     property_get("dalvik.vm.execution-mode", propBuf, "");
