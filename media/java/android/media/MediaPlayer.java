@@ -605,7 +605,7 @@ public class MediaPlayer implements SubtitleController.Listener
     private boolean mScreenOnWhilePlaying;
     private boolean mStayAwake;
     private final IAppOpsService mAppOps;
-    private MediaPlayerSubTitle mMediaPlayerSubTitle=null;
+    private static MediaPlayerSubTitle mMediaPlayerSubTitle=null;
     private int mStreamType = AudioManager.USE_DEFAULT_STREAM_TYPE;
     private int mUsage = -1;
 
@@ -1607,30 +1607,31 @@ public class MediaPlayer implements SubtitleController.Listener
     public boolean useFrameworkSubtitle(){
         if ("box".equals(android.os.SystemProperties.get("ro.target.product",  "unknown"))){
             //box use framework subtitle default
+            Log.d(TAG, "perperty[ro.target.product]=box  ------------------->     box use framework external subtitle default");
             return true;
         }
 
-		return android.os.SystemProperties.getBoolean("media.extsubtitle", false);
-	}
+	return android.os.SystemProperties.getBoolean("media.extsubtitle", false);
+    }
 
     
     public void setSubtitleColor(int color){
         if(mMediaPlayerSubTitle != null){
             mMediaPlayerSubTitle.setSubtitleColor(color);
         }
-	}
+    }
 
     public void setSubtitlePosition(int position){
         if(mMediaPlayerSubTitle != null){
             mMediaPlayerSubTitle.setSubtitleColor(position);
         }
-	}
+    }
 
     public void setSubtitleSize(int fontSize){
         if(mMediaPlayerSubTitle != null){
             mMediaPlayerSubTitle.setSubtitleColor(fontSize);
         }
-	}
+    }
 
     public void setSubtitleChaset(int chaset){
         if(mMediaPlayerSubTitle != null){
@@ -1948,7 +1949,8 @@ public class MediaPlayer implements SubtitleController.Listener
             mTrackType = in.readInt();
             // TODO: parcel in the full MediaFormat
             String language = in.readString();
-            switch(mTrackType){
+            if(mMediaPlayerSubTitle != null){
+              switch(mTrackType){
                 case MEDIA_TRACK_TYPE_TIMEDTEXT:
                     Log.e(TAG, "parcel --> MEDIA_TRACK_TYPE_TIMEDTEXT");
                     String mime1 = in.readString();
@@ -1973,6 +1975,21 @@ public class MediaPlayer implements SubtitleController.Listener
                     mFormat = new MediaFormat();
                     mFormat.setString(MediaFormat.KEY_LANGUAGE, language);
                     break;
+              }
+            }else{
+                 if (mTrackType == MEDIA_TRACK_TYPE_TIMEDTEXT) {
+                     mFormat = MediaFormat.createSubtitleFormat(
+                         MEDIA_MIMETYPE_TEXT_SUBRIP, language);
+                 } else if (mTrackType == MEDIA_TRACK_TYPE_SUBTITLE) {
+                    String mime = in.readString();
+                    mFormat = MediaFormat.createSubtitleFormat(mime, language);
+                    mFormat.setInteger(MediaFormat.KEY_IS_AUTOSELECT, in.readInt());
+                    mFormat.setInteger(MediaFormat.KEY_IS_DEFAULT, in.readInt());
+                    mFormat.setInteger(MediaFormat.KEY_IS_FORCED_SUBTITLE, in.readInt());
+                 } else {
+                    mFormat = new MediaFormat();
+                    mFormat.setString(MediaFormat.KEY_LANGUAGE, language);
+                 }
             }
         }
 
