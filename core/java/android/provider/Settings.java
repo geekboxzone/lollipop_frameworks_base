@@ -2158,6 +2158,11 @@ public final class Settings {
          */
         public static final String VIBRATE_ON = "vibrate_on";
 
+		 /**
+         * @hide
+         */	
+		public static final String VIBRATE_WHEN_CALLS_CONNECTED = "vibrate_when_calls_connected";
+
         /**
          * If 1, redirects the system vibrator to all currently attached input devices
          * that support vibration.  If there are no such input devices, then the system
