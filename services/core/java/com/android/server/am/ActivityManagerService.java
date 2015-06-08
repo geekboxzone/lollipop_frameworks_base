@@ -16837,7 +16837,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             if (starting != null) {
 				if(mKeyguardManager.isKeyguardLocked()){
 					Slog.d("ljh","-----------------------starting.info.screenOrientation="+starting.info.screenOrientation);
-					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT){
+					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
                         //Slog.d("ljh","do not change------------");
 				    }else{
 	                     //Slog.d("ljh","force change---------------");
