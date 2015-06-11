@@ -873,7 +873,8 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         }
 
         public boolean isEnabled() {
-            return !mState.inTransition();
+            //return !mState.inTransition();
+			return true;
         }
 
         /**
