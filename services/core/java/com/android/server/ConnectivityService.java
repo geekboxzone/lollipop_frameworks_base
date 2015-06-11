@@ -2630,9 +2630,18 @@ public class ConnectivityService extends IConnectivityManager.Stub
             mNetTransitionWakeLock.acquire();
             mNetTransitionWakeLockCausedBy = forWhom;
         }
-        mHandler.sendMessageDelayed(mHandler.obtainMessage(
+        if (Settings.Global.getInt(mContext.getContentResolver(),
+            Settings.Global.WIFI_SLEEP_POLICY, 2)
+                == Settings.Global.WIFI_SLEEP_POLICY_INTELLIGENT) {
+            log("Wifi intelligent sleep: try to lock 3S to wait new network connection.");
+            mHandler.sendMessageDelayed(mHandler.obtainMessage(
+                EVENT_EXPIRE_NET_TRANSITION_WAKELOCK, serialNum, 0),
+                3000);
+        } else {
+            mHandler.sendMessageDelayed(mHandler.obtainMessage(
                 EVENT_EXPIRE_NET_TRANSITION_WAKELOCK, serialNum, 0),
                 mNetTransitionWakeLockTimeout);
+        }
         return;
     }
 
