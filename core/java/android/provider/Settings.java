@@ -2162,6 +2162,11 @@ public final class Settings {
          * @hide
          */	
 		public static final String VIBRATE_WHEN_CALLS_CONNECTED = "vibrate_when_calls_connected";
+		
+		/**
+         * @hide
+         */	
+		public static final String FLIP_MUTE_INCOMMING_CALL = "flip_mute_incomming_call";
 
         /**
          * If 1, redirects the system vibrator to all currently attached input devices
