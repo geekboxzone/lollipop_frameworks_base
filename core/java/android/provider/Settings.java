@@ -5271,6 +5271,11 @@ public final class Settings {
         public static final int WIFI_SLEEP_POLICY_NEVER = 2;
 
         /**
+         * Value for {@link #WIFI_SLEEP_POLICY} wifi to use intelligent sleep.
+         */
+        public static final int WIFI_SLEEP_POLICY_INTELLIGENT = 3;
+
+        /**
          * Value to specify if the user prefers the date, time and time zone
          * to be automatically fetched from the network (NITZ). 1=yes, 0=no
          */
