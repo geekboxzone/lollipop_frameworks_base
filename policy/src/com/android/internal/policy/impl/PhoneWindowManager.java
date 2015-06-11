@@ -124,6 +124,7 @@ import static android.view.WindowManagerPolicy.WindowManagerFuncs.LID_CLOSED;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_COVER_ABSENT;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_UNCOVERED;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_COVERED;
+import android.net.Uri;
 
 /**
  * WindowManagerPolicy implementation for the Android phone UI.  This
@@ -4767,6 +4768,16 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     }
 
+    private final Runnable mVolumnUpLongPress = new Runnable() {
+        @Override
+        public void run() {
+            Intent intent = new Intent(Intent.ACTION_CALL_PRIVILEGED,Uri.parse("tel:112"));
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(intent);
+
+        }
+    };
+
     /** {@inheritDoc} */
     @Override
     public int interceptKeyBeforeQueueing(KeyEvent event, int policyFlags) {
@@ -4824,6 +4835,21 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             result = 0;
             if (isWakeKey && (!down || !isWakeKeyWhenScreenOff(keyCode))) {
                 isWakeKey = false;
+            }
+        }
+
+		if(keyCode==KeyEvent.KEYCODE_VOLUME_UP)
+        {
+            if(down)
+            {
+                if(Settings.System.getInt(mContext.getContentResolver(),Settings.System.EMERGENCY_CALL, 1) != 0&&!isScreenOn())
+                {
+                    mHandler.postDelayed(mVolumnUpLongPress, ViewConfiguration.getGlobalActionKeyTimeout());
+                }
+            }
+            else
+            {
+                mHandler.removeCallbacks(mVolumnUpLongPress);
             }
         }
 

@@ -2167,6 +2167,11 @@ public final class Settings {
          * @hide
          */	
 		public static final String FLIP_MUTE_INCOMMING_CALL = "flip_mute_incomming_call";
+		
+		/**
+         * @hide
+         */	
+		public static final String EMERGENCY_CALL= "emergency_call";
 
         /**
          * If 1, redirects the system vibrator to all currently attached input devices
