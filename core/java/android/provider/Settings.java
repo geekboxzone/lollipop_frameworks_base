@@ -2173,6 +2173,12 @@ public final class Settings {
          */	
 		public static final String EMERGENCY_CALL= "emergency_call";
 
+		/**
+         * @hide
+         */	
+		public static final String AUTO_CALL_RECORD = "auto_call_record";
+
+
         /**
          * If 1, redirects the system vibrator to all currently attached input devices
          * that support vibration.  If there are no such input devices, then the system
