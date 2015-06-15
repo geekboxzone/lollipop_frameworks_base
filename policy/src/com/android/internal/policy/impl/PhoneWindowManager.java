@@ -4835,7 +4835,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             {
                 if(Settings.System.getInt(mContext.getContentResolver(),Settings.System.EMERGENCY_CALL, 1) != 0&&!isScreenOn())
                 {
-                    mHandler.postDelayed(mVolumnUpLongPress, ViewConfiguration.getGlobalActionKeyTimeout());
+                    TelecomManager telecomManager = getTelecommService();
+                    if (!(telecomManager!=null&&(telecomManager.isInCall()||telecomManager.isRinging()))){
+                        mHandler.postDelayed(mVolumnUpLongPress, ViewConfiguration.getGlobalActionKeyTimeout());
+                    }
                 }
             }
             else
