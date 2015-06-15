@@ -77,6 +77,10 @@ public final class InputWindowHandle {
     // Input event dispatching is paused.
     public boolean paused;
 
+	//is Home Window
+
+	public boolean isHomeWindow;
+
     // Window layer.
     public int layer;
 

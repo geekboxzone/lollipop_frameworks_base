@@ -529,6 +529,8 @@
 
        <!-- $_rbox_$_modify_$_chenxiao begin,hide bar msg -->
         <string name="hidebar_msg">"System Bar has hidden\nyou can swipe from the bottom of screen to show it again. "</string>
+        
+        <string name="cleartasks_msg">"Already clear background tasks"</string>
 
     <!-- Text to display underneath the graphical signal strength meter when
          it is displaying Wi-Fi status and Wi-Fi is connected to a network
@@ -949,4 +951,8 @@
 
     <!-- Hide quick settings tile confirmation button -->
     <string name="quick_settings_reset_confirmation_button">Hide</string>
+      <string name="quick_settings_cutimage_device_label">cut image</string>
+    <string name="accessibility_desc_app_bar">App Bar.</string>
+     <string name="popuwindow_close_app">close app</string>
+    <string name="popuwindow_lock_app">unlock app</string>
 </resources>

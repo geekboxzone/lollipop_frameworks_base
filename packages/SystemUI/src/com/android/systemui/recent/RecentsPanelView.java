@@ -679,8 +679,13 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         show(false);
         if (ad.taskId >= 0) {
             // This is an active task; it should just go to the foreground.
-            am.moveTaskToFront(ad.taskId, ActivityManager.MOVE_TASK_WITH_HOME,
-                    opts);
+            if(context.getResources().getConfiguration().enableMultiWindow()){
+				am.moveTaskToFront(ad.taskId,0,opts);
+
+			}else{
+				am.moveTaskToFront(ad.taskId, ActivityManager.MOVE_TASK_WITH_HOME,
+						opts);
+			}
         } else {
             Intent intent = ad.intent;
             intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY

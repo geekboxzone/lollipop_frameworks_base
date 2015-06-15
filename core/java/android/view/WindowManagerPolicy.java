@@ -109,6 +109,51 @@ public interface WindowManagerPolicy {
      * {@link #interceptKeyBeforeQueueing}.
      */
     public final static int ACTION_PASS_TO_USER = 0x00000001;
+    /**
+     * Pass this motion event to the home / app.  To be returned from {@link #interceptMotionTq}.
+     * Pss motion event to home window, told InputManager touched window should be home.
+     * home app will receive the input event but it is not focused.
+     */
+    public final static int MOTION_PASS_TO_HOME = 0x00000001;
+
+    /**
+     * Pass this motion event to the user / app.  To be returned from {@link #interceptMotionTq}.
+     * Pass motion event to user,if force focus home still be true ,then we need to layout window
+     * and update focus, this operation can only be done once.
+     */
+    public final static int MOTION_PASS_TO_USER = 0x00000002;
+	/*
+	* below used by AppAlignWatcher
+	*/
+	public final static int WINDOW_ALIGN_LEFT = 0x00000001;
+	
+	public final static int WINDOW_ALIGN_RIGHT = 0x00000002;
+
+	public final static int WINDOW_ALIGN_TOP = 0x00000004;
+
+	public final static int WINDOW_ALIGN_BOTTOM = 0x00000008;
+
+	public final static int WINDOW_DRAG_SCALE_ENABLE = 0x00000010;
+
+	public final static int WINDOW_DRAG_SCALE_DISABLE = 0x00000020;
+
+	public final static int WINDOW_UPDATE_LAYOUT = 0x00000040;
+
+	public final static int WINDOW_SIZE_CHANGE = 0x00000080;
+
+	public final static int WINDOW_CHANGE_TO_HALFSCREEN = 0x00001000;
+
+	public final static int ALIGN_LEFT_TOP_WINDOW = 0x00000100;
+
+	public final static int ALIGN_RIGHT_TOP_WINDOW = 0x00000200;
+
+	public final static int ALIGN_LEFT_BOTTOM_WINDOW = 0x00000400;
+
+	public final static int ALIGN_RIGHT_BOTTOM_WINDOW = 0x00000800;
+
+	public final static int WINDOW_CHANGE_TO_FULLSCREEN = 0x00002000;
+
+	public final static int WINDOW_CHANGE_TO_TOPSCREEN = 0x00004000;
 
     /**
      * Interface to the Window Manager state associated with a particular
@@ -163,6 +208,11 @@ public interface WindowManagerPolicy {
          */
         public Rect getFrameLw();
 
+		public float getHScale();
+
+		public float getVScale();
+
+		public Rect getSurfaceFrameLw();
         /**
          * Retrieve the current frame of the window that is actually shown.
          * Must be called with the window manager lock held.
@@ -290,6 +340,8 @@ public interface WindowManagerPolicy {
          *         else false.
          */
         public boolean hasAppShownWindows();
+
+		public boolean isHomeWindow();
 
         /**
          * Is this window visible?  It is not visible if there is no
@@ -667,9 +719,9 @@ public interface WindowManagerPolicy {
      * 
      * @see #removeStartingWindow
      */
-    public View addStartingWindow(IBinder appToken, String packageName,
+    public View addStartingWindow(IBinder appToken, int groupId, String packageName,
             int theme, CompatibilityInfo compatInfo, CharSequence nonLocalizedLabel,
-            int labelRes, int icon, int logo, int windowFlags);
+            int labelRes, int icon, int logo, int windowFlags,int align);
 
     /**
      * Called when the first window of an application has been displayed, while
@@ -850,6 +902,10 @@ public interface WindowManagerPolicy {
      * @param r The rectangle to be filled with the boundaries available to applications.
      */
     public void getContentRectLw(Rect r);
+	
+	public int getDockDecorRectLw(Rect dockRect);
+	
+	public int getStatusBarHeightIfAvailable();
 
     /**
      * Called for each window attached to the window manager as layout is

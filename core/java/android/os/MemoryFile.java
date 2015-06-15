@@ -22,6 +22,8 @@ import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import android.util.Log;
+
 
 
 /**
@@ -80,6 +82,33 @@ public class MemoryFile
             mAddress = 0;
         }
     }
+
+	
+	public MemoryFile(FileDescriptor fd, int length, String mode) throws IOException {
+			if (fd == null) {
+				throw new NullPointerException("File descriptor is null.");
+			}
+			if (!isMemoryFile(fd)) {
+				throw new IllegalArgumentException("Not a memory file.");
+			}
+			mLength = length;
+			mFD = fd;
+			mAddress = native_mmap(mFD, length, modeToProt(mode));
+	}
+
+	
+	public static boolean isMemoryFile(FileDescriptor fd) throws IOException {
+			return (native_get_size(fd) >= 0);
+	}
+
+	
+	private static int modeToProt(String mode) {
+			if ("r".equals(mode)) {
+				return PROT_READ;
+			} else {
+				throw new IllegalArgumentException("Unsupported file mode: '" + mode + "'");
+			}
+	}
 
     /**
      * Closes the memory file. If there are no other open references to the memory

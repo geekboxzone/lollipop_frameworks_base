@@ -105,7 +105,7 @@ interface IWindowManager
     void executeAppTransition();
     void setAppStartingWindow(IBinder token, String pkg, int theme,
             in CompatibilityInfo compatInfo, CharSequence nonLocalizedLabel, int labelRes,
-            int icon, int logo, int windowFlags, IBinder transferFrom, boolean createIfNeeded);
+            int icon, int logo, int windowFlags, IBinder transferFrom, boolean createIfNeeded,int align);
     void setAppWillBeHidden(IBinder token);
     void setAppVisibility(IBinder token, boolean visible);
     void startAppFreezingScreen(IBinder token, int configChanges);
@@ -175,6 +175,16 @@ interface IWindowManager
      * of its windows even if the rotation hasn't changed.
      */
     void updateRotation(boolean alwaysSendConfiguration, boolean forceRelayout);
+    void updateSurfacesAlpha(boolean change);
+    void multiWindowUsed(boolean used);
+    boolean isMultiWindowMode();
+    void updateAllWindowsPositionStretch();
+    void updateAllWindowsPositionCompose();
+    void updateAllWindowsFullScreenMode();
+    void updateAllWindowsHalfScreenMode();
+    void updateAllWindowsFourScreenMode();
+    void multiWindowMenuOperation(String actionString);
+    void dispatchUnhandledKey(IApplicationToken token, in KeyEvent event);
 
     /**
      * Retrieve the current screen orientation, constants as per

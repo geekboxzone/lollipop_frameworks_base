@@ -34,7 +34,7 @@ import android.transition.Scene;
 import android.transition.Transition;
 import android.transition.TransitionManager;
 import android.view.accessibility.AccessibilityEvent;
-
+import android.util.Log;
 /**
  * Abstract base class for a top-level window look and behavior policy.  An
  * instance of this class should be used as the top-level view added to the
@@ -48,6 +48,14 @@ import android.view.accessibility.AccessibilityEvent;
  * implementation.
  */
 public abstract class Window {
+
+	private static final String LOG = "window";
+	private static final boolean DEBUG_ZJY = false;
+	private void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Log.d(LOG,msg);
+		}
+	}
     /** Flag for the "options panel" feature.  This is enabled by default. */
     public static final int FEATURE_OPTIONS_PANEL = 0;
     /** Flag for the "no title" feature, turning off the title at the top
@@ -122,11 +130,12 @@ public abstract class Window {
      */
     public static final int FEATURE_ACTIVITY_TRANSITIONS = 13;
 
+	public static final int FEATURE_ACTION_HALF_SCREEN = 14;
     /**
      * Max value used as a feature ID
      * @hide
      */
-    public static final int FEATURE_MAX = FEATURE_ACTIVITY_TRANSITIONS;
+    public static final int FEATURE_MAX = FEATURE_ACTION_HALF_SCREEN;
 
     /** Flag for setting the progress bar's visibility to VISIBLE */
     public static final int PROGRESS_VISIBILITY_ON = -1;
@@ -201,6 +210,7 @@ public abstract class Window {
     private boolean mHasSoftInputMode = false;
 
     private boolean mDestroyed;
+	private boolean mIsHomeWindow;
 
     // The current window attributes.
     private final WindowManager.LayoutParams mWindowAttributes =
@@ -507,7 +517,18 @@ public abstract class Window {
     public final boolean hasChildren() {
         return mHasChildren;
     }
-
+	/**
+	*@hide
+	*/
+	public final void setHomeWindow(boolean isHome){
+		mIsHomeWindow = isHome;
+	}
+	/**
+	*@hide
+	*/
+	public final boolean isHomeWindow(){
+		return mIsHomeWindow;
+	}
     /** @hide */
     public final void destroy() {
         mDestroyed = true;
@@ -593,6 +614,7 @@ public abstract class Window {
         if (mHardwareAccelerated) {
             wp.flags |= WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
         }
+		wp.align = getAttributes().align;
     }
 
     /**

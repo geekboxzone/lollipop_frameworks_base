@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<office-package>
+    <app package="com.mt.mtxx.mtxx" phonemode="false"/>
+    <app package="com.meitu.meiyancamera" phonemode="false"/>
+    <app package="com.baidu.baiducamera" phonemode="false"/>
+    <app package="com.qiyi.video" phonemode="false"/>
+    <app package="com.qiyi.video.pad" phonemode="false"/>
+    <app package="com.qiyi.video.pad.intel" phonemode="false"/>
+    <app package="com.sohu.tv" phonemode="false"/>
+    <app package="com.sohu.sohuvideo" phonemode="false"/>
+    <app package="com.youku.phone" phonemode="false"/>
+    <app package="com.sohu.newsclient" phonemode="false"/>
+    <app package="com.letv.android.client.pad" phonemode="false"/>
+    <app package="com.hdzdy.game" phonemode="false"/>
+    <app package="com.gamedo.ZombieTerminator.bd" phonemode="false"/>
+    
+<app package="com.tencent.mm" phonemode="true"/>
+<app package="com.yongqv.XXL2048" phonemode="true"/>
+</office-package>

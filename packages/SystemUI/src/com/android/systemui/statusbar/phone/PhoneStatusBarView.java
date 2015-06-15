@@ -16,6 +16,8 @@
 
 package com.android.systemui.statusbar.phone;
 
+import android.app.ActivityManager;
+import android.app.StatusBarManager;
 import android.content.Context;
 import android.content.res.Resources;
 import android.util.AttributeSet;
@@ -26,16 +28,20 @@ import android.view.accessibility.AccessibilityEvent;
 
 import com.android.systemui.EventLogTags;
 import com.android.systemui.R;
+import android.util.Slog;
 
 public class PhoneStatusBarView extends PanelBar {
     private static final String TAG = "PhoneStatusBarView";
     private static final boolean DEBUG = PhoneStatusBar.DEBUG;
-    private static final boolean DEBUG_GESTURES = false;
+    private static final boolean DEBUG_GESTURES = true;
+	private void LOGD(String msg){
+		Slog.v(TAG, msg);
+	}
 
     PhoneStatusBar mBar;
 
     PanelView mLastFullyOpenedPanel = null;
-    PanelView mNotificationPanel;
+    PanelView mNotificationPanel,mAppBarPanel;
     private final PhoneStatusBarTransitions mBarTransitions;
     private ScrimController mScrimController;
 
@@ -68,7 +74,9 @@ public class PhoneStatusBarView extends PanelBar {
         super.addPanel(pv);
         if (pv.getId() == R.id.notification_panel) {
             mNotificationPanel = pv;
-        }
+        }else if(pv.getId() == R.id.appbar_panel){
+			mAppBarPanel = pv;
+		}
     }
 
     @Override
@@ -93,6 +101,14 @@ public class PhoneStatusBarView extends PanelBar {
 
     @Override
     public PanelView selectPanelForTouch(MotionEvent touch) {
+        final float x = touch.getX();
+	if(mAppBarPanel != null)
+		LOGD("selectPanelForTouch enable="+mAppBarPanel.panelViewEnabled());
+		if(mAppBarPanel != null && mAppBarPanel.panelViewEnabled()){
+		if( x >= mAppBarPanel.getLeft() && x < mAppBarPanel.getRight()){
+			return mAppBarPanel;
+		}
+			}
         // No double swiping. If either panel is open, nothing else can be pulled down.
         return mNotificationPanel.getExpandedHeight() > 0
                 ? null

@@ -142,7 +142,7 @@ final class TaskRecord {
 
     /** If original intent did not allow relinquishing task identity, save that information */
     boolean mNeverRelinquishIdentity = true;
-
+	boolean mTopOfLauncher = false;
     // Used in the unique case where we are clearing the task in order to reuse it. In that case we
     // do not want to delete the stack when the task goes empty.
     boolean mReuseTask = false;
@@ -1084,10 +1084,12 @@ final class TaskRecord {
                     pw.print(" taskType="); pw.print(taskType);
                     pw.print(" mTaskToReturnTo="); pw.println(mTaskToReturnTo);
         }
-        if (rootWasReset || mNeverRelinquishIdentity || mReuseTask) {
+        if (rootWasReset || mNeverRelinquishIdentity || mReuseTask || mTopOfLauncher) {
             pw.print(prefix); pw.print("rootWasReset="); pw.print(rootWasReset);
                     pw.print(" mNeverRelinquishIdentity="); pw.print(mNeverRelinquishIdentity);
                     pw.print(" mReuseTask="); pw.println(mReuseTask);
+					 pw.print(" mTopOfLauncher="); pw.println(mTopOfLauncher);
+					
         }
         if (mAffiliatedTaskId != taskId || mPrevAffiliateTaskId != INVALID_TASK_ID
                 || mPrevAffiliate != null || mNextAffiliateTaskId != INVALID_TASK_ID

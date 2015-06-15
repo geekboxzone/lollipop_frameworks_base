@@ -82,6 +82,7 @@ static struct {
     jmethodID interceptKeyBeforeQueueing;
     jmethodID interceptMotionBeforeQueueingNonInteractive;
     jmethodID interceptKeyBeforeDispatching;
+	jmethodID interceptMotionBeforeDispatching;
     jmethodID dispatchUnhandledKey;
     jmethodID checkInjectEventsPermission;
     jmethodID getVirtualKeyQuietTimeMillis;
@@ -193,6 +194,8 @@ public:
     status_t unregisterInputChannel(JNIEnv* env, const sp<InputChannel>& inputChannel);
 
     void setInputWindows(JNIEnv* env, jobjectArray windowHandleObjArray);
+	void setDontFocusedHome(bool dontNeedFocusHome);
+	void setMultiWindowConfig(bool enable);
     void setFocusedApplication(JNIEnv* env, jobject applicationHandleObj);
     void setInputDispatchMode(bool enabled, bool frozen);
     void setSystemUiVisibility(int32_t visibility);
@@ -229,6 +232,9 @@ public:
     virtual nsecs_t interceptKeyBeforeDispatching(
             const sp<InputWindowHandle>& inputWindowHandle,
             const KeyEvent* keyEvent, uint32_t policyFlags);
+	virtual nsecs_t interceptMotionBeforeDispatching(
+			const sp<InputWindowHandle>& inputWindowHandle,
+			const MotionEvent* motionEvent, uint32_t policyFlags);
     virtual bool dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowHandle,
             const KeyEvent* keyEvent, uint32_t policyFlags, KeyEvent* outFallbackKeyEvent);
     virtual void pokeUserActivity(nsecs_t eventTime, int32_t eventType);
@@ -706,6 +712,13 @@ void NativeInputManager::setInputWindows(JNIEnv* env, jobjectArray windowHandleO
     }
 }
 
+void NativeInputManager::setDontFocusedHome(bool dontNeedFocusHome) {
+    mInputManager->getDispatcher()->setDontFocusedHome(dontNeedFocusHome);
+}
+
+void NativeInputManager::setMultiWindowConfig(bool enable){
+	mInputManager->getDispatcher()->setMultiWindowConfig(enable);
+}
 void NativeInputManager::setFocusedApplication(JNIEnv* env, jobject applicationHandleObj) {
     sp<InputApplicationHandle> applicationHandle =
             android_server_InputApplicationHandle_getHandle(env, applicationHandleObj);
@@ -960,6 +973,43 @@ nsecs_t NativeInputManager::interceptKeyBeforeDispatching(
     return result;
 }
 
+nsecs_t NativeInputManager::interceptMotionBeforeDispatching(
+	const sp < InputWindowHandle > & inputWindowHandle,
+	const MotionEvent * motionEvent,uint32_t policyFlags){
+	// Policy:
+	 // - Ignore untrusted events and pass them along.
+	 // - Filter normal events and trusted injected events through the window manager policy to
+	 //   handle the HOME key and the like.
+	 //ALOGE("com_android_server_input_inputmanager interceptMotionBeforeDispatching");
+	 nsecs_t result = 0;
+	 if (policyFlags & POLICY_FLAG_TRUSTED) {
+		 JNIEnv* env = jniEnv();
+	
+		 // Note: inputWindowHandle may be null.
+		 jobject inputWindowHandleObj = getInputWindowHandleObjLocalRef(env, inputWindowHandle);
+		 jobject motionEventObj = android_view_MotionEvent_obtainAsCopy(env, motionEvent);
+		 if (motionEventObj) {
+			 jlong delayMillis = env->CallLongMethod(mServiceObj,
+					 gServiceClassInfo.interceptMotionBeforeDispatching,
+					 inputWindowHandleObj, motionEventObj, policyFlags);
+			 bool error = checkAndClearExceptionFromCallback(env, "interceptMotionBeforeDispatching");
+			 android_view_MotionEvent_recycle(env, motionEventObj);
+			 env->DeleteLocalRef(motionEventObj);
+			 if (!error) {
+				 if (delayMillis < 0) {
+					 result = -1;
+				 } else if (delayMillis > 0) {
+					 result = milliseconds_to_nanoseconds(delayMillis);
+				 }
+			 }
+		 } else {
+			 ALOGE("Failed to obtain key event object for interceptMotionBeforeDispatching.");
+		 }
+		 env->DeleteLocalRef(inputWindowHandleObj);
+	 }
+	 return result;
+
+}
 bool NativeInputManager::dispatchUnhandledKey(const sp<InputWindowHandle>& inputWindowHandle,
         const KeyEvent* keyEvent, uint32_t policyFlags, KeyEvent* outFallbackKeyEvent) {
     // Policy:
@@ -1231,7 +1281,20 @@ static void nativeSetInputWindows(JNIEnv* env, jclass clazz,
 
     im->setInputWindows(env, windowHandleObjArray);
 }
+static void nativeSetDontFocusedHome(JNIEnv* env, jclass clazz,
+           jlong ptr, jboolean dontNeedFocusHome) {
+    
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
 
+    im->setDontFocusedHome(dontNeedFocusHome);
+}
+
+static void nativeSetMultiWindowConfig(JNIEnv* env, jclass clazz,
+		jlong ptr, jboolean enable){
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+	im->setMultiWindowConfig(enable);
+
+}
 static void nativeSetFocusedApplication(JNIEnv* env, jclass clazz,
         jlong ptr, jobject applicationHandleObj) {
     NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
@@ -1463,6 +1526,10 @@ static JNINativeMethod gInputManagerMethods[] = {
             (void*) nativeInjectInputEvent },
     { "nativeSetInputWindows", "(J[Lcom/android/server/input/InputWindowHandle;)V",
             (void*) nativeSetInputWindows },
+    { "nativeSetDontFocusedHome", "(JZ)V",
+            (void*) nativeSetDontFocusedHome }, 
+    { "nativeSetMultiWindowConfig", "(JZ)V",
+    		(void*) nativeSetMultiWindowConfig },
     { "nativeSetFocusedApplication", "(JLcom/android/server/input/InputApplicationHandle;)V",
             (void*) nativeSetFocusedApplication },
     { "nativeSetInputDispatchMode", "(JZZ)V",
@@ -1548,6 +1615,10 @@ int register_android_server_InputManager(JNIEnv* env) {
             "interceptKeyBeforeDispatching",
             "(Lcom/android/server/input/InputWindowHandle;Landroid/view/KeyEvent;I)J");
 
+    GET_METHOD_ID(gServiceClassInfo.interceptMotionBeforeDispatching, clazz,
+            "interceptMotionBeforeDispatching",
+            "(Lcom/android/server/input/InputWindowHandle;Landroid/view/MotionEvent;I)J");
+	
     GET_METHOD_ID(gServiceClassInfo.dispatchUnhandledKey, clazz,
             "dispatchUnhandledKey",
             "(Lcom/android/server/input/InputWindowHandle;Landroid/view/KeyEvent;I)Landroid/view/KeyEvent;");

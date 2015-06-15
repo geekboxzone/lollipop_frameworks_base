@@ -41,15 +41,21 @@ import com.android.systemui.statusbar.StatusBarState;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import android.util.Slog;
 
 public abstract class PanelView extends FrameLayout {
     public static final boolean DEBUG = PanelBar.DEBUG;
     public static final String TAG = PanelView.class.getSimpleName();
 
+    public static final boolean DEBUG_NAN = true; // http://b/7686690
+	public void LOGD(String msg){
+		Slog.d(TAG,"<-----"+msg+"---->");
+	}
     private final void logf(String fmt, Object... args) {
         Log.v(TAG, (mViewName != null ? (mViewName + ": ") : "") + String.format(fmt, args));
     }
 
+	private boolean mPanelViewEnabled = true;
     protected PhoneStatusBar mStatusBar;
     private float mPeekHeight;
     private float mHintDistance;
@@ -116,7 +122,20 @@ public abstract class PanelView extends FrameLayout {
 
     protected void onExpandingStarted() {
     }
+public boolean panelViewEnabled(){
+		LOGD("panelViewEnable ="+ mPanelViewEnabled);
+		return mPanelViewEnabled;
+	}
+	public void setPanelViewEnabled(boolean enable){
+		LOGD("setPanelViewEnable ="+enable);
+		if(mPanelViewEnabled != enable){
+			mPanelViewEnabled = enable;
+			if(enable == true){
+				expand();
+			}
+		}
 
+	}
     private void notifyExpandingStarted() {
         if (!mExpanding) {
             mExpanding = true;

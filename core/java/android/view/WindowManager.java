@@ -27,7 +27,10 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.Log;
-
+import android.view.MultiWindowInfo;
+import android.view.WindowManagerPolicy;
+import java.lang.Throwable;
+import android.util.Slog;
 
 /**
  * The interface that apps use to talk to the window manager.
@@ -104,7 +107,15 @@ public interface WindowManager extends ViewManager {
      * @param view The view to be removed.
      */
     public void removeViewImmediate(View view);
+	/**
+	*@hide
+	*/
+	public void updateAppLayout(WindowManager.LayoutParams wmprams); 
 
+	/**
+	*@hide
+	*/
+	public void removeApp(String packageName);
     public static class LayoutParams extends ViewGroup.LayoutParams
             implements Parcelable {
         /**
@@ -122,6 +133,20 @@ public interface WindowManager extends ViewManager {
          */
         @ViewDebug.ExportedProperty
         public int y;
+
+		/**
+		*@hide
+		*/
+		public MultiWindowInfo mWindowInfo;
+
+		/**
+		*@hide
+		*/
+		public int align;
+		/**
+		*@hide
+		*/
+		public int taskId;
 
         /**
          * Indicates how much of the extra space will be allocated horizontally
@@ -553,6 +578,28 @@ public interface WindowManager extends ViewManager {
          * they are covered by a touchable window.
          */
         public static final int TYPE_ACCESSIBILITY_OVERLAY = FIRST_SYSTEM_WINDOW+32;
+	public static final int TYPE_MULTIWINDOW_CONTROLLER = FIRST_SYSTEM_WINDOW+33;
+		
+		/**
+		*@hide
+		*/
+		public static final int TYPE_MULTIMODE_BUTTON = FIRST_SYSTEM_WINDOW+34;
+
+		/**
+		*@hide
+		*/
+		public static final int TYPE_MULTI_BACK_WINDOW = FIRST_SYSTEM_WINDOW+35;
+
+		/**
+		*@hide
+		*/
+		public static final int TYPE_MULTIWINDOW_FOURSCREEN_CENTER_BUTTON = FIRST_SYSTEM_WINDOW+36;
+
+	
+	    /**
+		*@hide
+		*/
+		public static final int TYPE_MULTIWINDOW_TOP_WINDOW = FIRST_SYSTEM_WINDOW+37;
 
         /**
          * End of types of system windows.
@@ -928,6 +975,12 @@ public interface WindowManager extends ViewManager {
          */
         public static final int FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS = 0x80000000;
 
+
+	/**
+		* Window flag: special flag for app that support half screen display.
+		*@hide
+		*/
+		public static final int FLAG_HALF_SCREEN_WINDOW = 0x10000000;
         /**
          * Various behavioral options/flags.  Default is none.
          * 
@@ -1521,7 +1574,18 @@ public interface WindowManager extends ViewManager {
          * @hide
          */
         public int inputFeatures;
-
+		/**
+		*@hide
+		*/
+		public static final int MULIT_FEATURE_DISABLE = 0x00000001;
+		/**
+		*@hide
+		*/
+		public static final int MULIT_FEATURE_TOP_WINDOW = 0x00000002;
+		/**
+		*@hide
+		*/
+		public int multiFeatures;
         /**
          * Sets the number of milliseconds before the user activity timeout occurs
          * when this window has focus.  A value of -1 uses the standard timeout.
@@ -1541,12 +1605,18 @@ public interface WindowManager extends ViewManager {
             super(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
             type = TYPE_APPLICATION;
             format = PixelFormat.OPAQUE;
+			align = -1;
+			taskId = -1;
+			mWindowInfo = new MultiWindowInfo();
         }
         
         public LayoutParams(int _type) {
             super(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
             type = _type;
             format = PixelFormat.OPAQUE;
+			align = -1;
+			taskId = -1;
+			mWindowInfo = new MultiWindowInfo();
         }
     
         public LayoutParams(int _type, int _flags) {
@@ -1554,6 +1624,9 @@ public interface WindowManager extends ViewManager {
             type = _type;
             flags = _flags;
             format = PixelFormat.OPAQUE;
+			align = -1;
+			taskId = -1;
+			mWindowInfo = new MultiWindowInfo();
         }
     
         public LayoutParams(int _type, int _flags, int _format) {
@@ -1561,6 +1634,9 @@ public interface WindowManager extends ViewManager {
             type = _type;
             flags = _flags;
             format = _format;
+			align = -1;
+			taskId = -1;
+			mWindowInfo = new MultiWindowInfo();
         }
         
         public LayoutParams(int w, int h, int _type, int _flags, int _format) {
@@ -1568,6 +1644,9 @@ public interface WindowManager extends ViewManager {
             type = _type;
             flags = _flags;
             format = _format;
+			align = -1;
+			taskId = -1;
+			mWindowInfo = new MultiWindowInfo();
         }
         
         public LayoutParams(int w, int h, int xpos, int ypos, int _type,
@@ -1578,6 +1657,9 @@ public interface WindowManager extends ViewManager {
             type = _type;
             flags = _flags;
             format = _format;
+			align = -1;
+			taskId = -1;
+			mWindowInfo = new MultiWindowInfo();
         }
     
         public final void setTitle(CharSequence title) {
@@ -1596,6 +1678,9 @@ public interface WindowManager extends ViewManager {
         }
 
         public void writeToParcel(Parcel out, int parcelableFlags) {
+			mWindowInfo.writeToParcel(out,parcelableFlags);
+			out.writeInt(align);
+			out.writeInt(taskId);
             out.writeInt(width);
             out.writeInt(height);
             out.writeInt(x);
@@ -1623,6 +1708,7 @@ public interface WindowManager extends ViewManager {
             out.writeInt(subtreeSystemUiVisibility);
             out.writeInt(hasSystemUiListeners ? 1 : 0);
             out.writeInt(inputFeatures);
+			out.writeInt(multiFeatures);
             out.writeLong(userActivityTimeout);
             out.writeInt(surfaceInsets.left);
             out.writeInt(surfaceInsets.top);
@@ -1644,6 +1730,9 @@ public interface WindowManager extends ViewManager {
     
     
         public LayoutParams(Parcel in) {
+			mWindowInfo = new MultiWindowInfo(in);
+			align = in.readInt();
+			taskId = in.readInt();
             width = in.readInt();
             height = in.readInt();
             x = in.readInt();
@@ -1671,6 +1760,7 @@ public interface WindowManager extends ViewManager {
             subtreeSystemUiVisibility = in.readInt();
             hasSystemUiListeners = in.readInt() != 0;
             inputFeatures = in.readInt();
+			multiFeatures = in.readInt();
             userActivityTimeout = in.readLong();
             surfaceInsets.left = in.readInt();
             surfaceInsets.top = in.readInt();
@@ -1713,6 +1803,10 @@ public interface WindowManager extends ViewManager {
         public static final int PREFERRED_REFRESH_RATE_CHANGED = 1 << 21;
         /** {@hide} */
         public static final int NEEDS_MENU_KEY_CHANGED = 1 << 22;
+			/**{@hide}*/
+		public static final int MULTI_FEATURES_CHANGED = 1<<23;
+		/**{@hide}*/
+		public static final int ALIGN_FEATURES_CHANGED = 1<<24;
         /** {@hide} */
         public static final int EVERYTHING_CHANGED = 0xffffffff;
 
@@ -1721,7 +1815,16 @@ public interface WindowManager extends ViewManager {
 
         public final int copyFrom(LayoutParams o) {
             int changes = 0;
-
+			mWindowInfo = o.mWindowInfo;
+			if(align != o.align){
+				align = o.align;
+				changes |= LAYOUT_CHANGED;
+				changes |= ALIGN_FEATURES_CHANGED;
+			}
+			if(taskId != o.taskId){
+				taskId = o.taskId;
+				changes |= LAYOUT_CHANGED;
+			}
             if (width != o.width) {
                 width = o.width;
                 changes |= LAYOUT_CHANGED;
@@ -1852,7 +1955,10 @@ public interface WindowManager extends ViewManager {
                 userActivityTimeout = o.userActivityTimeout;
                 changes |= USER_ACTIVITY_TIMEOUT_CHANGED;
             }
-
+	if(multiFeatures != o.multiFeatures){
+				multiFeatures = o.multiFeatures;
+				changes |= MULTI_FEATURES_CHANGED;
+			}
             if (!surfaceInsets.equals(o.surfaceInsets)) {
                 surfaceInsets.set(o.surfaceInsets);
                 changes |= SURFACE_INSETS_CHANGED;
@@ -1890,6 +1996,52 @@ public interface WindowManager extends ViewManager {
             sb.append('x');
             sb.append((height== MATCH_PARENT ?"fill":(height==WRAP_CONTENT?"wrap":height)));
             sb.append(")");
+			
+			if(mWindowInfo!=null){
+				sb.append("mPosX=");
+				sb.append(mWindowInfo.mPosX);
+				sb.append("mPosY=");
+				sb.append(mWindowInfo.mPosY);
+				sb.append("mHScale=");
+				sb.append(mWindowInfo.mHScale);
+				sb.append("mVScale=");
+				sb.append(mWindowInfo.mVScale);
+				
+			}
+			sb.append(" align=");
+			switch(align){
+				case WindowManagerPolicy.WINDOW_ALIGN_LEFT:
+					sb.append("LEFT");
+					break;
+				case WindowManagerPolicy.WINDOW_ALIGN_RIGHT:
+					sb.append("RIGHT");
+					break;
+				case WindowManagerPolicy.WINDOW_ALIGN_TOP:
+					sb.append("TOP");
+					break;
+				case WindowManagerPolicy.WINDOW_ALIGN_BOTTOM:
+					sb.append("BOTTOM");
+					break;
+ 				case WindowManagerPolicy.ALIGN_LEFT_TOP_WINDOW:
+					sb.append("0");
+					break;
+				case WindowManagerPolicy.ALIGN_RIGHT_TOP_WINDOW:
+					sb.append("1");
+					break;
+				case WindowManagerPolicy.ALIGN_LEFT_BOTTOM_WINDOW:
+					sb.append("2");
+					break;
+				case WindowManagerPolicy.ALIGN_RIGHT_BOTTOM_WINDOW:
+					sb.append("3");
+					break;
+				case -1:
+					sb.append("UNDEFINE");
+					break;
+				default :
+					sb.append("EXCEPTION");
+					break;
+			}
+			sb.append(" taskId=");sb.append(taskId);
             if (horizontalMargin != 0) {
                 sb.append(" hm=");
                 sb.append(horizontalMargin);
@@ -1963,6 +2115,10 @@ public interface WindowManager extends ViewManager {
             if (inputFeatures != 0) {
                 sb.append(" if=0x").append(Integer.toHexString(inputFeatures));
             }
+			if(multiFeatures != 0){
+				sb.append("mf=0x");
+				sb.append(Integer.toHexString(multiFeatures));
+			}
             if (userActivityTimeout >= 0) {
                 sb.append(" userActivityTimeout=").append(userActivityTimeout);
             }

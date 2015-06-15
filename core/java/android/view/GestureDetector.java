@@ -233,6 +233,8 @@ public class GestureDetector {
     private float mDownFocusY;
 
     private boolean mIsLongpressEnabled;
+	
+	private boolean mIgnoreMultitouch;
 
     /**
      * Determines speed during touch scrolling
@@ -377,6 +379,7 @@ public class GestureDetector {
     public GestureDetector(Context context, OnGestureListener listener, Handler handler,
             boolean unused) {
         this(context, listener, handler);
+		mIgnoreMultitouch = unused;
     }
 
     private void init(Context context) {
@@ -483,6 +486,10 @@ public class GestureDetector {
             mDownFocusY = mLastFocusY = focusY;
             // Cancel long press and taps
             cancelTaps();
+			if (mIgnoreMultitouch) {
+                // Multitouch event - abort.
+                cancel();
+            }
             break;
 
         case MotionEvent.ACTION_POINTER_UP:
@@ -551,7 +558,7 @@ public class GestureDetector {
             break;
 
         case MotionEvent.ACTION_MOVE:
-            if (mInLongPress) {
+            if (mInLongPress || (mIgnoreMultitouch && ev.getPointerCount() > 1)) {
                 break;
             }
             final float scrollX = mLastFocusX - focusX;

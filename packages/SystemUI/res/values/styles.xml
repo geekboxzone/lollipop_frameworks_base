@@ -70,6 +70,16 @@
         <item name="android:textColor">#FF808080</item>
     </style>
 
+   <style name="TextAppearance" />
+   <style name="TextAppearance.QuickSettings" />
+    <style name="TextAppearance.QuickSettings.TileView">
+          <item name="android:textSize">12dp</item>
+          <item name="android:textStyle">normal</item>
+          <item name="android:textColor">#CCCCCC</item>
+          <item name="android:textAllCaps">true</item>
+          <item name="android:paddingStart">6dp</item>
+          <item name="android:paddingEnd">6dp</item>
+      </style>
     <style name="TextAppearance.StatusBar.TextButton"
         parent="@*android:style/TextAppearance.StatusBar">
         <item name="android:textAppearance">?android:attr/textAppearance</item>
@@ -276,5 +286,11 @@
     <style name="TextAppearance.StatusBar.SimSwitchNotification"
         parent="@*android:style/TextAppearance.StatusBar">
         <item name="android:textSize">14dp</item>
+    </style>
+    <style name="FullHeightDialog" parent="android:Theme.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:backgroundDimEnabled">false</item>
     </style>
 </resources>

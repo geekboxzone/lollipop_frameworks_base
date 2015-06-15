@@ -31,11 +31,15 @@ import android.view.WindowContentFrameStats;
 import com.android.internal.app.IBatteryStats;
 import com.android.internal.policy.PolicyManager;
 import com.android.internal.policy.impl.PhoneWindowManager;
+import android.view.MultiWindowInfo;
 import com.android.internal.util.FastPrintWriter;
 import com.android.internal.view.IInputContext;
 import com.android.internal.view.IInputMethodClient;
 import com.android.internal.view.IInputMethodManager;
 import com.android.internal.view.WindowManagerPolicyThread;
+import com.android.multiwindow.wmservice.MWSInterface;
+import com.android.multiwindow.wmservice.MulWindowService;
+
 import com.android.server.AttributeCache;
 import com.android.server.DisplayThread;
 import com.android.server.EventLogTags;
@@ -142,6 +146,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.view.animation.Transformation;
 
+import android.app.ActivityManager;
+import android.app.ActivityOptions;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
@@ -160,11 +166,27 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import android.view.IAppAlignWatcher;
+import android.view.animation.Animation;
+import android.view.animation.ScaleAnimation;
+import android.app.ActivityManager.RunningServiceInfo;
 
 /** {@hide} */
 public class WindowManagerService extends IWindowManager.Stub
-        implements Watchdog.Monitor, WindowManagerPolicy.WindowManagerFuncs {
-    static final String TAG = "WindowManager";
+        implements Watchdog.Monitor, WindowManagerPolicy.WindowManagerFuncs ,MWSInterface {
+    static final String TAG = "WindowManagerService";
+	static final boolean DEBUG_ZJY = true;
+	static final boolean DEBUG_ZJY_PER = true;
+	void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Log.d(TAG,"@@@@@@@@@@@@@@@"+msg);
+		}
+	}
+	void LOGR(String msg){
+		if(DEBUG_ZJY_PER){
+			Log.d(TAG,msg);
+		}
+        }
     static final boolean DEBUG = false;
     static final boolean DEBUG_ADD_REMOVE = false;
     static final boolean DEBUG_FOCUS = false;
@@ -214,11 +236,14 @@ public class WindowManagerService extends IWindowManager.Stub
     /** Offset from TYPE_LAYER_MULTIPLIER for moving a group of windows above
      * or below others in the same layer. */
     static final int TYPE_LAYER_OFFSET = 1000;
+	static final int TYPE_LAYER_TMP = 1001;
 
     /** How much to increment the layer for each window, to reserve room
      * for effect surfaces between them.
      */
     static final int WINDOW_LAYER_MULTIPLIER = 5;
+
+	static final int MAX_MULTI_WINDOW_COUNT = 4;
 
     /**
      * Dim surface layer is immediately below target window.
@@ -378,6 +403,7 @@ public class WindowManagerService extends IWindowManager.Stub
      */
     final HashMap<IBinder, WindowState> mWindowMap = new HashMap<IBinder, WindowState>();
 
+	final HashMap<WindowState, IAppAlignWatcher>mAppAlignWatcher = new HashMap<WindowState,IAppAlignWatcher>();
     /**
      * Mapping from a token IBinder to a WindowToken object.
      */
@@ -495,6 +521,22 @@ public class WindowManagerService extends IWindowManager.Stub
 
     /** All DisplayContents in the world, kept here */
     SparseArray<DisplayContent> mDisplayContents = new SparseArray<DisplayContent>(2);
+	private static  int XFIX = 0;
+	private static  int YFIX = 0; 
+	private static  int XMaxFix = 0;
+	private static 	int YMaxFix = 0;
+	private static final int RATIO = 10;
+	private static  int XDELTA = 0;
+	private static  int YDELTA = 0;
+	private static  int step = 0;	
+	private static Point[]posXY = null;//{new Point(0,0),new Point(640,0),
+							 	//new Point(0,372),new Point(640,372)};
+	private MulWindowService mMulWindowService;						 	
+	private AppWindowToken mHomeApp = null;
+	private WindowState mTopMultiApp;
+	private static int mLastWindowsCount = 0;
+	private static boolean mHalfWindowChange = false;
+	static int mWindowBoundsWidth = 0;
 
     int mRotation = 0;
     int mForcedAppOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
@@ -867,6 +909,7 @@ public class WindowManagerService extends IWindowManager.Stub
         mDisplayManagerInternal = LocalServices.getService(DisplayManagerInternal.class);
         mDisplaySettings = new DisplaySettings();
         mDisplaySettings.readSettingsLocked();
+		mMulWindowService = new MulWindowService(this,mContext);
 
         LocalServices.addService(WindowManagerPolicy.class, mPolicy);
 
@@ -1246,6 +1289,22 @@ public class WindowManagerService extends IWindowManager.Stub
         return tokenWindowsPos;
     }
 
+	private void addMultiBackWindowToListLocked(final WindowState win) {
+        final WindowList windows = win.getWindowList();
+        int i;
+        for (i = windows.size() - 1; i >= 0; i--) {
+            WindowState ws = windows.get(i);
+			if(isHomeWindow(ws)){
+                break;
+			}
+        }
+        i++;
+        if (DEBUG_FOCUS_LIGHT || DEBUG_WINDOW_MOVEMENT || DEBUG_ADD_REMOVE) Slog.v(TAG,
+                "Free window: Adding window " + win + " at " + i + " of " + windows.size());
+        windows.add(i, win);
+        mWindowsChanged = true;
+    }
+
     private void addFreeWindowToListLocked(final WindowState win) {
         final WindowList windows = win.getWindowList();
 
@@ -1332,17 +1391,21 @@ public class WindowManagerService extends IWindowManager.Stub
         if (DEBUG_FOCUS_LIGHT) Slog.d(TAG, "addWindowToListInOrderLocked: win=" + win +
                 " Callers=" + Debug.getCallers(4));
         if (win.mAttachedWindow == null) {
-            final WindowToken token = win.mToken;
-            int tokenWindowsPos = 0;
-            if (token.appWindowToken != null) {
-                tokenWindowsPos = addAppWindowToListLocked(win);
-            } else {
-                addFreeWindowToListLocked(win);
-            }
-            if (addToToken) {
-                if (DEBUG_ADD_REMOVE) Slog.v(TAG, "Adding " + win + " to " + token);
-                token.windows.add(tokenWindowsPos, win);
-            }
+			if(win.getAttrs().type  == WindowManager.LayoutParams.TYPE_MULTI_BACK_WINDOW){
+				addMultiBackWindowToListLocked(win);
+			}else{
+            	final WindowToken token = win.mToken;
+            	int tokenWindowsPos = 0;
+            	if (token.appWindowToken != null) {
+                	tokenWindowsPos = addAppWindowToListLocked(win);
+            	} else {
+                	addFreeWindowToListLocked(win);
+            	}
+            	if (addToToken) {
+                	if (DEBUG_ADD_REMOVE) Slog.v(TAG, "Adding " + win + " to " + token);
+                	token.windows.add(tokenWindowsPos, win);
+            	}
+			}
         } else {
             addAttachedWindowToListLocked(win, addToToken);
         }
@@ -1374,6 +1437,23 @@ public class WindowManagerService extends IWindowManager.Stub
             return w.isVisibleOrAdding();
         }
         return false;
+    }
+  int findWindowPositionInStack(WindowState win)
+	{
+        //use a local variable to cache mWindows
+        DisplayContent displayContent = getDefaultDisplayContentLocked();
+		WindowList localmWindows = displayContent.getWindowList();
+        int jmax = localmWindows.size();
+        if(jmax == 0) {
+            return -1;
+        }
+        for(int j = (jmax-1); j >= 0; j--) {
+            WindowState wentry = localmWindows.get(j);
+            if(wentry.mClient == win.mClient) {
+                return j;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -2385,10 +2465,10 @@ public class WindowManagerService extends IWindowManager.Stub
                 }
             }
 
-            if (type == TYPE_PRIVATE_PRESENTATION && !displayContent.isPrivate()) {
+            /*if (type == TYPE_PRIVATE_PRESENTATION && !displayContent.isPrivate()) {
                 Slog.w(TAG, "Attempted to add private presentation window to a non-private display.  Aborting.");
                 return WindowManagerGlobal.ADD_PERMISSION_DENIED;
-            }
+            }*/
 
             boolean addToken = false;
             WindowToken token = mTokenMap.get(attrs.token);
@@ -2552,6 +2632,8 @@ public class WindowManagerService extends IWindowManager.Stub
                 imMayMove = false;
             } else {
                 addWindowToListInOrderLocked(win, true);
+				
+				getDefaultDisplayContentLocked().pendingLayoutChanges|= WindowManagerPolicy.FINISH_LAYOUT_REDO_WALLPAPER;
                 if (type == TYPE_WALLPAPER) {
                     mLastWallpaperTimeoutTime = 0;
                     displayContent.pendingLayoutChanges |= FINISH_LAYOUT_REDO_WALLPAPER;
@@ -2947,6 +3029,596 @@ public class WindowManagerService extends IWindowManager.Stub
         }
     }
 
+	public void getWindowSurfaceFrame(Session session, IWindow client,
+			Rect outSurfaceFrame){
+	 	synchronized(mWindowMap) {
+            WindowState win = windowForClientLocked(session, client, false);
+            if (win == null) {
+                outSurfaceFrame.setEmpty();
+                return;
+            }
+            outSurfaceFrame.set(win.mFrame);
+        }
+	}
+
+	private void getDefalutTransInfo(MultiWindowInfo outTransFormInfo){
+		outTransFormInfo.mPosX = 0;
+		outTransFormInfo.mPosY = 0;
+		outTransFormInfo.mCurrentWidth = 0;
+		outTransFormInfo.mCurrentHeight = 0;
+		outTransFormInfo.mHScale = 1.0f;
+		outTransFormInfo.mVScale = 1.0f;
+		outTransFormInfo.mActualScale = 1.0f;
+		outTransFormInfo.mRotation = getRotation();
+        outTransFormInfo.mVisibleFrame.setEmpty();
+		outTransFormInfo.mSystemDecorRect.setEmpty();
+	}
+
+	public int getWindowOrientationFormInfo(Session session, IWindow client){
+		synchronized(mWindowMap) {
+			WindowState win = windowForClientLocked(session, client, false);
+			if(win == null || win.mAppToken == null){
+				return ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+			}
+			return win.mAppToken.mOriginalOrientation;
+		}
+	}
+	
+	public void getWindowTransFormInfo(Session session, IWindow client,
+			MultiWindowInfo outTransFormInfo){
+		synchronized(mWindowMap) {
+				   WindowState win = windowForClientLocked(session, client, false);
+				   //download app which a activity width dialog theme.
+				   if (win == null) {
+					  // outTransFormInfo.set(0.0f, 0.0f, 1.0f, 1.0f);
+						getDefalutTransInfo(outTransFormInfo);
+					   return;
+				   }
+				   
+				   mMulWindowService.getWindowTransFormInfo(win,outTransFormInfo,getRotation());
+				   
+			   }
+
+
+	}
+
+	public boolean isTopToLauncher(int taskId){
+        ArrayList<WindowState> wsList = getAllWindowListInDefaultDisplay();
+		boolean result = false;
+		if(wsList != null){
+           for(int i = wsList.size()-1;i >= 0;i--){
+		   	   WindowState win = wsList.get(i);
+               if(isHomeWindow(win)){
+			   		if(win!= null && win.taskId == taskId){
+						result = true;
+			   		}
+			   		break;
+               }
+			   if(win != null && win.taskId == taskId){
+                   result = true;
+				   break;
+			   }
+           }
+		}
+		return result;
+	}
+	
+
+	public ArrayList<WindowState> getAllWindowListInDefaultDisplay(){
+		 WindowList windows = getDefaultDisplayContentLocked().getWindowList(); 
+		 /*for(int i = windows.size()-1;i >= 0; i--){
+		 	WindowState ws = windows.get(i);
+             Log.v(TAG,"--------------------windows.get("+ws.taskId+"):"+ws);
+		 }*/
+		 return windows;
+	}
+	public void setWindowTransFormInfo(WindowState win){
+		LOGD("~~~~~~~~~~~~~~~~~~~setWindowTransFormInfo");
+		boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+		if(!used){
+			return;
+		}
+			if(win == null)return;
+			AppWindowToken wtoken = win.mAppToken;
+			if(wtoken == null)return;
+			int x = win.mPosX;
+			int y = win.mPosY;
+			int width = (int)(win.mVisibleFrame.width() * win.mHScale+0.5);
+			int height = (int)(win.mVisibleFrame.height() * win.mVScale+0.5);
+			float mHscale = win.mHScale;
+			float mVscale = win.mVScale;
+			float actualScale = win.mActualScale;
+			if(x < (int)(win.mSystemDecorRect.left*(1.0f-mHscale)+0.5f))x = (int)(win.mSystemDecorRect.left*(1.0f-mHscale)+0.5f);
+			if(y < (int)(win.mSystemDecorRect.top*(1-mVscale)+0.5f))y = (int)(win.mSystemDecorRect.top*(1-mVscale)+0.5f);
+			if(x > win.mVisibleFrame.right -width - win.mSystemDecorRect.left*mHscale)x=(int)(win.mVisibleFrame.right-width - win.mSystemDecorRect.left*mHscale);
+			if(y > win.mVisibleFrame.bottom-height - win.mSystemDecorRect.top*mVscale)y=(int)(win.mVisibleFrame.bottom-height - win.mSystemDecorRect.top*mVscale);
+			
+			int groupId = wtoken.groupId;
+			float xOffset = 0;
+			float yOffset = 0;
+			boolean change = false;
+			boolean drawBounds = false;
+			if(win.mActualScale == 1.0f && actualScale != 1.0f){
+				drawBounds = true;
+				change = true;
+			}
+			if(win.mActualScale != 1.0f && actualScale == 1.0f){
+				drawBounds = false;
+				change = true;
+			}
+			SurfaceControl.openTransaction();
+			Iterator<WindowToken> it = mTokenMap.values().iterator();
+            while (it.hasNext()) {
+                WindowToken wt = it.next();
+				AppWindowToken token = wt.appWindowToken;
+				//have same task id
+				if(token != null && token.groupId == groupId){
+					for(int j=0;j<token.allAppWindows.size();j++){
+						WindowState w = token.allAppWindows.get(j);
+						if(isHomeWindow(w)){
+							LOGD("ignore the launcher app");
+							continue;
+						}
+						float posX = x;
+						float posY = y;
+						if(w.mAttachedWindow!=null && w.mAttachedWindow.mAppWindowState!=null){
+							posX = x + (w.mFrame.left - w.mAttachedWindow.mFrame.left)*mHscale +
+									(w.mAttachedWindow.mFrame.left - w.mAttachedWindow.mAppWindowState.mFrame.left)*mHscale+0.5f;
+							posY = y + (w.mFrame.top - w.mAttachedWindow.mFrame.top)*mVscale +
+									(w.mAttachedWindow.mFrame.top - w.mAttachedWindow.mAppWindowState.mFrame.top)*mVscale+0.5f;
+						}else if(w.mAppWindowState!=null){
+							posX = x + (int)((w.mFrame.left - w.mAppWindowState.mFrame.left)*mHscale+0.5f);
+							posY = y + (int)((w.mFrame.top - w.mAppWindowState.mFrame.top)*mVscale+0.5f);
+						}else{
+							posX = x;
+							posY = y;
+						}
+						xOffset = w.mSystemDecorRect.left*mHscale;
+						yOffset = w.mSystemDecorRect.top*mVscale;
+						if(w.mWinAnimator.mSurfaceControl != null){
+							w.mWinAnimator.mSurfaceControl.setPosition(posX,posY);
+							w.mWinAnimator.mSurfaceControl.setMatrix(mHscale*w.mScaleX,0,0,mVscale*w.mScaleY);
+							
+						}
+						w.mPosX = (int)posX;
+						w.mPosY = (int)posY;
+						w.mSfOffsetX = (int)xOffset;
+						w.mSfOffsetY = (int)yOffset;
+						w.mHScale = mHscale;
+						w.mVScale = mVscale;
+						w.mActualScale = actualScale;
+						w.mSurfaceFrame.set((int)(posX+xOffset),(int)(posY+yOffset),(int)(posX+xOffset+w.mVisibleFrame.width()*mHscale+0.5f),
+												(int)(posY+yOffset+(w.mVisibleFrame.height()+w.mVisibleInsets.bottom)*mVscale+0.5f));
+						
+					}
+				}
+			}
+			if(change){
+				performLayoutAndPlaceSurfacesLocked();
+				notifyAppInvalidate(win);
+			}
+			SurfaceControl.closeTransaction();
+
+		
+	}
+
+	public void setWindowTransFormInfo(Session session,IWindow client, MultiWindowInfo transForInfo){
+		LOGD("~~~~~~~~~~~~~~~~~~~setWindowTransFormInfo");
+		boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+		if(!used){
+			return;
+		}
+		long origId = Binder.clearCallingIdentity();
+
+		synchronized(mWindowMap){
+			WindowState win = windowForClientLocked(session, client, false);
+			if(win == null)return;
+			AppWindowToken wtoken = win.mAppToken;
+			if(wtoken == null)return;
+			int x = transForInfo.mPosX;
+			int y = transForInfo.mPosY;
+			int width = (int)(win.mVisibleFrame.width() * transForInfo.mHScale+0.5);
+			int height = (int)(win.mVisibleFrame.height() * transForInfo.mVScale+0.5);
+			float mHscale = transForInfo.mHScale;
+			float mVscale = transForInfo.mVScale;
+			float actualScale = transForInfo.mActualScale;
+			if(x < (int)(win.mSystemDecorRect.left*(1.0f-mHscale)+0.5f))x = (int)(win.mSystemDecorRect.left*(1.0f-mHscale)+0.5f);
+			if(y < (int)(win.mSystemDecorRect.top*(1-mVscale)+0.5f))y = (int)(win.mSystemDecorRect.top*(1-mVscale)+0.5f);
+			if(x > win.mVisibleFrame.right -width - win.mSystemDecorRect.left*mHscale)x=(int)(win.mVisibleFrame.right-width - win.mSystemDecorRect.left*mHscale);
+			if(y > win.mVisibleFrame.bottom-height - win.mSystemDecorRect.top*mVscale)y=(int)(win.mVisibleFrame.bottom-height - win.mSystemDecorRect.top*mVscale);
+			
+			int groupId = wtoken.groupId;
+			float xOffset = 0;
+			float yOffset = 0;
+			boolean change = false;
+			boolean drawBounds = false;
+			if(win.mActualScale == 1.0f && actualScale != 1.0f){
+				drawBounds = true;
+				change = true;
+			}
+			if(win.mActualScale != 1.0f && actualScale == 1.0f){
+				drawBounds = false;
+				change = true;
+			}
+			SurfaceControl.openTransaction();
+			Iterator<WindowToken> it = mTokenMap.values().iterator();
+            while (it.hasNext()) {
+                WindowToken wt = it.next();
+				AppWindowToken token = wt.appWindowToken;
+				//have same task id
+				if(token != null && token.groupId == groupId){
+					for(int j=0;j<token.allAppWindows.size();j++){
+						WindowState w = token.allAppWindows.get(j);
+						if(isHomeWindow(w)){
+							LOGD("ignore the launcher app");
+							continue;
+						}
+						float posX = x;
+						float posY = y;
+						if(w.mAttachedWindow!=null && w.mAttachedWindow.mAppWindowState!=null){
+							posX = x + (w.mFrame.left - w.mAttachedWindow.mFrame.left)*mHscale +
+									(w.mAttachedWindow.mFrame.left - w.mAttachedWindow.mAppWindowState.mFrame.left)*mHscale+0.5f;
+							posY = y + (w.mFrame.top - w.mAttachedWindow.mFrame.top)*mVscale +
+									(w.mAttachedWindow.mFrame.top - w.mAttachedWindow.mAppWindowState.mFrame.top)*mVscale+0.5f;
+						}else if(w.mAppWindowState!=null){
+							posX = x + (int)((w.mFrame.left - w.mAppWindowState.mFrame.left)*mHscale+0.5f);
+							posY = y + (int)((w.mFrame.top - w.mAppWindowState.mFrame.top)*mVscale+0.5f);
+						}else{
+							posX = x;
+							posY = y;
+						}
+						xOffset = w.mSystemDecorRect.left*mHscale;
+						yOffset = w.mSystemDecorRect.top*mVscale;
+						if(w.mWinAnimator.mSurfaceControl != null){
+							w.mWinAnimator.mSurfaceControl.setPosition(posX,posY);
+							w.mWinAnimator.mSurfaceControl.setMatrix(mHscale*w.mScaleX,0,0,mVscale*w.mScaleY);
+							
+						}
+						w.mPosX = (int)posX;
+						w.mPosY = (int)posY;
+						w.mSfOffsetX = (int)xOffset;
+						w.mSfOffsetY = (int)yOffset;
+						w.mHScale = mHscale;
+						w.mVScale = mVscale;
+						w.mActualScale = actualScale;
+						w.mSurfaceFrame.set((int)(posX+xOffset),(int)(posY+yOffset),(int)(posX+xOffset+w.mVisibleFrame.width()*mHscale+0.5f),
+												(int)(posY+yOffset+(w.mVisibleFrame.height()+w.mVisibleInsets.bottom)*mVscale+0.5f));
+						
+					}
+				}
+			}
+			if(change){
+				performLayoutAndPlaceSurfacesLocked();
+				notifyAppInvalidate(win);
+			}
+			SurfaceControl.closeTransaction();
+
+		}
+		 Binder.restoreCallingIdentity(origId);	
+	}
+
+	public void setHalfScreenWindowTransFormInfo(Session session,IWindow client, int posX, int posY){
+        synchronized(mWindowMap){
+            WindowState current = windowForClientLocked(session, client, false); 
+			WindowState win = null;
+			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=windows.size()-1;i>=0;i--){
+				win = windows.get(i);
+				if(win!=null && current!=null && (current.getAttrs().packageName.equals(win.getAttrs().packageName)
+					|| (current.taskId == win.taskId && current.taskId != -1))){
+					/*IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+					if(watcher != null){
+						try{
+							watcher.onHalfScreenWindowPositionChanged(posX,posY);
+						}catch(RemoteException ex){
+						}
+					}*/
+					current.mPosX = posX;
+					current.mPosY = posY;
+					
+					LOGD(current+"~~~~~~~~~~~~~~~~~~~setHalfScreenWindowTransFormInfo"+posX+",posY:"+posY);
+				}
+			}
+        }
+	}
+
+	public void setHalfScreenWindowTransFormInfo(WindowState current,int posX, int posY){
+        synchronized(mWindowMap){
+			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=windows.size()-1;i>=0;i--){
+				WindowState win = windows.get(i);
+				if(win!=null && current!=null && (current.getAttrs().packageName.equals(win.getAttrs().packageName)
+					|| (current.taskId == win.taskId && current.taskId != -1))){
+					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+					if(watcher != null){
+						try{
+							watcher.onHalfScreenWindowPositionChanged(posX,posY);
+						}catch(RemoteException ex){
+						}
+					}
+				}
+			}
+        }
+	}
+	public void setTopAllWindow(WindowState current){
+        synchronized(mWindowMap){
+			WindowState win = null;
+			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=windows.size()-1;i>=0;i--){
+				win = windows.get(i);
+				if(win!=null && current!=null && (!current.getAttrs().packageName.equals(win.getAttrs().packageName)
+					|| (current.taskId != win.taskId && current.taskId != -1))){
+					AppWindowToken wtoken = win.mAppToken;
+					if(wtoken == null){
+            			continue;
+					}
+					if(win.stepOfFourScreen == -1 &&  (win.getAttrs().align != WindowManagerPolicy.WINDOW_ALIGN_RIGHT) ) continue;
+					if(ignoreWindow((win)))continue;
+					
+					if(isHomeWindow(win)){
+					 LOGD("ignore the launcher window to setTopAllWindow");
+					 continue;
+				    }
+				    if(sameGroupIdWithHome(win)){
+						LOGD("ignore the window which same group id with home app");
+						continue;
+				    }
+				    if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING){
+					  LOGD(" ignore the strating window to setTopAllWindow");
+					  continue;
+				   }
+					
+				   IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+				   if(watcher != null){
+						try{
+							watcher.onTopAllWindowChanged(win.taskId);
+						}catch(RemoteException ex){
+						}
+					}
+				}
+			}
+        }
+	}
+	
+
+	public int getHalfScreenWindowAlignFromSameTask(IBinder mAppToken,int taskId){
+		int  aligh = -1;
+        boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+		synchronized(mWindowMap){
+			if(multiWindowConfig){
+				Iterator<WindowToken> it = mTokenMap.values().iterator();
+            	while (it.hasNext()) {
+                	WindowToken wt = it.next();
+					AppWindowToken mToken = wt.appWindowToken;
+					if(mToken != null && mAppToken != mToken.appToken && taskId == mToken.groupId && mToken.groupId != -1){
+						WindowState ws = mToken.findMainWindow();
+						if(ws != null && ws.getAttrs() != null && (ws.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) != 0){			  
+							  aligh = ws.getAttrs().align;
+						}
+						break;
+					}
+				}
+			}
+		}
+		return aligh;
+	}
+	
+	public int getWindowAppTokenGroupId(Session session, IWindow client){
+			long origId = Binder.clearCallingIdentity();
+			int groupId = -1;
+			synchronized(mWindowMap){
+				WindowState win = windowForClientLocked(session, client, false);
+				if(win!=null &&win.mAppToken != null){
+					groupId = win.mAppToken.groupId;
+				}
+			}
+			
+			Binder.restoreCallingIdentity(origId);
+			return groupId;
+	}
+
+	public boolean isWindowSameTaskWithHome(Session session, IWindow client){
+		long origId = Binder.clearCallingIdentity();
+		boolean sameTask = false;
+		synchronized(mWindowMap){
+			WindowState win = windowForClientLocked(session, client, false);
+			if(win!=null&& win.mAppToken!=null && mHomeApp!=null){
+				if((win.mAppToken == mHomeApp) || (win.mAppToken.groupId == mHomeApp.groupId)){
+					sameTask = true;
+				}
+			}
+		}
+		Binder.restoreCallingIdentity(origId);
+		
+		return sameTask;
+	}
+	public void registerWindowAppAlignWatcher(Session session,
+									IWindow client, IAppAlignWatcher watcher){		
+				final IBinder watcherBinder = watcher.asBinder();
+				IBinder.DeathRecipient dr = new IBinder.DeathRecipient() {
+            	public void binderDied() {
+                synchronized (mWindowMap) {
+					 Iterator<WindowState> it = mAppAlignWatcher.keySet().iterator();
+                    	while(it.hasNext()){
+							WindowState nextWin = it.next();
+                       		if (watcherBinder == mAppAlignWatcher.get(nextWin).asBinder()) {
+							LOGD("remove the IAppAlignWatcher---------");
+                            IAppAlignWatcher removed = mAppAlignWatcher.remove(nextWin);
+                            if (removed != null) {
+                                removed.asBinder().unlinkToDeath(this, 0);
+                            }                        
+                        	}
+                    	}
+                	}
+            	}
+        		};
+			synchronized(mWindowMap){
+				WindowState win = windowForClientLocked(session, client, false);
+
+				if(isHomeWindow(win)){
+					LOGD("ignore the launcher window to register");
+					return;
+				}
+				if(sameGroupIdWithHome(win)){
+					LOGD("ignore the window which same group id with home app");
+					return;
+				}
+				if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING){
+					LOGD(" ignore the strating window to register");
+					return;
+				}
+				
+				if(win!=null && mAppAlignWatcher.get(win)==null){
+					LOGD("register win="+win);
+					LOGD("watcher="+watcher);
+                	mAppAlignWatcher.put(win, watcher);
+            		LOGD(win.getAttrs().align+"mAppAlignWatche.size="+mAppAlignWatcher.size());
+					//try{
+						//applyPositionForHalfScreenWindow( win);
+						//if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)
+						  // watcher.onAppAlignChanged(WindowManagerPolicy.WINDOW_CHANGE_TO_HALFSCREEN,false);
+					//}catch(RemoteException ex){}					
+				}
+			}
+		
+	}
+
+	public void unregisterAppAlignWatcher(Session session, IWindow client){
+			synchronized(mWindowMap){
+				WindowState win = windowForClientLocked(session, client, false);
+				if(win != null ){
+					LOGD(" unregister win="+win.getAttrs().getTitle().toString());
+					if(mAppAlignWatcher.get(win)!=null){
+						mAppAlignWatcher.remove(win);
+					}
+				}
+			}
+
+		
+
+	}
+
+	public void notifyAppInvalidate(WindowState window){
+		synchronized(mWindowMap){
+			WindowState current = window;//windowForClientLocked(session, client, false);
+			LOGD("current="+current);
+			//ignore the app that contain win
+			WindowState win = null;
+			String packName = null;
+			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=windows.size()-1;i>=0;i--){
+				win = windows.get(i);
+				IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						if(watcher != null){
+							try{
+								watcher.onAppAlignChanged(WindowManagerPolicy.WINDOW_UPDATE_LAYOUT,false);
+							}catch(RemoteException ex){
+
+							}
+						}
+				
+			}
+		}
+	}
+
+    public void updateHalfScreenWindow(Session session , IWindow client, int align){
+		synchronized(mWindowMap){
+			WindowState current = windowForClientLocked(session, client, false);
+			LOGD("current="+current);
+			WindowState win = null;
+			String packName = null;
+			int taskId = -1;
+			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=windows.size()-1;i>=0;i--){
+				win = windows.get(i);
+						LOGR("=====================current.taskId:"+current.taskId+",win.mAppToken.groupId:"+win.taskId);
+						//if(win!=null && current!=null&& current.getAttrs().packageName.equals(win.getAttrs().packageName)){
+						if(win!=null && current!=null&& (current.getAttrs().packageName.equals(win.getAttrs().packageName)
+							|| (current.taskId == win.taskId && current.taskId != -1))){
+							IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+							if(watcher != null){
+								try{
+									watcher.onAppAlignChanged(align,false);
+								}catch(RemoteException ex){
+								}
+							}
+							continue;
+						}			
+			}
+		}
+    }
+	
+	public void notifyAppAlignChanged(Session session , IWindow client, int align){
+		synchronized(mWindowMap){
+			WindowState current = windowForClientLocked(session, client, false);
+			LOGD("current="+current);
+			//ignore the app that contain win
+			int oppositeAlign = -1;
+			switch(align){
+				case WindowManagerPolicy.WINDOW_ALIGN_LEFT:
+					oppositeAlign = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					break;
+				case WindowManagerPolicy.WINDOW_ALIGN_RIGHT:
+					oppositeAlign = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
+					break;
+				case WindowManagerPolicy.WINDOW_ALIGN_TOP:
+					oppositeAlign = WindowManagerPolicy.WINDOW_ALIGN_BOTTOM;
+					break;
+				case WindowManagerPolicy.WINDOW_ALIGN_BOTTOM:
+					oppositeAlign = WindowManagerPolicy.WINDOW_ALIGN_TOP;
+					break;
+			}
+			WindowState win = null;
+			String packName = null;
+			int taskId = -1;
+			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=windows.size()-1;i>=0;i--){
+				win = windows.get(i);
+				LOGR("=====================current.taskId:"+current.taskId+",win.mAppToken.groupId:"+win.taskId);
+				//if(win!=null && current!=null&& current.getAttrs().packageName.equals(win.getAttrs().packageName)){
+				if(win!=null && current!=null&& (current.getAttrs().packageName.equals(win.getAttrs().packageName)
+					|| (current.taskId == win.taskId && current.taskId != -1))){
+					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+					if(watcher != null){
+						try{
+							watcher.onAppAlignChanged(align,false);
+						}catch(RemoteException ex){
+						}
+
+					
+				}
+					continue;
+					}
+				if((win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0 &&
+					  win.getAttrs().align == align){
+					if(packName == null){
+						packName = win.getAttrs().packageName;
+						taskId = win.taskId;
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						if(watcher != null){
+							try{
+								watcher.onAppAlignChanged(oppositeAlign,false);
+							}catch(RemoteException ex){
+
+							}
+						}
+					}else if(win.getAttrs().packageName.equals(packName)
+					    || (taskId == win.taskId && taskId != -1)){
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						if(watcher != null){
+							try{
+								watcher.onAppAlignChanged(oppositeAlign,false);
+							}catch(RemoteException ex){
+
+							}
+						}
+					}
+					
+	
+				}
+			}
+		}
+	}
     public void setWindowWallpaperPositionLocked(WindowState window, float x, float y,
             float xStep, float yStep) {
         if (window.mWallpaperX != x || window.mWallpaperY != y)  {
@@ -3057,7 +3729,8 @@ public class WindowManagerService extends IWindowManager.Stub
         }
     }
 
-    public int relayoutWindow(Session session, IWindow client, int seq,
+    public int 
+		relayoutWindow(Session session, IWindow client, int seq,
             WindowManager.LayoutParams attrs, int requestedWidth,
             int requestedHeight, int viewVisibility, int flags,
             Rect outFrame, Rect outOverscanInsets, Rect outContentInsets,
@@ -3079,18 +3752,30 @@ public class WindowManagerService extends IWindowManager.Stub
             if (win == null) {
                 return 0;
             }
+			WindowState ws = null;
+			if(win.mAppWindowState != null){
+				ws = win.mAppWindowState;
+			}else if(win.mAttachedWindow!=null){
+				ws = win.mAttachedWindow;
+			}
+			
+			if(attrs != null && ws != null && ws.getAttrs()!= null&&  ws.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+                win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+				attrs.align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+			}
             WindowStateAnimator winAnimator = win.mWinAnimator;
             if (viewVisibility != View.GONE && (win.mRequestedWidth != requestedWidth
                     || win.mRequestedHeight != requestedHeight)) {
                 win.mLayoutNeeded = true;
                 win.mRequestedWidth = requestedWidth;
                 win.mRequestedHeight = requestedHeight;
+				LOGD(requestedWidth+"========relayoutWindow=========="+requestedHeight);
             }
 
             if (attrs != null) {
                 mPolicy.adjustWindowParamsLw(attrs);
             }
-
+            
             // if they don't have the permission, mask out the status bar bits
             int systemUiVisibility = 0;
             if (attrs != null) {
@@ -3122,6 +3807,10 @@ public class WindowManagerService extends IWindowManager.Stub
                         | WindowManager.LayoutParams.SYSTEM_UI_VISIBILITY_CHANGED)) != 0) {
                     win.mLayoutNeeded = true;
                 }
+				if((attrChanges & WindowManager.LayoutParams.ALIGN_FEATURES_CHANGED) != 0){
+					LOGR("align_feature_chage recomute");
+					mHalfWindowChange = true;
+				}
             }
 
             if (DEBUG_LAYOUT) Slog.v(TAG, "Relayout " + win + ": viewVisibility=" + viewVisibility
@@ -3140,12 +3829,13 @@ public class WindowManagerService extends IWindowManager.Stub
             if (scaledWindow) {
                 // requested{Width|Height} Surface's physical size
                 // attrs.{width|height} Size on screen
-                win.mHScale = (attrs.width  != requestedWidth)  ?
+                win.mScaleX = (attrs.width  != requestedWidth)  ?
                         (attrs.width  / (float)requestedWidth) : 1.0f;
-                win.mVScale = (attrs.height != requestedHeight) ?
+                win.mScaleY = (attrs.height != requestedHeight) ?
                         (attrs.height / (float)requestedHeight) : 1.0f;
+		Log.e("shenzhicheng", win+"WMS win = " + win.getAttrs()+ " mScaleY = " + win.mScaleY);
             } else {
-                win.mHScale = win.mVScale = 1;
+                //win.mHScale = win.mVScale = 1;
             }
 
             boolean imMayMove = (flagChanges & (FLAG_ALT_FOCUSABLE_IM | FLAG_NOT_FOCUSABLE)) != 0;
@@ -3158,6 +3848,42 @@ public class WindowManagerService extends IWindowManager.Stub
             boolean wallpaperMayMove = win.mViewVisibility != viewVisibility
                     && (win.mAttrs.flags & FLAG_SHOW_WALLPAPER) != 0;
             wallpaperMayMove |= (flagChanges & FLAG_SHOW_WALLPAPER) != 0;
+
+			boolean halfscrenMayChange = (flagChanges & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0;
+			boolean haveHalfScreenFlag = (win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0;
+				LOGD("halfscreenMayChange="+halfscrenMayChange);
+			if(halfscrenMayChange){
+				boolean drawBounds = false;
+				if(haveHalfScreenFlag){
+						win.mHScale = 1.0f;
+						win.mVScale = 1.0f;
+						win.mActualScale = 1.0f;
+						win.mPosX = 0;
+						win.mPosY = 0;
+						for(int i=0;i<win.mChildWindows.size();i++){
+							WindowState child = win.mChildWindows.get(i);
+							if(child != null){
+								LOGD("adjust the child window to adapt the halfwindow");
+								child.mHScale = 1.0f;
+								child.mVScale = 1.0f;
+								child.mActualScale = 1.0f;
+							}
+						}
+						LOGD("win is halfscreen");
+						drawBounds = true;
+				}else{
+							//switch from half-screen window to multiwindow(mActualScale = 0.5f) 
+						if(win.mActualScale != 1.0f){
+							drawBounds = true;
+						}else{
+							//switch to fullscreen
+							drawBounds = false;
+						}
+				}
+				
+				mHalfWindowChange = true;
+				
+			}
 
             win.mRelayoutCalled = true;
             final int oldVisibility = win.mViewVisibility;
@@ -3331,6 +4057,9 @@ public class WindowManagerService extends IWindowManager.Stub
                 displayContent.layoutNeeded = true;
             }
             win.mGivenInsetsPending = (flags&WindowManagerGlobal.RELAYOUT_INSETS_PENDING) != 0;
+            if (halfscrenMayChange) {
+				assignLayersLocked(win.getWindowList());
+            }
             configChanged = updateOrientationFromAppTokensLocked(false);
             performLayoutAndPlaceSurfacesLocked();
             if (toBeDisplayed && win.mIsWallpaper) {
@@ -3715,6 +4444,8 @@ public class WindowManagerService extends IWindowManager.Stub
             Slog.w(TAG, "Could not get dispatching timeout.", ex);
             inputDispatchingTimeoutNanos = DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS;
         }
+		LOGD("addAppToken taskId:"+taskId);
+		shouldAppMoveBack(taskId);
 
         synchronized(mWindowMap) {
             AppWindowToken atoken = findAppWindowToken(token.asBinder());
@@ -3727,7 +4458,12 @@ public class WindowManagerService extends IWindowManager.Stub
             atoken.groupId = taskId;
             atoken.appFullscreen = fullscreen;
             atoken.showWhenLocked = showWhenLocked;
-            atoken.requestedOrientation = requestedOrientation;
+			atoken.mOriginalOrientation = requestedOrientation;
+			if(mCurConfiguration.enableMultiWindow() && isMultiWindowMode() && atoken.mForceRotation){
+            	atoken.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+			}else{
+				atoken.requestedOrientation = requestedOrientation;
+			}
             atoken.layoutConfigChanges = (configChanges &
                     (ActivityInfo.CONFIG_SCREEN_SIZE | ActivityInfo.CONFIG_ORIENTATION)) != 0;
             atoken.mLaunchTaskBehind = launchTaskBehind;
@@ -3745,7 +4481,14 @@ public class WindowManagerService extends IWindowManager.Stub
 
             // Application tokens start out hidden.
             atoken.hidden = true;
-            atoken.hiddenRequested = true;
+			atoken.hiddenRequested = true;
+			resetMultiWindowFlag();
+			try{
+				if(atoken.appToken!=null && atoken.appToken.isHomeActivity()){
+					LOGD("----add HomeApp token----");
+					mHomeApp = atoken;
+				}
+			}catch(RemoteException e){}
 
             //dump();
         }
@@ -3929,6 +4672,7 @@ public class WindowManagerService extends IWindowManager.Stub
             // the value of the previous configuration.
             mTempConfiguration.setToDefaults();
             mTempConfiguration.fontScale = currentConfig.fontScale;
+			mTempConfiguration.multiwindowflag = currentConfig.multiwindowflag;
             if (computeScreenConfigurationLocked(mTempConfiguration)) {
                 if (currentConfig.diff(mTempConfiguration) != 0) {
                     mWaitingForConfig = true;
@@ -4003,6 +4747,11 @@ public class WindowManagerService extends IWindowManager.Stub
             }
             performLayoutAndPlaceSurfacesLocked();
         }
+       if(mCurConfiguration.enableMultiWindow()){
+                          mInputManager.setMultiWindowConfig(true);
+                  }else{
+                          mInputManager.setMultiWindowConfig(false);
+                  }
     }
 
     @Override
@@ -4019,9 +4768,31 @@ public class WindowManagerService extends IWindowManager.Stub
                 return;
             }
 
-            atoken.requestedOrientation = requestedOrientation;
+            atoken.mOriginalOrientation = requestedOrientation;
+			if(mCurConfiguration.enableMultiWindow() && isMultiWindowMode() && atoken.mForceRotation){
+            	atoken.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+			}else{
+				atoken.requestedOrientation = requestedOrientation;
+			}
         }
     }
+
+	public void dispatchUnhandledKey(IApplicationToken token, KeyEvent event){
+		LOGD("--------------dispatchUnhandledKey-----------------");
+		AppWindowToken wtoken = findAppWindowToken(token.asBinder());
+		if (wtoken != null) {
+			WindowState win = wtoken.findMainWindow();
+			if(mAppAlignWatcher.get(win)!=null){
+				IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+				if(watcher != null){
+					try{
+						LOGD("############watcher.dispatchUnhandledKey###############");
+						watcher.dispatchUnhandledKey(event);
+					}catch(RemoteException ex){}
+				}
+			}
+		}
+	}
 
     @Override
     public int getAppOrientation(IApplicationToken token) {
@@ -4104,8 +4875,19 @@ public class WindowManagerService extends IWindowManager.Stub
             }
 
             final boolean changed = mFocusedApp != newFocus;
-            if (changed) {
-                mFocusedApp = newFocus;
+			mFocusedApp = newFocus;   
+			//WindowState win = mFocusedApp.findMainWindow();
+             if(newFocus !=null && newFocus.appToken!=null){
+                 try{
+                        if(newFocus.appToken.isHomeActivity()){
+                            mHomeApp = newFocus;
+                         }
+                    }catch(RemoteException e){}
+
+                }
+            if (DEBUG_FOCUS) Slog.v(TAG, "Set focused app to: " + mFocusedApp
+                        + " moveFocusNow=" + moveFocusNow);
+            if (changed) {      
                 mInputMonitor.setFocusedAppLw(newFocus);
             }
 
@@ -4214,8 +4996,8 @@ public class WindowManagerService extends IWindowManager.Stub
         }
 
         synchronized(mWindowMap) {
-            if (DEBUG_APP_TRANSITIONS) Slog.w(TAG, "Execute app transition: " + mAppTransition,
-                    new RuntimeException("here").fillInStackTrace());
+            if (DEBUG_APP_TRANSITIONS) Slog.w(TAG, "Execute app transition: " + mAppTransition,  
+				  new RuntimeException("here").fillInStackTrace());
             if (mAppTransition.isTransitionSet()) {
                 mAppTransition.setReady();
                 final long origId = Binder.clearCallingIdentity();
@@ -4232,7 +5014,7 @@ public class WindowManagerService extends IWindowManager.Stub
     public void setAppStartingWindow(IBinder token, String pkg,
             int theme, CompatibilityInfo compatInfo,
             CharSequence nonLocalizedLabel, int labelRes, int icon, int logo,
-            int windowFlags, IBinder transferFrom, boolean createIfNeeded) {
+            int windowFlags, IBinder transferFrom, boolean createIfNeeded,int align) {
         if (!checkCallingPermission(android.Manifest.permission.MANAGE_APP_TOKENS,
                 "setAppStartingWindow()")) {
             throw new SecurityException("Requires MANAGE_APP_TOKENS permission");
@@ -4432,7 +5214,7 @@ public class WindowManagerService extends IWindowManager.Stub
             if (DEBUG_STARTING_WINDOW) Slog.v(TAG, "Creating StartingData");
             mStartingIconInTransition = true;
             wtoken.startingData = new StartingData(pkg, theme, compatInfo, nonLocalizedLabel,
-                    labelRes, icon, logo, windowFlags);
+                    labelRes, icon, logo, windowFlags,align);
             Message m = mH.obtainMessage(H.ADD_STARTING, wtoken);
             // Note: we really want to do sendMessageAtFrontOfQueue() because we
             // want to process the message ASAP, before any other queued
@@ -4537,6 +5319,10 @@ public class WindowManagerService extends IWindowManager.Stub
                 if (win == wtoken.startingWindow) {
                     continue;
                 }
+				if(win!=null && lp!=null){
+					LOGD("setTokenVisible windowanimation="+lp.windowAnimations+" win="+win);
+					win.getAttrs().windowAnimations = lp.windowAnimations;
+				}
 
                 //Slog.i(TAG, "Window " + win + ": vis=" + win.isVisible());
                 //win.dump("  ");
@@ -4642,6 +5428,9 @@ public class WindowManagerService extends IWindowManager.Stub
                 Slog.w(TAG, "Attempted to set visibility of non-existing app token: " + token);
                 return;
             }
+			LOGD("---------------setAppVisibility-----------------visible:"+visible+",wtoken.findMainWindow():"+wtoken.findMainWindow());
+			mH.removeMessages(H.SET_MULTIWINDOW_MODE_ACTION);
+			mH.sendEmptyMessageDelayed(H.SET_MULTIWINDOW_MODE_ACTION,400);
 
             if (DEBUG_APP_TRANSITIONS || DEBUG_ORIENTATION) Slog.v(TAG, "setAppVisibility(" +
                     token + ", visible=" + visible + "): " + mAppTransition +
@@ -4905,6 +5694,10 @@ public class WindowManagerService extends IWindowManager.Stub
                     startingToken = wtoken;
                 }
                 unsetAppFreezingScreenLocked(wtoken, true, true);
+				if(wtoken == mHomeApp){
+					LOGD("------remove the home app token--------");
+					mHomeApp = null;
+				}
                 if (mFocusedApp == wtoken) {
                     if (DEBUG_FOCUS_LIGHT) Slog.v(TAG, "Removing focused app token:" + wtoken);
                     mFocusedApp = null;
@@ -5091,9 +5884,58 @@ public class WindowManagerService extends IWindowManager.Stub
             windows.add(index, win);
             index++;
         }
+		int result = adjustCenterButtonWindow(windows,win);
+		if(result != -1){
+			index = result;
+		}
         mWindowsChanged = true;
         return index;
     }
+
+
+	private int adjustCenterButtonWindow(WindowList windows,WindowState win){
+		if(mCurConfiguration.enableMultiWindow() && getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){			
+			ArrayList<WindowState> list = new ArrayList<WindowState>();
+			int circleMenuIndex = -1;
+			for(int t = windows.size()-1;t >=0;t--){
+				WindowState ws = windows.get(t);
+				if(ws.getAttrs().type == WindowManager.LayoutParams.TYPE_MULTI_BACK_WINDOW){
+					windows.remove(t);
+					list.add(ws);
+				}else if(ws.getAttrs().type == WindowManager.LayoutParams.TYPE_MULTIWINDOW_FOURSCREEN_CENTER_BUTTON && circleMenuIndex == -1){
+					circleMenuIndex = t;
+				}
+			}
+			int i;
+			for(i = windows.size()-1;i >=0;i--){
+				WindowState ws = windows.get(i);
+				if(isHomeWindow(ws)){
+					break;
+				}
+			}
+			for(int m = 0;m < list.size();m++){
+				windows.add(i+1,list.get(m));
+			}
+			for(int t = windows.size()-1;t >=0;t--){
+				WindowState ws = windows.get(t);
+				if(isHomeWindow(ws)){
+					break;
+				}
+				if(ws.mIsImWindow){
+					if(circleMenuIndex != -1){
+						windows.remove(t);
+						windows.add(circleMenuIndex,ws);
+					}
+					break;
+				}
+			}
+			if(win != null)
+				return indexOfWinInWindowList(win,windows)+1;
+	  }
+
+	  return -1;
+
+	}
 
     private final int reAddAppWindowsLocked(final DisplayContent displayContent, int index,
                                             WindowToken token) {
@@ -5166,6 +6008,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     // Normal behavior, addAppToken will be called next and task will be created.
                     return;
                 }
+
                 final TaskStack stack = task.mStack;
                 final DisplayContent displayContent = task.getDisplayContent();
                 displayContent.moveStack(stack, true);
@@ -5177,6 +6020,42 @@ public class WindowManagerService extends IWindowManager.Stub
                         displayContent.moveStack(homeStack, false);
                     }
                 }
+//TODO  is error
+  final boolean isHomeStackTask = false;
+		if(mCurConfiguration.enableMultiWindow()){
+			if(!hasHomeWindow()){
+				Settings.System.putInt(mContext.getContentResolver(),
+							Settings.System.MULITI_WINDOW_MODE, 0);
+			}
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			boolean isMultiWindow = isMultiWindowMode();
+			if(!isMultiWindow){
+				if(!isHomeStackTask){
+					Settings.System.putInt(mContext.getContentResolver(),
+								Settings.System.MULITI_WINDOW_MODE, 0);
+				}
+			}
+			for (int i=mWindows.size()-1; i>=0; i--) {
+                            WindowState ws = mWindows.get(i);
+			    if(ws == null){
+                          	continue;
+			    }
+			    if(ws.taskId == taskId
+				|| (ws.mAppWindowState != null && ws.mAppWindowState.taskId == taskId)){
+					AppWindowToken atoken = ws.mAppToken;
+				if(atoken != null){
+				   if(atoken.mForceRotation){
+				     if(mCurConfiguration.enableMultiWindow() && isMultiWindowMode() ){
+            				  atoken.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+					}else{
+						atoken.requestedOrientation = atoken.mOriginalOrientation;
+					}
+				    }
+			       }
+			     //setMultiWindowModeWindow(ws);
+			     }	
+			  }
+		  }
                 stack.moveTaskToTop(task);
                 if (mAppTransition.isTransitionSet()) {
                     task.setSendingToBottom(false);
@@ -5184,14 +6063,70 @@ public class WindowManagerService extends IWindowManager.Stub
                 moveStackWindowsLocked(displayContent);
             }
         } finally {
+         	shouldAppMoveBack(-1);
             Binder.restoreCallingIdentity(origId);
         }
     }
+
+	public boolean isMultiWindowMode(){
+		boolean isMultiWindow = false;
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for (int i=mWindows.size()-1; i>=0; i--) {
+			WindowState ws = mWindows.get(i);
+			if(ws == null){
+				continue;
+			}
+            if(isHomeWindow(ws)){
+                break;
+            }
+			if((ws.stepOfFourScreen != -1 && ws.mViewVisibility == View.VISIBLE)){
+				isMultiWindow = true;
+				break;
+			}
+		}
+		return isMultiWindow;
+	}
+
+
+	public boolean hasHomeWindow(){
+		boolean result = false;
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for (int i=mWindows.size()-1; i>=0; i--) {
+			WindowState ws = mWindows.get(i);
+			if(ws == null){
+				continue;
+			}
+			if(isHomeWindow(ws)){
+				result = true;
+				break;
+			}
+		}
+		return result;
+	}
 
     public void moveTaskToBottom(int taskId) {
         final long origId = Binder.clearCallingIdentity();
         try {
             synchronized(mWindowMap) {
+				/*if(mCurConfiguration.enableMultiWindow()){
+					ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+					for (int i=mWindows.size()-1; i>=0; i--) {
+                    	WindowState ws = mWindows.get(i);
+						if(ws == null){
+                          	continue;
+						}
+						if(ws.taskId == taskId
+							|| (ws.mAppWindowState != null && ws.mAppWindowState.taskId == taskId)){
+							LOGD("===========moveTaskToBottom=====================ws:"+ws);
+							ws.stepOfFourScreen = -1;
+                            ws.mAttrs.align = -1;
+							if(mAppAlignWatcher.get(ws)!=null){
+								IAppAlignWatcher watcher = mAppAlignWatcher.get(ws);
+								onAppAlignChanged(watcher,ws,false);
+							}
+						}	
+					}
+				}*/
                 Task task = mTaskIdToTask.get(taskId);
                 if (task == null) {
                     Slog.e(TAG, "moveTaskToBottom: taskId=" + taskId
@@ -5317,7 +6252,99 @@ public class WindowManagerService extends IWindowManager.Stub
         }
     }
 
-    public void resizeStack(int stackId, Rect bounds) {
+	private void toFullScreenModeAppMoveBack(int groupId){
+		if(!mCurConfiguration.enableMultiWindow()){
+			return;
+		}
+		if(groupId == -1){
+            return;
+		}
+		ArrayList<AppWindowToken> pendingRemove = new ArrayList<AppWindowToken>();
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for(int i=mWindows.size()-1;i>=0;i--){
+			WindowState ws = mWindows.get(i);
+			if(ws.taskId == groupId || ws.taskId== -1){
+				continue;
+			}
+			if(ws.mAppToken == null){
+                continue;
+			}
+			if(ws != null && "com.android.systemui/com.android.systemui.recent.RecentsActivity".equals(ws.getAttrs().getTitle())){
+            	continue;
+			}
+			WindowState win = ws.mAppToken.findMainWindow();
+			if(isHomeWindow(win)){
+				break;
+			}
+			pendingRemove.add(ws.mAppToken);
+		}
+		if(pendingRemove.size()>0){
+			//exceed max,just remove the oldest task
+			for(int j=pendingRemove.size()-1;j>=0;j--){
+				int removeTaskId = pendingRemove.get(j).groupId;
+				try{
+					mActivityManager.moveTaskToBack(removeTaskId,ActivityManager.MOVE_TASK_NO_ANIMATION);
+				}catch(RemoteException e){}
+			}
+		}
+		mHalfWindowChange = true;
+	}
+	
+	/**
+	* groupId 
+	*/
+	private void shouldAppMoveBack(int groupId){
+		if(!mCurConfiguration.enableMultiWindow()){
+			return;
+		}
+		boolean newTask = true;
+		int oldestTaskGroupId = -1;
+		int max = groupId == -1?MAX_MULTI_WINDOW_COUNT+1:MAX_MULTI_WINDOW_COUNT;
+		int count = 0;
+		HashMap<Integer,AppWindowToken>visibleApps = new HashMap<Integer,AppWindowToken>();
+		ArrayList<AppWindowToken> pendingRemove = new ArrayList<AppWindowToken>();
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for(int i=mWindows.size()-1;i>=0;i--){
+			WindowState ws = mWindows.get(i);
+			if(ws.taskId == groupId && groupId != -1){
+				LOGD("shouldAppMoveBack");
+				newTask = false;
+				break;
+			}
+			if(ws.mAppToken == null){
+                continue;
+			}
+			WindowState win = ws.mAppToken.findMainWindow();
+			if(isHomeWindow(win)){
+				break;
+			}
+			if(ws.taskId == -1){
+				continue;
+			}
+			if(!visibleApps.containsKey(ws.taskId)){
+				visibleApps.put(ws.taskId,ws.mAppToken);
+				count++;
+				if(count>=max){
+					pendingRemove.add(ws.mAppToken);
+				}
+				oldestTaskGroupId = ws.taskId;
+				LOGD("count="+count+" win="+win+" pendingSize="+pendingRemove.size()+",ws.taskId:"+ws.taskId);
+			}
+		}
+		if(newTask && pendingRemove.size()>0){
+			//exceed max,just remove the oldest task
+			for(int j=pendingRemove.size()-1;j>=0;j--){
+				int removeTaskId = pendingRemove.get(j).groupId;
+				LOGD("removeTaskId="+removeTaskId);
+				try{
+					mActivityManager.removeTask(removeTaskId);	
+				}catch(RemoteException e){}
+			}
+		}
+		mHalfWindowChange = true;
+	}
+
+   public void resizeStack(int stackId, Rect bounds) {
         synchronized (mWindowMap) {
             final TaskStack stack = mStackIdToStack.get(stackId);
             if (stack == null) {
@@ -6148,11 +7175,11 @@ public class WindowManagerService extends IWindowManager.Stub
     @Override
     public Bitmap screenshotApplications(IBinder appToken, int displayId, int width,
             int height, boolean force565) {
-        if (!checkCallingPermission(Manifest.permission.READ_FRAME_BUFFER,
+        /*if (!checkCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
                 "screenshotApplications()")) {
             throw new SecurityException("Requires READ_FRAME_BUFFER permission");
-        }
-
+        }*/
+		LOGD("================screenshotApplications==================appToken:"+appToken);
         final DisplayContent displayContent = getDisplayContentLocked(displayId);
         if (displayContent == null) {
             if (DEBUG_SCREENSHOT) Slog.i(TAG, "Screenshot of " + appToken
@@ -6245,6 +7272,7 @@ public class WindowManagerService extends IWindowManager.Stub
                         }
                         appWin = ws;
                     }
+					LOGD("================screenshot layer==================ws:"+ws);
 
                     // Include this window.
 
@@ -6252,7 +7280,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     if (maxLayer < winAnim.mSurfaceLayer) {
                         maxLayer = winAnim.mSurfaceLayer;
                     }
-                    if (minLayer > winAnim.mSurfaceLayer) {
+                    if (minLayer > winAnim.mSurfaceLayer && ws.mAppToken != null && ws.mAppToken.token == appToken) {
                         minLayer = winAnim.mSurfaceLayer;
                     }
 
@@ -6455,7 +7483,761 @@ public class WindowManagerService extends IWindowManager.Stub
     public void updateRotation(boolean alwaysSendConfiguration, boolean forceRelayout) {
         updateRotationUnchecked(alwaysSendConfiguration, forceRelayout);
     }
+    private boolean isValidWindowType(WindowState win){	
+		if(win == null){
+			return false;
+		}
+		if(isHomeWindow(win)){
+			return false;
+		}
+        if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+			return false;
+		}
+		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION ||
+			win.getAttrs().type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION ||
+			win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING){
+			if(win.getAttrs().width == -1 && win.getAttrs().height == -1)
+				return true;
+			if((win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+			//if((win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0){
+				return true;
+			}
+		}
+                 return false;
+    }
+	public boolean isHalfWindow(WindowState win){
+		if((win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0){
+			Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.MULITI_WINDOW_MODE, 2);
+		
+			//if(isMultiWindowMode()){
+ 				Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,1);
+			//}
+			return true;
+		}
+		return false;
+	}
+    public boolean isHomeWindow(WindowState win){
+		return isHomeWindow(win,false);
+	}
+	public boolean isHomeWindow(WindowState win,boolean force){
+		boolean isHome = false;
+		if(win!=null && win.mAppToken != null){
+			if(mHomeApp == null || force){
+				try{
+				if(win.mAppToken.appToken!=null &&
+					win.mAppToken.appToken.isHomeActivity()){
+					isHome = true;
+					if(win.mAppToken.hidden ==  false){
+						mHomeApp = win.mAppToken;
+					} 
+				}
+					}catch(RemoteException e){}
+			}else{
+				if(mHomeApp == win.mAppToken){
+					isHome = true;
+				}
+			}
+		}
 
+		return isHome;
+	}
+	public boolean sameGroupIdWithHome(WindowState win){
+		boolean sameGroupId = false;
+		if(win.mAppToken == null)return false;
+		AppWindowToken homeToken = null;
+		try{
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			for(int i=	mWindows.size()-1;i>=0;i--){
+				WindowState ws = mWindows.get(i);
+				AppWindowToken awtoken = ws.mAppToken;
+				if(awtoken != null && awtoken.appToken!=null && awtoken.appToken.isHomeActivity()){
+					homeToken = awtoken;
+					break;
+				}
+			}
+		}catch(RemoteException e){}
+		LOGD("------judege groupid win.group="+win.mAppToken.groupId+" home="+homeToken);
+		if(homeToken!=null && win.mAppToken != homeToken 
+			&&win.mAppToken.groupId == homeToken.groupId){
+			LOGD("sameGroupId win="+win+" home="+homeToken);
+			sameGroupId = true;
+		}
+		return sameGroupId;
+	}
+    public boolean ignoreWindow(WindowState win){
+		boolean ignore = true;		
+		
+		//ignore select wallpaper window(com.android.launcher/com.android.launcher2.WallpaperChooser)
+		if(win == null)return true;
+		if(isHomeWindow(win))return true;
+		if(mHomeApp!=null&&win.mAppToken!=null
+			&&win.mAppToken.groupId==mHomeApp.groupId){
+			LOGD("ignore the window which have same groupid with home app");
+			return true;
+		}
+		if(win.mDisableMulti == true){
+			LOGD("ignore the window which have flag MULIT_FEATURE_DISABLEv");
+			return true;
+		}
+	
+
+		//if(win != null && "com.android.systemui/com.android.systemui.recent.RecentsActivity".equals(win.getAttrs().getTitle())){
+		if(win.getAttrs() != null && win.getAttrs().getTitle().toString().contains("com.android.systemui")){
+            return true;
+		}else if(win.mAppWindowState!= null){
+			if(isValidWindowType(win.mAppWindowState)){
+				return false;
+			}else{
+				return true;
+			}			
+		}else if(win.mAttachedWindow!=null){
+			if(isValidWindowType(win.mAttachedWindow)){
+				return false;
+			}else{
+				return true;
+			}
+		}else if(isValidWindowType(win)){
+			return false;
+		}
+		
+		/*
+		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_KEYGUARD){
+			ignore = true;
+		}
+		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_PHONE){
+			ignore = true;
+		}
+		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_INPUT_METHOD){
+			ignore = true;
+		}
+		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_WALLPAPER){
+			ignore = true;
+		}
+		*/
+		//LOGD("title="+win.getAttrs().getTitle().toString()+" ignore="+ignore);
+		return ignore;
+}
+
+	public void resetMultiWindowFlag(){
+		LOGD("reset the settings.System.MULTI_WINDOW value:0");
+		Settings.System.putInt(mContext.getContentResolver(),
+                        Settings.System.MULTI_WINDOW_USED, 0);
+	}
+
+	public Point getFourScreenSettingPosition(){
+		Point p = new Point(0,0);
+		String pos = Settings.System.getString(mContext.getContentResolver(),Settings.System.FOUR_SCREEN_WINDOW_POSITION);
+		int width = getDefaultDisplayContentLocked().getDisplay().getWidth();
+		int height = getDefaultDisplayContentLocked().getDisplay().getHeight();
+		if(pos !=null){
+			String[] position = pos.split(",");
+			p.x = Integer.parseInt(position[0]);
+			p.y = Integer.parseInt(position[1]);
+		}
+		LOGD("--------getFourScreenSettingPosition p.x="+p.x+",p.y:"+p.y);
+		if(p.x == 0){
+            p.x = width /2;
+		}
+		if(p.y == 0){
+        	p.y = height /2;
+		}	
+		LOGD("==========getFourScreenSettingPosition p.x="+p.x+",p.y:"+p.y);
+		return p;
+	}
+
+	private void initIfNeed(){
+			if(posXY == null){
+				float statusBarHeight = mPolicy.getStatusBarHeightIfAvailable();
+				int width = getDefaultDisplayContentLocked().getDisplay().getWidth();
+				int height = getDefaultDisplayContentLocked().getDisplay().getHeight();
+				XFIX = (int)(width/RATIO);
+				YFIX = (int)((height-statusBarHeight)/RATIO);
+				XDELTA = XFIX;
+				YDELTA = YFIX;
+				XMaxFix = 4*XDELTA;
+				YMaxFix = 4*YDELTA;
+				posXY = new Point[]{new Point(0,(int)(statusBarHeight/2+0.5f)), new Point(width/2,(int)(statusBarHeight/2+0.5f)),
+									new Point(0,(height)/2), new Point(width/2,(height)/2)};
+				LOGD("statusBarHeight="+statusBarHeight);
+				LOGD("Display=("+width+","+height+")"+" posXY[0]=("+posXY[0].x+","+posXY[0].y+")"+" posXY[2]=("+posXY[2].x+","+posXY[2].y+")");
+			}
+	}
+	public void updateAppTokenWindowsPositionCompose(){
+			synchronized(mWindowMap){
+				//SurfaceControl.openTransaction();
+				initIfNeed();
+				int tempGroupId = -1;
+				int posX = 0;
+				int posY = 0;
+				XFIX = 0;
+				YFIX = mPolicy.getStatusBarHeightIfAvailable();
+				ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+				for(int i = mWindows.size()-1;i>=0;i--){
+					WindowState ws = mWindows.get(i);
+					AppWindowToken wtoken = ws.mAppToken;
+					if(wtoken == null){
+                       continue;
+					}
+					WindowState w = wtoken.findMainWindow();
+					if(isHomeWindow(w)){
+						LOGD("ignore the launcher and windows that below launcher");
+						return ;
+					}
+					if(ignoreWindow(w))continue;
+					
+					if(tempGroupId != wtoken.groupId){
+						XFIX += XDELTA;
+						YFIX += YDELTA;
+						if(XFIX>=XMaxFix){
+							XFIX = XMaxFix;
+						}
+						if(YFIX>=YMaxFix){
+							YFIX = YMaxFix;
+						}
+					}
+					tempGroupId = wtoken.groupId;
+					for(int j=0;j<wtoken.allAppWindows.size();j++){
+						WindowState win = wtoken.allAppWindows.get(j);
+						if(win.mAppWindowState != null){
+							posX = XFIX + (int)((win.mFrame.left - win.mAppWindowState.mFrame.left)*0.5f+0.5f);
+							posY = YFIX + (int)((win.mFrame.top - win.mAppWindowState.mFrame.top)*0.5f + 0.5f);
+						}else{
+							posX = XFIX;
+							posY = YFIX;
+						}
+
+						applyPositionForWindow(win,posX,posY);
+					}
+				}
+				//SurfaceControl.closeTransaction();
+			}
+		}
+	
+		public void updateAppTokenWindowsPositionStretch(){
+	
+			synchronized(mWindowMap){
+				//SurfaceControl.openTransaction();
+				initIfNeed();
+				int tempGroupId = -1;
+				int posX = 0;
+				int posY = 0;
+				int step = -1;
+				ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+				for(int i = mWindows.size()-1;i>=0;i--){
+					WindowState ws = mWindows.get(i);
+					AppWindowToken wtoken = ws.mAppToken;
+					if(wtoken == null){
+                       continue;
+					}
+					WindowState w = wtoken.findMainWindow();	
+					if(isHomeWindow(w)){
+						LOGD("ignore the launcher and windows that below launcher");
+						return ;
+					}
+					if(ignoreWindow(w))continue;
+					
+					if(tempGroupId != wtoken.groupId){
+						step ++;
+					}
+					tempGroupId = wtoken.groupId;
+					for(int j=0;j<wtoken.allAppWindows.size();j++){
+						WindowState win = wtoken.allAppWindows.get(j);
+						if(win.mAppWindowState != null){
+							posX = posXY[step%4].x + (int)((win.mFrame.left - win.mAppWindowState.mFrame.left)*0.5f+0.5f);
+							posY = posXY[step%4].y + (int)((win.mFrame.top - win.mAppWindowState.mFrame.top)*0.5f + 0.5f);
+						}else{
+							posX = posXY[step%4].x;
+							posY = posXY[step%4].y;
+						}
+						applyPositionForWindow(win,posX,posY);
+					}
+				}
+				//SurfaceControl.closeTransaction();
+			}
+		}
+       public void applyPositionForMultiWindow(WindowState win,int posX,int posY){
+	   	mMulWindowService.applyPositionForMultiWindow(mAppAlignWatcher,win,posX,posY);
+	
+		}
+
+		public void applyPositionForWindow(WindowState win,int posX,int posY){
+//			float xOffset = win.mSystemDecorRect.left*0.5f;
+//			float yOffset = win.mSystemDecorRect.top*0.5f;
+			if(win.mWinAnimator.mSurfaceShown == true){
+				win.mWinAnimator.mSurfaceControl.setPosition(posX, posY);
+				win.mWinAnimator.mSurfaceControl.setMatrix(0.5f*win.mScaleX, 0, 0, 0.5f*win.mScaleY);
+			}
+			mMulWindowService.applyPositionForWindow(mAppAlignWatcher,win,posX,posY);
+
+		}
+
+		public void applyPositionForFourScreenWindow(WindowState win){
+			mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked());
+			
+			if(true){
+				if(mAppAlignWatcher.get(win)!=null){
+					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+					onAppAlignChanged(watcher,win,false);
+				}
+			}
+	}
+	
+	private void setSurfaceViewBackWindowShow(WindowState w){
+		if(mCurConfiguration.enableMultiWindow() && w.mSurfaceViewBackWindow != null){
+			SurfaceControl.openTransaction();
+            try {
+				int left = 0;
+				int top = 0;
+				int width = 0;
+				int height = 0;
+				if(w.mAttachedWindow != null){
+					int statusBarHeight = (int)mPolicy.getStatusBarHeightIfAvailable();
+					Point p = getFourScreenSettingPosition();
+					int WIDTH = getDefaultDisplayContentLocked().getDisplay().getWidth();
+					int HEIGHT = getDefaultDisplayContentLocked().getDisplay().getHeight();
+					switch(w.mAttachedWindow.stepOfFourScreen){
+						case 0:
+							left = 0;
+							top = statusBarHeight;
+							width = p.x;
+							height = p.y - statusBarHeight;
+							break;
+						case 1:
+							left = p.x;
+							top = statusBarHeight;
+							width = WIDTH - left;
+							height = p.y - statusBarHeight;
+							break;
+						case 2:
+							left = 0;
+							top = p.y;
+							width = p.x;
+							height = HEIGHT - top;
+							break;
+						case 3:
+							left = p.x;
+							top = p.y;
+							width = WIDTH - left; 
+							height = HEIGHT - top;
+							break;
+					}
+				}
+				Log.v("SurfaceViewBackWindow","---wms---left:"+left+",top:"+top+",width:"+width+",height:"+height);
+				w.mSurfaceViewBackWindow.positionSurface(left,top,width,height);	
+				boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+				if(w.mViewVisibility == View.VISIBLE && !used){
+					//w.mSurfaceViewBackWindow.SetLayer(w.mLayer- 2);
+					Log.v("SurfaceViewBackWindow","----wms------setVisibility-------true----------");
+					w.mSurfaceViewBackWindow.setVisibility(true);
+				}else{
+					Log.v("SurfaceViewBackWindow","-----wms-----setVisibility-------false----------");
+					w.mSurfaceViewBackWindow.setVisibility(false);
+				}
+			} finally {
+                SurfaceControl.closeTransaction();
+            }	
+		}
+	}
+
+	private void onAppAlignChanged(IAppAlignWatcher watcher,WindowState win,boolean rotate){
+		int msg = WindowManagerPolicy.WINDOW_SIZE_CHANGE;
+		if(win.stepOfFourScreen == 0){
+			msg = win.getAttrs().align = WindowManagerPolicy.ALIGN_LEFT_TOP_WINDOW;
+		}else if(win.stepOfFourScreen == 1){
+			msg = win.getAttrs().align = WindowManagerPolicy.ALIGN_RIGHT_TOP_WINDOW;
+		}else if(win.stepOfFourScreen == 2){
+			msg = win.getAttrs().align = WindowManagerPolicy.ALIGN_LEFT_BOTTOM_WINDOW;
+		}else if(win.stepOfFourScreen == 3){
+			msg = win.getAttrs().align = WindowManagerPolicy.ALIGN_RIGHT_BOTTOM_WINDOW;
+		}else if(win.mAttrs.align == WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN || win.stepOfFourScreen == -1){
+		    new Exception().printStackTrace();
+			msg = WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN;
+		}
+		if(watcher != null){
+			try{
+				watcher.onAppAlignChanged(msg,rotate);
+			}catch(RemoteException ex){}
+		}
+	}
+	@Override
+		public ArrayList<WindowState> getAllWindowInDefaultDisplay() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	
+		@Override
+		public int getStepOfFourScreen(WindowState ws) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	
+		@Override
+		public int getWindowViewState(WindowState ws) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	
+		@Override
+		public WindowState getAppWindowState(WindowState ws) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	
+		@Override
+		public int getAppWindowStepOfFourScreen(WindowState ws) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	
+		@Override
+		public WindowState getAttachedWindow(WindowState ws) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	
+		@Override
+		public int getAttachedWindowStep(WindowState ws) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	
+		@Override
+		public AppWindowToken getAppWindowToken(WindowState ws) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	
+		@Override
+		public WindowState getMainWindow(AppWindowToken awt) {
+			// TODO Auto-generated method stub
+			return null;
+		}
+	
+		@Override
+		public int getTaskId(WindowState ws) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	
+		@Override
+		public int getGroupId(AppWindowToken awt) {
+			// TODO Auto-generated method stub
+			return 0;
+		}
+	
+		@Override
+		public boolean isignoreWindow(WindowState ws) {
+			// TODO Auto-generated method stub
+			return false;
+		}
+
+	public void updateAllWindowsPositionCompose(){
+		if(mCurConfiguration.enableMultiWindow()){
+			updateAppTokenWindowsPositionCompose();
+		}
+	}
+
+	public void updateAllWindowsPositionStretch(){
+		if(mCurConfiguration.enableMultiWindow()){
+			updateAppTokenWindowsPositionStretch();
+		}		
+	}
+
+    public void updateAllWindowsFullScreenMode(){
+		if(mCurConfiguration.enableMultiWindow()){
+			if(getMultiWindowMode() != Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE){
+				return;
+			}
+			Settings.System.putInt(mContext.getContentResolver(),
+										Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+			Settings.System.putInt(mContext.getContentResolver(),
+									Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
+			updateAppTokenWindowsFullScreen();
+		}
+    }
+
+	public void updateAllWindowsHalfScreenMode(){
+		if(mCurConfiguration.enableMultiWindow()){
+			Settings.System.putInt(mContext.getContentResolver(),
+										Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+			Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.MULITI_WINDOW_MODE, 1);
+			updateAppTokenWindowsHalfScreen();
+		}
+    }
+
+	public void updateAllWindowsFourScreenMode(){
+		LOGD(mCurConfiguration.enableMultiWindow()+"-----------updateAllWindowsFourScreenMode----------------:");
+		if(mCurConfiguration.enableMultiWindow()){
+			Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.MULITI_WINDOW_MODE, 2);
+			updateAppTokenWindowsFourScreen();
+			if(isMultiWindowMode()){
+ 				Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,1);
+			}
+		}
+    }
+
+       public int multiWindowMenuOperation(Session session,IWindow client, int operation){
+	   synchronized(mWindowMap){					
+		LOGD(mCurConfiguration.enableMultiWindow()+"-----------multiWindowMenuOperation----------------actionString:"+operation);
+		if(mCurConfiguration.enableMultiWindow()){
+	            //if(getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+			  WindowState operationWindowState = windowForClientLocked(session, client, false);
+			  LOGD("current="+operationWindowState);	
+
+			return mMulWindowService.multiWindowMenuOperation(mActivityManager,mTopMultiApp,operationWindowState, mCurConfiguration,operation);
+		  }
+          }
+
+		return -1;
+	}
+
+	public void multiWindowMenuOperation(String actionString){
+	}
+
+	public void updateAppTokenWindowsFourScreen(){
+		synchronized(mWindowMap){
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			for(int i = mWindows.size()-1;i>=0;i--){
+				int step = -1;
+				WindowState ws = mWindows.get(i);
+				AppWindowToken wtoken = ws.mAppToken;
+				if(wtoken == null){
+					continue;
+				}
+				WindowState w = wtoken.findMainWindow();	
+				if(isHomeWindow(w)){				
+					break ;
+				}
+				
+				if(ignoreWindow(w))continue;			
+			//	for(int j=0;j<wtoken.allAppWindows.size();j++){
+			//		WindowState win = wtoken.allAppWindows.get(j);
+					if(step == -1){
+						step = getPositionOfFourScreenMode(ws);
+
+					}
+					if(ws.stepOfFourScreen == -1){
+						ws.stepOfFourScreen = step;
+						LOGD("===========updateAppTokenWindowsFourScreen===========stepOfFourScreen:=====step:"+step+"=====ws:"+ws);
+					}
+					applyPositionForFourScreenWindow(ws);
+			}
+			//assignLayersLocked(getDefaultWindowListLocked());
+			//performLayoutAndPlaceSurfacesLocked();
+		}
+	}
+	public void updateAppTokenWindowsHalfScreen(){	
+		synchronized(mWindowMap){
+			int tempGroupId = -1;
+			int step = -1;
+			int posX = 0;
+			int posY = 0;
+			int topTaskId = -1;
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			for(int i = mWindows.size()-1;i>=0;i--){
+				WindowState ws = mWindows.get(i);
+				AppWindowToken wtoken = ws.mAppToken;
+				if(wtoken == null){
+                    continue;
+				}
+				WindowState w = wtoken.findMainWindow();	
+				if(isHomeWindow(w)){
+					LOGD("ignore the launcher and windows that below launcher");
+					continue;
+				}
+				if(ignoreWindow(w)){
+					break;
+				}
+			    if(tempGroupId != wtoken.groupId){
+					step ++;
+				}
+				if(topTaskId == -1){
+					topTaskId = tempGroupId;
+				}
+				tempGroupId = wtoken.groupId;
+				for(int j=0;j<wtoken.allAppWindows.size();j++){
+					WindowState win = wtoken.allAppWindows.get(j);		
+
+					if(mAppAlignWatcher.get(win)!=null){
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						if(watcher != null){
+							try{
+								LOGD("############watcher.onAppAlignChanged###############");
+								watcher.onAppAlignChanged(WindowManagerPolicy.WINDOW_CHANGE_TO_HALFSCREEN,false);
+							}catch(RemoteException ex){}
+						}
+					}
+				}
+			}
+		}	
+	}
+
+	public void updateAppTokenWindowsFullScreen(){	
+		synchronized(mWindowMap){
+			int tempGroupId = -1;
+			int step = -1;
+			int posX = 0;
+			int posY = 0;
+			int topTaskId = -1;
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			for(int i = mWindows.size()-1;i>=0;i--){
+				WindowState ws = mWindows.get(i);
+				AppWindowToken wtoken = ws.mAppToken;
+				if(wtoken == null){
+                    continue;
+				}
+				WindowState w = wtoken.findMainWindow();	
+				if(isHomeWindow(w)){
+					continue;
+				}
+				if(ignoreWindow(w)){
+					continue;
+				}
+				if(tempGroupId != wtoken.groupId){
+					step ++;
+				}
+				tempGroupId = wtoken.groupId;
+				if(topTaskId == -1){
+					topTaskId = tempGroupId;
+				}
+				for(int j=0;j<wtoken.allAppWindows.size();j++){
+					WindowState win = wtoken.allAppWindows.get(j);
+					if(win.mAppWindowState != null){
+						posX = 0 + (int)(win.mFrame.left - win.mAppWindowState.mFrame.left);
+						posY = 0 + (int)(win.mFrame.top - win.mAppWindowState.mFrame.top);
+					}else{
+						posX = 0;
+						posY = 0;
+					}
+					float xOffset = win.mSystemDecorRect.left;
+					float yOffset = win.mSystemDecorRect.top;
+						
+					if(win.mWinAnimator.mSurfaceControl != null){
+						win.mWinAnimator.mSurfaceControl.setPosition(posX, posY);
+						win.mWinAnimator.mSurfaceControl.setMatrix(win.mScaleX, 0, 0, win.mScaleY);
+					}
+					win.mPosX = posX;
+					win.mPosY = posY;
+					win.mSfOffsetX = (int)xOffset;
+					win.mSfOffsetY = (int)yOffset;
+					win.mHScale = 1.0f;
+					win.mVScale = 1.0f;
+					win.mActualScale =  1.0f;
+					win.stepOfFourScreen = -1;
+					LOGD("===========updateAppTokenWindowsFullScreen================ws:"+ws);
+					win.mSurfaceFrame.set((int)(posX+xOffset), (int)(posY+yOffset), 
+									(int)(posX+xOffset)+(int)(win.mHScale*win.mVisibleFrame.width()),
+									(int)(posY+yOffset)+(int)(win.mVScale*(win.mVisibleFrame.height()+win.mVisibleInsets.bottom)));
+					if(mAppAlignWatcher.get(win)!=null){
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						win.mAttrs.align = WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN;
+						onAppAlignChanged(watcher,win,false);
+					}
+				}
+				if(topTaskId != -1) break;
+			}
+		
+			//toFullScreenModeAppMoveBack(topTaskId);
+		}	
+	}
+
+	public void multiWindowUsed(boolean used){
+		if(!used){	
+			//if(mFocusedApp!= null && )){
+				resetFourScreenPosition();
+				if(mCurrentFocus != null && !ignoreWindow(mCurrentFocus) && mCurrentFocus.mHScale > 2/(float)3){	
+					LOGD("-------------multiWindowUsed---FullScreenMode--------------");
+					updateAllWindowsFullScreenMode();
+				}else{
+					LOGD("-------------multiWindowUsed---FourScreenMode--------------");
+					if(!isWorked("com.android.Listappinfo.ManderService")){
+                                              Intent intent  = new Intent("com.android.ZENGJUN");
+                                              intent.setPackage("com.android.Listappinfo");
+					      mContext.startServiceAsUser(intent,android.os.UserHandle.CURRENT );
+					}	
+					updateAllWindowsFourScreenMode();
+				}
+		//	}
+		}
+	}
+
+	private void resetFourScreenPosition(){
+		int width = getDefaultDisplayContentLocked().getDisplay().getWidth();
+		int height = getDefaultDisplayContentLocked().getDisplay().getHeight();
+		String savePos = ""+width*2/3+","+height*2/3;
+		Settings.System.putString(mContext.getContentResolver(),
+				Settings.System.FOUR_SCREEN_WINDOW_POSITION, savePos);
+	}
+
+	//add by ljh
+	public boolean isWorked(String servicename){
+		ActivityManager myManager=(ActivityManager)mContext.getSystemService(mContext.ACTIVITY_SERVICE);
+		ArrayList<RunningServiceInfo> runningService = 
+			(ArrayList<RunningServiceInfo>) myManager.getRunningServices(60);
+		for(int i = 0 ; i<runningService.size();i++){
+			if(runningService.get(i).service.getClassName().equals(servicename)){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public void updateSurfacesAlpha(boolean change){
+		WindowList windows = getDefaultDisplayContentLocked().getWindowList();
+		LOGD("updateSurfacesAlpha change="+change);
+		        long origId = Binder.clearCallingIdentity();
+        boolean changed;
+        synchronized(mWindowMap) {
+			SurfaceControl.openTransaction();
+			WindowState win = null;
+           for(int i=windows.size()-1;i>=0;i--){
+				win = windows.get(i);
+				//if(ignoreWindow(win))continue;
+				
+				if(win != null){
+					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						if(watcher != null){
+							int value = change ? WindowManagerPolicy.WINDOW_DRAG_SCALE_ENABLE
+												: WindowManagerPolicy.WINDOW_DRAG_SCALE_DISABLE;
+							try{
+								watcher.onAppAlignChanged(value,false);
+							}catch(RemoteException ex){
+
+							}
+						}
+				if("SurfaceView".equals(win.getAttrs().getTitle().toString())&&win.mWinAnimator.mSurfaceControl!=null){		
+					if(change){
+						//win.mWinAnimator.mAlpha= 1.0f;
+						//TODO
+						//win.mWinAnimator.mSurfaceControl.setBlend(true);
+						//win.mWinAnimator.mSurfaceControl.setAlpha(0.99f);
+						
+					}else{
+						//win.mWinAnimator.mAlpha= 1.0f;
+                                                //TODO
+						//win.mWinAnimator.mSurfaceControl.setBlend(false);
+						//win.mWinAnimator.mSurfaceControl.setAlpha(1.0f);
+					}
+					}
+					
+				}
+		   }
+                
+            
+        }
+		SurfaceControl.closeTransaction();
+		//mLayoutNeeded = true;
+        //performLayoutAndPlaceSurfacesLocked();
+
+        Binder.restoreCallingIdentity(origId);
+
+		
+	}
     /**
      * Temporarily pauses rotation changes until resumed.
      *
@@ -6556,17 +8338,20 @@ public class WindowManagerService extends IWindowManager.Stub
              mRotation = Surface.ROTATION_0;
              rotation = Surface.ROTATION_90;
         }
-        
-        /* $_rbox_$_modify_$_lly , force android rotation according to 0 */
-        if("box".equals(SystemProperties.get("ro.target.product","tablet")))
-        rotation = Surface.ROTATION_0; 
-        /* $_rbox_$_modify_$ end */
-
+		if(mCurConfiguration.enableMultiWindow()){
+        	rotation = Surface.ROTATION_0; 
+		}
         if (mRotation == rotation && mAltOrientation == altOrientation) {
             // No change.
             return false;
         }
 
+		posXY = null;
+		boolean adjust = true;
+		if(Math.abs(mRotation-rotation)==2){
+			LOGD("----------need adjust the window info-------");
+			adjust = false;
+		}
         if (DEBUG_ORIENTATION) {
             Slog.v(TAG,
                 "Rotation changed to " + rotation + (altOrientation ? " (alt)" : "")
@@ -6656,6 +8441,15 @@ public class WindowManagerService extends IWindowManager.Stub
         }
 
         final WindowList windows = displayContent.getWindowList();
+        final boolean rotated = (mRotation == Surface.ROTATION_90
+                || mRotation == Surface.ROTATION_270);
+        final int realdw = rotated ?
+                displayContent.mBaseDisplayHeight : displayContent.mBaseDisplayWidth;
+        final int realdh = rotated ?
+                displayContent.mBaseDisplayWidth : displayContent.mBaseDisplayHeight;
+        int dw = realdw;
+        int dh = realdh;
+		boolean isLandscape = dw >= dh ? true :false;
         for (int i = windows.size() - 1; i >= 0; i--) {
             WindowState w = windows.get(i);
             if (w.mHasSurface) {
@@ -6664,8 +8458,60 @@ public class WindowManagerService extends IWindowManager.Stub
                 mInnerFields.mOrientationChangeComplete = false;
             }
             w.mLastFreezeDuration = 0;
-        }
-
+        if(adjust){
+				int cx = w.mPosX;
+				int cy = w.mPosY;
+				float scaleX = w.mHScale;
+				float scaleY = w.mVScale;
+				w.mHScale = scaleY;
+				w.mVScale = scaleX;
+				float statusBarHeight = mPolicy.getStatusBarHeightIfAvailable();
+				int height = getDefaultDisplayContentLocked().getDisplay().getHeight();
+				if(cy == (int)(statusBarHeight/2+0.5f)){
+					w.mPosX = cy-(int)(w.mVisibleFrame.top*(1-w.mVScale)+0.5f);
+				}else if(Math.abs(cy-(int)(statusBarHeight/2+w.mVisibleFrame.height()/2)) <= 1){
+					w.mPosX = cy+(int)(statusBarHeight*2);
+				}else{
+					w.mPosX = cy;
+				}
+				w.mPosY = cx;
+				w.mSurfaceFrame.setEmpty();
+				w.mSurfaceFrame.left = (int)(w.mPosX+w.mSfOffsetX);
+				w.mSurfaceFrame.top = (int)(w.mPosY+w.mSfOffsetY);
+				LOGD("%%%%%%%%%%updateRotationUncheckedLocked w.mSurfaceFrame.top="+w.mSurfaceFrame.top+",w:"+w);
+			}
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(w);
+					if(watcher != null ){
+						try{
+							int align = w.getAttrs().align;
+							boolean isChangeAlign = true;
+							if(isLandscape && (align == WindowManagerPolicy.WINDOW_ALIGN_LEFT
+								               || align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+								isChangeAlign = false;
+							}else if(!isLandscape && (align == WindowManagerPolicy.WINDOW_ALIGN_TOP
+								               || align == WindowManagerPolicy.WINDOW_ALIGN_BOTTOM)){
+								isChangeAlign = false;
+							}
+							if(adjust && isChangeAlign){
+								switch(align){
+									case WindowManagerPolicy.WINDOW_ALIGN_LEFT:
+										align = WindowManagerPolicy.WINDOW_ALIGN_TOP;
+										break;
+									case WindowManagerPolicy.WINDOW_ALIGN_RIGHT:
+										align = WindowManagerPolicy.WINDOW_ALIGN_BOTTOM;
+										break;
+									case WindowManagerPolicy.WINDOW_ALIGN_TOP:
+										align = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
+										break;
+									case WindowManagerPolicy.WINDOW_ALIGN_BOTTOM:
+										align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+										break;
+								}
+							}
+							watcher.onAppAlignChanged(align,true);
+						}catch(RemoteException ex){}
+					}
+}
         for (int i=mRotationWatchers.size()-1; i>=0; i--) {
             try {
                 mRotationWatchers.get(i).watcher.onRotationChanged(rotation);
@@ -7437,8 +9283,11 @@ public class WindowManagerService extends IWindowManager.Stub
             if (mShowImeWithHardKeyboard) {
                 config.keyboard = Configuration.KEYBOARD_NOKEYS;
             }
-
-            // Let the policy update hidden states.
+			boolean multiconfig = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_CONFIG,0) != 0;
+			LOGD("+++++++++++++++computescreenconfigr config="+config);
+			config.multiwindowflag = multiconfig ? Configuration.ENABLE_MULTI_WINDOW:Configuration.DISABLE_MULTI_WINDOW;
+			LOGD("+++++++++++++++computtescreenf after config="+config);
+			// Let the policy update hidden states.
             config.keyboardHidden = Configuration.KEYBOARDHIDDEN_NO;
             config.hardKeyboardHidden = Configuration.HARDKEYBOARDHIDDEN_NO;
             config.navigationHidden = Configuration.NAVIGATIONHIDDEN_NO;
@@ -7453,7 +9302,148 @@ public class WindowManagerService extends IWindowManager.Stub
             return mHardKeyboardAvailable;
         }
     }
+	public int getMultiWindowMode(){
+        return Settings.System.getInt(mContext.getContentResolver(),
+    					Settings.System.MULITI_WINDOW_MODE, Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE);
+	}
 
+	public void setMultiWindowModeWindow(WindowState ws){
+		if(!mCurConfiguration.enableMultiWindow()){
+			return;
+		}
+		mMulWindowService.setMultiWindowModeWindow(ws);
+
+	}
+
+
+	public void moveTaskToOtherStep(int taskId,int mStep){
+		if(mCurConfiguration.enableMultiWindow()){
+			if(getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+				 if(taskId == -1 || mStep == -1){
+					return;
+				 }
+				 ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+//				 mMulWindowService.moveTaskToOtherStep(mWindows,taskId,mStep);
+				 int step = -1;
+				 for(int i = mWindows.size()-1;i>=0;i--){					
+					WindowState ws = mWindows.get(i);
+					AppWindowToken wtoken = ws.mAppToken;
+					if(wtoken == null){
+						continue;
+					}
+					WindowState w = wtoken.findMainWindow();	
+					if(isHomeWindow(w)){				
+						break ;
+					}
+				
+					if(ignoreWindow(w))continue;
+					if(ws.taskId == taskId){
+						continue;
+					}
+					if(ws.mAppWindowState != null && ws.mAppWindowState.taskId == taskId){
+						continue;
+					}
+					if(ws.mAttachedWindow != null && ws.mAttachedWindow.taskId == taskId){
+						continue;
+					}
+					if(ws.stepOfFourScreen == -1 || ws.stepOfFourScreen != mStep){
+						continue;
+					}
+
+					for(int j=0;j<wtoken.allAppWindows.size();j++){
+						WindowState win = wtoken.allAppWindows.get(j);
+						if(step == -1){
+							step = getPositionOfFourScreenMode(null);
+
+						}
+						LOGD("--------moveDownTaskToOtherStep-----------step:"+step+",win:"+win+",win.taskId:"+win.taskId+",taskId:"+taskId);
+						win.stepOfFourScreen = step;
+						applyPositionForFourScreenWindow(win);
+						}
+				}
+			}
+		}
+	}
+
+	private void storeAreasOfFourScreen(){
+		Settings.System.putString(mContext.getContentResolver(),
+									Settings.System.MULTI_WINDOW_MIN_OPERATION_MOVE_PACKAGE, "");
+		Settings.System.putString(mContext.getContentResolver(),
+									Settings.System.FOUR_SCREEN_WINDOW_AREAS, "-");
+		if(mCurConfiguration.enableMultiWindow() && getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+			String areas = Settings.System.getString(mContext.getContentResolver(),
+				Settings.System.FOUR_SCREEN_WINDOW_AREAS);
+			StringBuffer moveMinWindowSb = new StringBuffer();
+        	int result = 0;
+			boolean []hasWindow = new boolean[]{false,false,false,false};
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			for(int i = mWindows.size()-1;i>=0;i--){
+				WindowState ws = mWindows.get(i);
+				AppWindowToken wtoken = ws.mAppToken;
+				if(wtoken == null){
+            		continue;
+				}
+				WindowState w = wtoken.findMainWindow();	
+				if(isHomeWindow(w)){
+					break;
+				}
+				if(ignoreWindow(w))continue;
+				if(w.mViewVisibility != View.VISIBLE){
+					continue;
+				}
+				moveMinWindowSb.append(w.getAttrs().packageName+",");
+				int step = w.stepOfFourScreen;
+				if(step >= 0 && step < hasWindow.length){
+               	 	hasWindow[step] = true;
+            	}
+			}
+			StringBuffer sb = new StringBuffer();
+			for(int t = 0;t < hasWindow.length;t++){
+           		if(hasWindow[t]){
+					sb.append(t+",");
+            	}
+			}
+			Settings.System.putString(mContext.getContentResolver(),
+						Settings.System.MULTI_WINDOW_MIN_OPERATION_MOVE_PACKAGE, moveMinWindowSb.toString());
+			LOGD("++++++++++++storeAreasOfFourScreen++++++++++++sb.toString():"+sb.toString());
+			Settings.System.putString(mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_AREAS, sb.toString());
+		}else{
+			Settings.System.putString(mContext.getContentResolver(),
+									Settings.System.FOUR_SCREEN_WINDOW_AREAS, "");
+		}
+	}
+
+	private int getPositionOfFourScreenMode(WindowState windowState){
+
+		return mMulWindowService.getPositionOfFourScreenMode(windowState);
+	}
+
+	private WindowState getFirstFourScreenModeWindow(){
+		if(getMultiWindowMode() != Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+                   return null;
+		}
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for(int i = mWindows.size()-1;i>=0;i--){
+			WindowState ws = mWindows.get(i);
+			AppWindowToken wtoken = ws.mAppToken;
+			if(wtoken == null){
+				continue;
+			}
+			WindowState w = wtoken.findMainWindow();	
+			if(isHomeWindow(w)){
+				LOGD("ignore the launcher and windows that below launcher");
+				break;
+			}
+			if(ignoreWindow(w))continue;
+			if(w.mViewVisibility != View.VISIBLE) continue;
+            if(w.stepOfFourScreen != -1){
+				LOGD("--getFirstFourScreenModeWindow--w:"+w+",ws:"+ws);
+				return ws;
+            }
+		}
+		return null;
+	}
     public void updateShowImeWithHardKeyboard() {
         final boolean showImeWithHardKeyboard = Settings.Secure.getIntForUser(
                 mContext.getContentResolver(), Settings.Secure.SHOW_IME_WITH_HARD_KEYBOARD, 0,
@@ -7719,6 +9709,7 @@ public class WindowManagerService extends IWindowManager.Stub
             mIsTouchDevice = mContext.getPackageManager().hasSystemFeature(
                     PackageManager.FEATURE_TOUCHSCREEN);
             configureDisplayPolicyLocked(getDefaultDisplayContentLocked());
+			mWindowBoundsWidth = (int)mContext.getResources().getDimension(com.android.internal.R.dimen.app_window_bounds_width);
         }
 
         try {
@@ -7804,7 +9795,8 @@ public class WindowManagerService extends IWindowManager.Stub
         public static final int CHECK_IF_BOOT_ANIMATION_FINISHED = 37;
         public static final int RESET_ANR_MESSAGE = 38;
         public static final int WALLPAPER_DRAW_PENDING_TIMEOUT = 39;
-
+		public static final int MULTIWINDOW_FREEZING_DISPLAY_ACTION = 40;
+		public static final int SET_MULTIWINDOW_MODE_ACTION = 41;
         @Override
         public void handleMessage(Message msg) {
             if (DEBUG_WINDOW_TRACE) {
@@ -7899,8 +9891,8 @@ public class WindowManagerService extends IWindowManager.Stub
                     View view = null;
                     try {
                         view = mPolicy.addStartingWindow(
-                            wtoken.token, sd.pkg, sd.theme, sd.compatInfo,
-                            sd.nonLocalizedLabel, sd.labelRes, sd.icon, sd.logo, sd.windowFlags);
+                            wtoken.token,wtoken.groupId, sd.pkg, sd.theme, sd.compatInfo,
+                            sd.nonLocalizedLabel, sd.labelRes, sd.icon, sd.logo, sd.windowFlags,sd.align);
                     } catch (Exception e) {
                         Slog.w(TAG, "Exception when adding starting window", e);
                     }
@@ -8335,6 +10327,35 @@ public class WindowManagerService extends IWindowManager.Stub
                     }
                 }
                 break;
+				case MULTIWINDOW_FREEZING_DISPLAY_ACTION:
+					final WindowList mWindows = getDefaultWindowListLocked();
+					for(int i = mWindows.size()-1;i>=0;i--){
+						WindowState ws = mWindows.get(i);
+						AppWindowToken wtoken = ws.mAppToken;
+						if(wtoken == null){
+							continue;
+						}
+						WindowState w = wtoken.findMainWindow();	
+						if(isHomeWindow(w)){				
+							break ;
+						}
+						if(ws.stepOfFourScreen != -1 && wtoken.mOriginalOrientation != ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED){
+							try{
+								mActivityManager.moveTaskToFront(ws.taskId,ActivityManager.MOVE_TASK_NO_ANIMATION,null);
+							}catch(RemoteException e){}
+							break;
+						}
+					}
+					break;
+				case SET_MULTIWINDOW_MODE_ACTION:
+					if(mCurConfiguration.enableMultiWindow()){
+						if(!isMultiWindowMode()){
+							if(getMultiWindowMode() != Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE)
+								Settings.System.putInt(mContext.getContentResolver(),
+									Settings.System.MULITI_WINDOW_MODE, 0);
+						}
+					}
+					break;
             }
             if (DEBUG_WINDOW_TRACE) {
                 Slog.v(TAG, "handleMessage: exit");
@@ -8658,6 +10679,7 @@ public class WindowManagerService extends IWindowManager.Stub
         boolean configChanged = updateOrientationFromAppTokensLocked(false);
         mTempConfiguration.setToDefaults();
         mTempConfiguration.fontScale = mCurConfiguration.fontScale;
+		mTempConfiguration.multiwindowflag = mCurConfiguration.multiwindowflag;
         if (computeScreenConfigurationLocked(mTempConfiguration)) {
             if (mCurConfiguration.diff(mTempConfiguration) != 0) {
                 configChanged = true;
@@ -8854,31 +10876,113 @@ public class WindowManagerService extends IWindowManager.Stub
             dumpWindowsLocked();
         }
     }
+	public void topWindowLayerOnAllWindow(WindowState win,int topLayer){
+		boolean isKeyguardOn = isKeyguardLocked();
+		if (isKeyguardOn) return;
+		if(win == null)return;
+		AppWindowToken wtoken = win.mAppToken;
+		if(wtoken == null)return;
+		int groupId = wtoken.groupId;
+		Iterator<WindowToken> it = mTokenMap.values().iterator();
+		while (it.hasNext()) {
+			WindowToken wt = it.next();
+			AppWindowToken token = wt.appWindowToken;
+			//have same task id
+			if(token != null && token.groupId == groupId){
+				 int index = findWindowPositionInStack(win);
+				 int size = token.allAppWindows.size();
+				for(int j=0;j<size;j++){
+					WindowState w = token.allAppWindows.get(j);
+					if(isHomeWindow(w)){
+						LOGD("ignore the launcher app");
+						continue;
+					}
+					LOGD(index+"assignLayer enable the topWindowLayerOnAllWindow layer"+w.mLayer+" topMultiScreen:"+w);
+					index += (index + size - j) < getDefaultDisplayContentLocked().getWindowList().size()? 1:0;
+					//getDefaultDisplayContentLocked().getWindowList().remove(w);
+					//getDefaultDisplayContentLocked().getWindowList().add(index,w);
+					w.mLayer = w.mLayer+topLayer;
+					w.mWinAnimator.mAnimLayer = w.mLayer;
+					
+				}
+			}
+		}
 
-    private final void assignLayersLocked(WindowList windows) {
+	}
+    public final void assignLayersLocked(WindowList windows) {
         int N = windows.size();
         int curBaseLayer = 0;
         int curLayer = 0;
         int i;
 
-        if (DEBUG_LAYERS) Slog.v(TAG, "Assigning layers based on windows=" + windows,
+        if (DEBUG_LAYOUT) Slog.v(TAG, "Assigning layers based on windows=" + windows,
                 new RuntimeException("here").fillInStackTrace());
 
+		 WindowState topHalfScreen = null;
+		 WindowState halfScreenController = null;
+		 WindowState fourScreenController = null;
+		 WindowState multiCenterButton = null;
+		 WindowState topMultiScreen = null;
         boolean anyLayerChanged = false;
+		int homeLayer = -1;
+		ArrayList<WindowState> backWindowWs = new ArrayList<WindowState>();
+        
+            
+		//LOGD("assignLayersLocked mTopMultiApp.mLayer:"+mTopMultiApp.mLayer+",stepOfFourScreen:"+mTopMultiApp.stepOfFourScreen+",mTopMultiApp="+topMultiScreen);
 
         for (i=0; i<N; i++) {
             final WindowState w = windows.get(i);
+			if((w.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0
+				&& w.mViewVisibility == View.VISIBLE){
+				topHalfScreen = w;
+			}
+		   
+			if(mTopMultiApp != null && (w.getAttrs().getTitle().equals(mTopMultiApp.getAttrs().getTitle()) 
+				||(w.mAppWindowState != null && w.mAppWindowState.getAttrs().getTitle().equals(mTopMultiApp.getAttrs().getTitle())))){
+				topMultiScreen = w;
+				LOGD("assignLayersLocked 111w.mLayer:"+w.mLayer+",stepOfFourScreen:"+w.stepOfFourScreen+",w="+topMultiScreen);
+                
+			}else if(w.mIsMcWindow){
+				if(halfScreenController == null){
+					halfScreenController = w;
+				}else{
+					fourScreenController = w;
+				}
+				LOGD("assignLayersLocked 111w.mLayer:"+w.mLayer+",stepOfFourScreen:"+w.stepOfFourScreen+",w="+fourScreenController);
+			}else if(w.getAttrs().type == WindowManager.LayoutParams.TYPE_MULTIWINDOW_FOURSCREEN_CENTER_BUTTON){
+				multiCenterButton = w;
+				LOGD("assignLayersLocked 222w.mLayer:"+w.mLayer+",stepOfFourScreen:"+w.stepOfFourScreen+",w="+multiCenterButton);
+			}
             final WindowStateAnimator winAnimator = w.mWinAnimator;
             boolean layerChanged = false;
             int oldLayer = w.mLayer;
-            if (w.mBaseLayer == curBaseLayer || w.mIsImWindow
-                    || (i > 0 && w.mIsWallpaper)) {
-                curLayer += WINDOW_LAYER_MULTIPLIER;
-                w.mLayer = curLayer;
-            } else {
-                curBaseLayer = curLayer = w.mBaseLayer;
-                w.mLayer = curLayer;
-            }
+			if(w.getAttrs().type != WindowManager.LayoutParams.TYPE_MULTI_BACK_WINDOW){
+            	if (w.mBaseLayer == curBaseLayer || w.mIsImWindow
+                    	|| (i > 0 && w.mIsWallpaper)) {
+                	curLayer += WINDOW_LAYER_MULTIPLIER;
+                	w.mLayer = curLayer;
+            	} else {
+                	curBaseLayer = curLayer = w.mBaseLayer;
+                	w.mLayer = curLayer;
+            	}
+			}			
+			if(isHomeWindow(w)){
+				homeLayer = w.mLayer;
+				for(int t = backWindowWs.size()-1;t >= 0;t--){
+                    WindowState bws = backWindowWs.get(t);
+					backWindowWs.remove(t);
+					bws.mLayer = homeLayer+3;
+					bws.mWinAnimator.mAnimLayer = bws.mLayer;
+				}
+			}else if(w.getAttrs().type == WindowManager.LayoutParams.TYPE_MULTI_BACK_WINDOW){
+				if(homeLayer != -1){
+                	w.mLayer = homeLayer+3;
+				}else{
+                    backWindowWs.add(w);
+					continue;
+				}
+			}
+			LOGD("assignLayersLocked w.mLayer:"+w.mLayer+",stepOfFourScreen:"+w.stepOfFourScreen+",isVisiable:"+(w.mViewVisibility == View.VISIBLE)+",w="+w);
             if (w.mLayer != oldLayer) {
                 layerChanged = true;
                 anyLayerChanged = true;
@@ -8918,14 +11022,87 @@ public class WindowManagerService extends IWindowManager.Stub
             //    "Assigned layer " + curLayer + " to " + w.mClient.asBinder());
         }
 
-        //TODO (multidisplay): Magnification is supported only for the default display.
+		storeAreasOfFourScreen();
+		
+		if(mCurConfiguration.enableMultiWindow()){
+			LOGD("halfScreenController="+getMultiWindowMode()+",topHalfScreen:"+topHalfScreen);
+		    if(mTopMultiApp == null){
+              Settings.System.putString(mContext.getContentResolver(),
+                                         Settings.System.TOP_MULTI_APP_ENABLE,"none");
+            }
+			else if(topMultiScreen!=null){
+				topWindowLayerOnAllWindow(topMultiScreen,100);
+				Settings.System.putString(mContext.getContentResolver(),
+                                  Settings.System.TOP_MULTI_APP_ENABLE,mTopMultiApp.getAttrs().packageName);
+				LOGD("assignLayer enable the four_screen_window topMultiScreen:"+topMultiScreen);
+			}else if(getMultiWindowMode()	== Settings.System.MULITI_WINDOW_HALF_SCREEN_MODE){
+				if(halfScreenController!=null && topHalfScreen != null){
+					int index = findWindowPositionInStack(topHalfScreen);
+					LOGD("assign topHalfScreen index="+index);
+					getDefaultDisplayContentLocked().getWindowList().remove(halfScreenController);
+					getDefaultDisplayContentLocked().getWindowList().add(index+1,halfScreenController);
+					halfScreenController.mLayer = topHalfScreen.mLayer+4;
+					halfScreenController.mWinAnimator.mAnimLayer = halfScreenController.mLayer;
+					LOGD("halfControll="+halfScreenController+" layer="+halfScreenController.mLayer);
+		 			LOGD("topHalfscreen="+topHalfScreen);
+				}else if(topHalfScreen == null){
+					LOGD("assignLayer disable the half_screen_window");
+					Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
+			}else if(halfScreenController == null && topHalfScreen!=null){
+				LOGD("assignLayer enable the half_screen_widow topHalfScreen:"+topHalfScreen);
+				Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.HALF_SCREEN_WINDOW_ENABLE,1);
+				}
+				Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+			}else if(getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+				WindowState topFourScreenWin = getFirstFourScreenModeWindow();
+				LOGD("halfScreenController="+halfScreenController+",fourScreenController:"+fourScreenController+",topFourScreenWin:"+topFourScreenWin);
+				if(halfScreenController!=null && topFourScreenWin != null){
+					int index = findWindowPositionInStack(topFourScreenWin);
+					getDefaultDisplayContentLocked().getWindowList().remove(halfScreenController);
+					getDefaultDisplayContentLocked().getWindowList().add(index+1,halfScreenController);
+					halfScreenController.mLayer = topFourScreenWin.mLayer+3;
+					halfScreenController.mWinAnimator.mAnimLayer = halfScreenController.mLayer;
+                    if(fourScreenController != null){
+						index += 2;
+						getDefaultDisplayContentLocked().getWindowList().remove(fourScreenController);
+						getDefaultDisplayContentLocked().getWindowList().add(index,fourScreenController);
+						fourScreenController.mLayer = topFourScreenWin.mLayer+3;
+						fourScreenController.mWinAnimator.mAnimLayer = fourScreenController.mLayer;		
+                    }
+					if(multiCenterButton != null){
+						index += 1;
+						getDefaultDisplayContentLocked().getWindowList().remove(multiCenterButton);
+						getDefaultDisplayContentLocked().getWindowList().add(index,multiCenterButton);
+						multiCenterButton.mLayer = topFourScreenWin.mLayer+4;
+						multiCenterButton.mWinAnimator.mAnimLayer = multiCenterButton.mLayer;
+					}
+				}else if(topFourScreenWin == null){
+					LOGD("assignLayer disable the four_screen_window");
+					Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+				}else if(halfScreenController == null&& topFourScreenWin != null){
+					Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,1);
+				}
+				Settings.System.putInt(mContext.getContentResolver(),
+					Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
+			}else{
+				Settings.System.putInt(mContext.getContentResolver(),
+										Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+				Settings.System.putInt(mContext.getContentResolver(),
+									Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
+			}
+		}
         if (mAccessibilityController != null && anyLayerChanged
                 && windows.get(windows.size() - 1).getDisplayId() == Display.DEFAULT_DISPLAY) {
             mAccessibilityController.onWindowLayersChangedLocked();
         }
     }
 
-    private final void performLayoutAndPlaceSurfacesLocked() {
+    public final void performLayoutAndPlaceSurfacesLocked() {
         int loopCount = 6;
         do {
             mTraversalScheduled = false;
@@ -9011,6 +11188,94 @@ public class WindowManagerService extends IWindowManager.Stub
             Slog.wtf(TAG, "Unhandled exception while laying out windows", e);
         }
 
+if(mCurConfiguration.enableMultiWindow()){
+	boolean reComAppWindow = mLastWindowsCount != getDefaultWindowListLocked().size();
+	if(reComAppWindow || mHalfWindowChange){
+		mLastWindowsCount = getDefaultWindowListLocked().size();
+		mHalfWindowChange = false;
+		HashMap<String,Integer>halfWindows =  new HashMap<String,Integer>();
+		HashMap<Integer,AppWindowToken> groupAppToken = new HashMap<Integer,AppWindowToken>();
+		boolean aboveHome = false;
+		int leftOrTop = 0;
+		int rightOrBottom = 0;	
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for(int i = 0;i< mWindows.size();i++){
+			WindowState ws = mWindows.get(i);
+			AppWindowToken token = ws.mAppToken;
+			if(token == null){
+              continue;
+			}
+			WindowState win = token.findMainWindow();
+			LOGD("@@@@@@@@@@@@@ win="+win);
+			if(reComAppWindow){
+				if(groupAppToken.containsKey(token.groupId)){
+					LOGD("exist groupid id="+token.groupId+" token="+token);
+					AppWindowToken samegroup = groupAppToken.get(token.groupId);
+					WindowState appwindowState = samegroup.findMainWindow();
+					if(appwindowState!=null){
+						for(int j=0;j<token.allAppWindows.size();j++){
+							WindowState child = token.allAppWindows.get(j);
+							if(child == appwindowState){
+								child.mAppWindowState = null;
+							}else{
+								child.mAppWindowState = appwindowState;
+							}
+						}
+					}
+				}else{
+					LOGD("new groupId="+token.groupId+" token="+token);
+					if(win!=null){
+						groupAppToken.put(token.groupId,token);
+					}
+					for(int k=0;k<token.allAppWindows.size();k++){
+						WindowState child = token.allAppWindows.get(k);
+						if(child == win){
+							child.mAppWindowState = null;
+						}else{
+							child.mAppWindowState = win;
+						}
+					}
+				}
+			}
+			
+			if(!aboveHome){
+				if(isHomeWindow(win)){
+					aboveHome = true;
+				}
+				LOGD("ignore the half screen window which behind the launcher");
+				continue;								
+			}
+			if(win!=null&&
+					win.getAttrs().packageName!=null&&(win.getAttrs().flags&WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0){
+				if(!halfWindows.containsKey(win.getAttrs().packageName)){
+					int align = win.getAttrs().align;
+					if(align == WindowManagerPolicy.WINDOW_ALIGN_LEFT 
+						|| align == WindowManagerPolicy.WINDOW_ALIGN_TOP){
+						leftOrTop++;
+					}else if(align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
+						|| align == WindowManagerPolicy.WINDOW_ALIGN_BOTTOM){
+						rightOrBottom++;
+					}
+					halfWindows.put(win.getAttrs().packageName,align);
+				}
+			}
+		
+			
+		}
+		LOGR("leftOrTop="+leftOrTop+" rightOrBottom="+rightOrBottom);
+		if(leftOrTop<=rightOrBottom){
+			//write 0 value to setting db
+			//Settings.System.putInt(mContext.getContentResolver(),Settings.System.HALF_SCREEN_APP_LOCATION,0);
+		}else{
+			//write 1 value to setting db key(HALF_SCREEN_APP_LOCATION)
+			//Settings.System.putInt(mContext.getContentResolver(),Settings.System.HALF_SCREEN_APP_LOCATION,1);
+		}		
+	}
+
+
+
+		
+}
         Trace.traceEnd(Trace.TRACE_TAG_WINDOW_MANAGER);
     }
 
@@ -9299,7 +11564,7 @@ public class WindowManagerService extends IWindowManager.Stub
             int bestAnimLayer = -1;
             boolean fullscreenAnim = false;
             boolean voiceInteraction = false;
-
+			boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
             if (DEBUG_APP_TRANSITIONS) Slog.v(TAG,
                     "New wallpaper target=" + mWallpaperTarget
                     + ", oldWallpaper=" + oldWallpaper
@@ -9378,9 +11643,25 @@ public class WindowManagerService extends IWindowManager.Stub
                         transit = AppTransition.TRANSIT_WALLPAPER_INTRA_CLOSE;
                         break;
                 }
-                if (DEBUG_APP_TRANSITIONS) Slog.v(TAG, "New transit: " + transit);
-            } else if ((oldWallpaper != null) && !mOpeningApps.isEmpty()
-                    && !mOpeningApps.contains(oldWallpaper.mAppToken)) {
+                if (DEBUG_APP_TRANSITIONS) Slog.v(TAG,
+                        "New transit: " + transit);
+            }else if(multiWindowConfig){
+				if (true) Slog.v(TAG,
+                        "old transit: " + transit);            	
+				switch(transit){
+					//case AppTransition.TRANSIT_ACTIVITY_OPEN:
+                    case AppTransition.TRANSIT_TASK_OPEN:
+                    
+						transit = AppTransition.TRANSIT_WALLPAPER_CLOSE;
+						break;
+					case AppTransition.TRANSIT_ACTIVITY_CLOSE:
+                    case AppTransition.TRANSIT_TASK_CLOSE:
+                    case AppTransition.TRANSIT_TASK_TO_BACK:
+					case AppTransition.TRANSIT_TASK_TO_FRONT:
+						transit = AppTransition.TRANSIT_WALLPAPER_OPEN;
+						break;
+				}
+			}else if ((oldWallpaper != null) && !mOpeningApps.isEmpty() && !mOpeningApps.contains(oldWallpaper.mAppToken)) {
                 // We are transitioning from an activity with
                 // a wallpaper to one without.
                 transit = AppTransition.TRANSIT_WALLPAPER_CLOSE;
@@ -9442,6 +11723,13 @@ public class WindowManagerService extends IWindowManager.Stub
                 appAnimator.clearThumbnail();
                 appAnimator.animation = null;
                 wtoken.inPendingTransaction = false;
+                wtoken.mAppAnimator.animation = null;
+				if(multiWindowConfig){
+					WindowState w = wtoken.findAnimMainWindow();		
+					if(w != null){
+						animLp = w.getAttrs();
+					}
+				}
                 setTokenVisibilityLocked(wtoken, animLp, true, transit, false, voiceInteraction);
                 wtoken.updateReportedVisibilityLocked();
                 wtoken.waitingToShow = false;
@@ -9475,6 +11763,13 @@ public class WindowManagerService extends IWindowManager.Stub
                 appAnimator.clearThumbnail();
                 appAnimator.animation = null;
                 wtoken.inPendingTransaction = false;
+                wtoken.mAppAnimator.animation = null;
+				if(multiWindowConfig){
+					WindowState win = wtoken.findAnimMainWindow();		
+					if(win != null){
+						animLp = win.getAttrs();
+					}
+				}
                 setTokenVisibilityLocked(wtoken, animLp, false, transit, false, voiceInteraction);
                 wtoken.updateReportedVisibilityLocked();
                 wtoken.waitingToHide = false;
@@ -10017,8 +12312,8 @@ public class WindowManagerService extends IWindowManager.Stub
                         winAnimator.setAnimation(a);
                         winAnimator.mAnimDw = w.mLastFrame.left - w.mFrame.left;
                         winAnimator.mAnimDh = w.mLastFrame.top - w.mFrame.top;
-
-                        //TODO (multidisplay): Accessibility supported only for the default display.
+						LOGR("performLayout shouldAimatmove mFrame="+w.mFrame.toString()+
+							"mLastFrame="+w.mLastFrame.toString());
                         if (mAccessibilityController != null
                                 && displayId == Display.DEFAULT_DISPLAY) {
                             mAccessibilityController.onSomeWindowResizedOrMovedLocked();
@@ -10122,6 +12417,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     }
 
                     updateResizingWindows(w);
+					setSurfaceViewBackWindowShow(w);
                 }
 
                 mDisplayManagerInternal.setDisplayProperties(displayId,
@@ -10973,6 +13269,8 @@ public class WindowManagerService extends IWindowManager.Stub
         if (configChanged) {
             mH.sendEmptyMessage(H.SEND_NEW_CONFIGURATION);
         }
+		mH.removeMessages(H.MULTIWINDOW_FREEZING_DISPLAY_ACTION);
+		mH.sendEmptyMessage(H.MULTIWINDOW_FREEZING_DISPLAY_ACTION);
     }
 
     static int getPropertyInt(String[] tokens, int index, int defUnits, int defDps,
@@ -11413,6 +13711,7 @@ public class WindowManagerService extends IWindowManager.Stub
             pw.print("  mLastFocus="); pw.println(mLastFocus);
         }
         pw.print("  mFocusedApp="); pw.println(mFocusedApp);
+		pw.print("  mHomeApp"); pw.println(mHomeApp);
         if (mInputMethodTarget != null) {
             pw.print("  mInputMethodTarget="); pw.println(mInputMethodTarget);
         }

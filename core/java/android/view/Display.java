@@ -67,6 +67,7 @@ public final class Display {
 
     private DisplayInfo mDisplayInfo; // never null
     private boolean mIsValid;
+    private boolean isSystem = false;
 
     // Temporary display metrics structure used for compatibility mode.
     private final DisplayMetrics mTempMetrics = new DisplayMetrics();
@@ -532,6 +533,15 @@ public final class Display {
         }
     }
 
+    public int getWidth(boolean system) {
+        synchronized (this) {
+	    isSystem = true;
+            updateCachedAppSizeIfNeededLocked();
+	    isSystem = false;
+            return mCachedAppWidthCompat;
+        }
+    }
+
     /**
      * @deprecated Use {@link #getSize(Point)} instead.
      */
@@ -539,6 +549,15 @@ public final class Display {
     public int getHeight() {
         synchronized (this) {
             updateCachedAppSizeIfNeededLocked();
+            return mCachedAppHeightCompat;
+        }
+    }
+
+    public int getHeight(boolean system) {
+        synchronized (this) {
+	    isSystem = true;
+            updateCachedAppSizeIfNeededLocked();
+	    isSystem = false;
             return mCachedAppHeightCompat;
         }
     }
@@ -785,7 +804,7 @@ public final class Display {
         long now = SystemClock.uptimeMillis();
         if (now > mLastCachedAppSizeUpdate + CACHED_APP_SIZE_DURATION_MILLIS) {
             updateDisplayInfoLocked();
-            mDisplayInfo.getAppMetrics(mTempMetrics, mDisplayAdjustments);
+            mDisplayInfo.getAppMetrics(mTempMetrics, mDisplayAdjustments, isSystem);
             mCachedAppWidthCompat = mTempMetrics.widthPixels;
             mCachedAppHeightCompat = mTempMetrics.heightPixels;
             mLastCachedAppSizeUpdate = now;

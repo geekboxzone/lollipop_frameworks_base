@@ -103,6 +103,17 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
+import android.content.pm.ApplicationInfo;
+import android.view.WindowManagerPolicy;
+import android.provider.MediaStore;
+import java.io.File;
+import android.provider.Settings;
+import java.util.List;
+import android.app.ActivityManager.RunningTaskInfo;
+import android.content.pm.ResolveInfo;
+import android.app.ActivityManager.RunningServiceInfo;
+import android.app.ActivityManager.RunningAppProcessInfo;
+import android.app.ActivityManager.RecentTaskInfo;
 
 /**
  * An activity is a single, focused thing that the user can do.  Almost all
@@ -717,6 +728,7 @@ public class Activity extends ContextThemeWrapper
     /*package*/ Configuration mCurrentConfig;
     private SearchManager mSearchManager;
     private MenuInflater mMenuInflater;
+	private MenuItem menuItem = null;
 
     static final class NonConfigurationInstances {
         Object activity;
@@ -1222,6 +1234,21 @@ public class Activity extends ContextThemeWrapper
         getApplication().dispatchActivityResumed(this);
         mActivityTransitionState.onResume();
         mCalled = true;
+		ApplicationInfo appInfo = getApplicationInfo();
+		/*	if( menuItem!=null){
+				
+				boolean isHalf = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0;
+				if(isHalf == true){					
+					menuItem.setIcon(com.android.internal.R.drawable.ic_media_stop);
+					menuItem.setTitle("Switch to full");
+				}else{
+				   	menuItem.setIcon(android.R.drawable.ic_menu_copy);
+				   	menuItem.setTitle("Switch to half");	
+				}
+				
+				menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+				//menuItem.setIcon(android.R.drawable.ic_menu_copy);			
+		       }*/
     }
 
     /**
@@ -2837,6 +2864,25 @@ public class Activity extends ContextThemeWrapper
         if (featureId == Window.FEATURE_OPTIONS_PANEL) {
             boolean show = onCreateOptionsMenu(menu);
             show |= mFragments.dispatchCreateOptionsMenu(menu, getMenuInflater());
+			ApplicationInfo appInfo = getApplicationInfo();
+			/*boolean multiConfig = mCurrentConfig.enableMultiWindow();
+			Slog.d(TAG,"onCreatePanelMenu multiConfig="+multiConfig);
+			if(multiConfig){
+				
+				boolean isHalf = (getWindow().getAttributes().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0;
+				if(isHalf == true){
+					menuItem = menu.add(0,android.R.drawable.ic_menu_copy,0,"Switch to Full");
+					menuItem.setIcon(com.android.internal.R.drawable.ic_media_stop);
+
+				}else{
+				   menuItem = menu.add(0,android.R.drawable.ic_menu_copy,0,"Switch to Half");
+				   menuItem.setIcon(android.R.drawable.ic_menu_copy);
+
+				}
+				
+				menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+				//menuItem.setIcon(android.R.drawable.ic_menu_copy);		
+		}*/
             return show;
         }
         return false;
@@ -3718,7 +3764,154 @@ public class Activity extends ContextThemeWrapper
      * @see #startActivity
      */
     public void startActivityForResult(Intent intent, int requestCode) {
+    	if(doActionPlayVideoInMultiWindow(intent,requestCode)){
+			return;
+		}
         startActivityForResult(intent, requestCode, null);
+    }
+
+	private int getMultiWindowMode(){
+        return Settings.System.getInt(getContentResolver(),
+    					Settings.System.MULITI_WINDOW_MODE, Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE);
+	}
+
+	private boolean doActionPlayVideoInMultiWindow(Intent intent, int requestCode){
+		boolean result = false;
+		if(!mCurrentConfig.enableMultiWindow()){
+			return false;
+		}
+		if(getMultiWindowMode() != Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+			return false;
+		}
+		if(isPlayVideoIntent(intent)){
+			boolean isWork = isSeviceWorked(this,"com.android.rk.mediafloat.MediaFloatService");
+			if(isWork){
+				Intent mIntent = new Intent("com.rk.app.mediafloat.CUSTOM_ACTION");
+				mIntent.putExtra("URI", intent.getDataString());
+				startService(mIntent);
+				return true;
+			}
+			Intent mIntent = new Intent();
+			mIntent.setAction(android.content.Intent.ACTION_VIEW);
+			mIntent.setDataAndType(Uri.fromFile(new File("")),"video/*");
+			List<ResolveInfo> list = getPackageManager().queryIntentActivities(
+                mIntent, PackageManager.MATCH_DEFAULT_ONLY
+                | PackageManager.GET_RESOLVED_FILTER);
+			for(int i = 0;i < list.size();i++){
+				ResolveInfo info = list.get(i);
+				if(isVideoClassWorked(this,info.activityInfo.packageName,info.activityInfo.name)){
+					ComponentName cName = intent.getComponent();
+					if(cName != null && info.activityInfo.packageName.equals(cName.getPackageName())){
+						return false;
+					}
+					result = true;
+					Intent resultIntent = new Intent(intent);
+					resultIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK |Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            		ActivityInfo ai = info.activityInfo;
+            		resultIntent.setComponent(new ComponentName(
+                    			ai.applicationInfo.packageName, ai.name));
+					startActivity(resultIntent);
+				}else{
+					ActivityManager myManager = (ActivityManager)getSystemService(Context.ACTIVITY_SERVICE);
+					List<RunningAppProcessInfo> processList = myManager.getRunningAppProcesses();
+					for (int t = 0; t < processList.size(); t++) {
+						RunningAppProcessInfo runningAppProcessInfo = processList.get(t);
+						if (runningAppProcessInfo.processName.equals(info.activityInfo.packageName)) {
+							if(runningAppProcessInfo.importance == RunningAppProcessInfo.IMPORTANCE_BACKGROUND){
+								ArrayList<RunningTaskInfo> runningActivitys = (ArrayList<RunningTaskInfo>) myManager.getRunningTasks(300);
+								for (int m = 0; m < runningActivitys.size(); m++) {
+									RunningTaskInfo runningTaskInfo = runningActivitys.get(m);
+									if (runningTaskInfo.topActivity.getPackageName().equals(info.activityInfo.packageName)
+											&& runningTaskInfo.topActivity.getClassName().equals(info.activityInfo.name)) {
+										myManager.removeTask(runningTaskInfo.id);
+									}
+								}			
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	private boolean isSeviceWorked(Context context, String serviceName) {
+		ActivityManager myManager = (ActivityManager) context
+				.getSystemService(Context.ACTIVITY_SERVICE);
+		ArrayList<RunningServiceInfo> runningService = (ArrayList<RunningServiceInfo>) myManager
+				.getRunningServices(30);
+		for (int i = 0; i < runningService.size(); i++) {
+			if (runningService.get(i).service.getClassName().toString().equals(
+					serviceName)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isVideoClassWorked(Context context, String packageName,String className) {
+		ActivityManager myManager = (ActivityManager) context
+				.getSystemService(Context.ACTIVITY_SERVICE);
+		
+		ArrayList<RunningTaskInfo> runningActivitys = (ArrayList<RunningTaskInfo>) myManager.getRunningTasks(300);
+		for (int i = 0; i < runningActivitys.size(); i++) {
+			RunningTaskInfo runningTaskInfo = runningActivitys.get(i);
+			if (runningTaskInfo.topActivity.getPackageName().equals(packageName)
+					&& runningTaskInfo.topActivity.getClassName().equals(className)) {
+				List<RunningAppProcessInfo> list = myManager.getRunningAppProcesses();
+				for (int t = 0; t < list.size(); t++) {
+					RunningAppProcessInfo info = list.get(t);
+					if (info.processName.equals(packageName)) {
+						if(info.importance == RunningAppProcessInfo.IMPORTANCE_BACKGROUND){
+							return false;
+						}else{    
+							return true;
+						}
+					}
+				}
+			}
+		}
+		
+		return false;
+	}
+
+	private boolean isPlayVideoIntent(Intent intent){
+		boolean result = false;
+		if(intent != null){
+			Uri mUri = intent.getData();
+			String data = intent.getDataString();
+			String type = intent.getType();
+			if(type != null && type.startsWith("video")){
+				return true;
+			}
+			if(mUri != null && mUri.getPath() != null &&isVideoFile(mUri.getPath())){
+				return true;			
+			}
+			if(data != null && data.startsWith(MediaStore.Video.Media.getContentUri("external").toString())){
+				return true;		
+			}
+		}
+
+		return result;
+	}
+
+	private boolean isVideoFile(String path){
+    	//String path = tmp_file.getPath();
+    	ContentResolver resolver = getContentResolver();
+    	String[] audiocols = new String[] {
+    			MediaStore.Video.Media._ID,
+    			MediaStore.Video.Media.DATA,
+    			MediaStore.Video.Media.TITLE
+        };  
+    	StringBuilder where = new StringBuilder();
+    	where.append(MediaStore.Video.Media.DATA + "=" + "'" + path + "'");
+    	Cursor cur = resolver.query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+        		audiocols,
+        		where.toString(), null, null);
+    	if(cur.moveToFirst()){
+    		return true;
+    	}
+    	return false;
     }
 
     /**
@@ -4983,6 +5176,7 @@ public class Activity extends ContextThemeWrapper
      */
     public boolean moveTaskToBack(boolean nonRoot) {
         try {
+			new Exception().printStackTrace();
             return ActivityManagerNative.getDefault().moveActivityTaskToBack(
                     mToken, nonRoot);
         } catch (RemoteException e) {
@@ -5939,7 +6133,7 @@ public class Activity extends ContextThemeWrapper
             Application application, Intent intent, ActivityInfo info,
             CharSequence title, Activity parent, String id,
             NonConfigurationInstances lastNonConfigurationInstances,
-            Configuration config, String referrer, IVoiceInteractor voiceInteractor) {
+            Configuration config, String referrer, IVoiceInteractor voiceInteractor,int align) {
         attachBaseContext(context);
 
         mFragments.attachActivity(this, mContainer, null);
@@ -5987,6 +6181,30 @@ public class Activity extends ContextThemeWrapper
         }
         mWindowManager = mWindow.getWindowManager();
         mCurrentConfig = config;
+	ApplicationInfo appInfo = getApplicationInfo();
+
+	
+		if(/*(intent.getFlags()&Intent.FLAG_USE_HALF_SCREEN) != 0*/ appInfo.phoneMode/* || info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT */&& config.enableMultiWindow()){
+			//mWindow.getAttributes().flags |= WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
+			//mWindow.getAttributes().align = info.align;
+				Log.e("shenzhicheng", "Activity --------- phoneMode");
+			mWindow.getAttributes().align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+		}
+		/*if(config.enableMultiWindow()){
+			if((intent.getFlags() & Intent.FLAG_ALIGN_LEFT_TOP_WINDOW)!=0){
+				mWindow.getAttributes().align = WindowManagerPolicy.ALIGN_LEFT_TOP_WINDOW;
+ 			}else if((intent.getFlags() & Intent.FLAG_ALIGN_RIGHT_TOP_WINDOW)!=0){
+				mWindow.getAttributes().align = WindowManagerPolicy.ALIGN_RIGHT_TOP_WINDOW;
+ 			}else if((intent.getFlags() & Intent.FLAG_ALIGN_LEFT_BOTTOM_WINDOW)!=0){
+				mWindow.getAttributes().align = WindowManagerPolicy.ALIGN_LEFT_BOTTOM_WINDOW;
+ 			}else if((intent.getFlags() & Intent.FLAG_ALIGN_RIGHT_BOTTOM_WINDOW)!=0){
+				mWindow.getAttributes().align = WindowManagerPolicy.ALIGN_RIGHT_BOTTOM_WINDOW;
+ 			}
+		}	
+		if(align != -1 && config.enableMultiWindow()){
+			//mWindow.getAttributes().flags |= WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
+			mWindow.getAttributes().align = align;
+		}*/
     }
 
     /** @hide */

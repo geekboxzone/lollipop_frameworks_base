@@ -51,6 +51,7 @@ import java.util.Locale;
 
 import libcore.icu.NativePluralRules;
 
+import android.os.Process;
 /**
  * Class for accessing an application's resources.  This sits on top of the
  * asset manager of the application (accessible through {@link #getAssets}) and
@@ -139,6 +140,8 @@ public class Resources {
     private NativePluralRules mPluralRule;
 
     private CompatibilityInfo mCompatibilityInfo = CompatibilityInfo.DEFAULT_COMPATIBILITY_INFO;
+
+    private String mPackageName;
 
     @SuppressWarnings("unused")
     private WeakReference<IBinder> mToken;
@@ -256,6 +259,20 @@ public class Resources {
         mToken = new WeakReference<IBinder>(token);
         updateConfiguration(config, metrics);
         assets.ensureStringBlocks();
+    }
+
+
+    public Resources(AssetManager assets, DisplayMetrics metrics, Configuration config,
+		                CompatibilityInfo compatInfo, IBinder token, String packageName) {
+	this.mPackageName = packageName;
+	mAssets = assets;
+	mMetrics.setToDefaults();
+	if (compatInfo != null) {
+		mCompatibilityInfo = compatInfo;
+	}
+	mToken = new WeakReference<IBinder>(token);
+	updateConfiguration(config, metrics);
+	assets.ensureStringBlocks();
     }
 
     /**
@@ -1826,6 +1843,18 @@ public class Resources {
                             == Configuration.HARDKEYBOARDHIDDEN_YES) {
                 keyboardHidden = Configuration.KEYBOARDHIDDEN_SOFT;
             }
+
+
+		//mMetrics.changeWidthHeight();
+	    if (false && this.mPackageName != null && this.mPackageName.contains("tencent")) {
+		Slog.i(TAG, "----------- Resources.java this.mPackageName.contains tencent");
+		mMetrics.changeWidthHeight();
+	    	mConfiguration.orientation = Configuration.ORIENTATION_PORTRAIT;
+	    	mConfiguration.densityDpi = 480;
+	    	mConfiguration.smallestScreenWidthDp = 360;
+	    	mConfiguration.screenWidthDp = 360;
+	    	mConfiguration.screenHeightDp = 567;
+	    }
             mAssets.setConfiguration(mConfiguration.mcc, mConfiguration.mnc,
                     locale, mConfiguration.orientation,
                     mConfiguration.touchscreen,
@@ -1974,6 +2003,15 @@ public class Resources {
     public DisplayMetrics getDisplayMetrics() {
         if (DEBUG_CONFIG) Slog.v(TAG, "Returning DisplayMetrics: " + mMetrics.widthPixels
                 + "x" + mMetrics.heightPixels + " " + mMetrics.density);
+	if (false && this.mPackageName != null && this.mPackageName.contains("tencent")) {
+
+	} else {
+		//mMetrics.changeWidthHeight();
+	}
+	if (false && Process.myUid() == 10058) {
+		mMetrics.widthPixels = 824;
+		mMetrics.heightPixels = 824;
+	}
         return mMetrics;
     }
 

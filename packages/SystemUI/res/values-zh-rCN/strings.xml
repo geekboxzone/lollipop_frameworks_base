@@ -261,6 +261,8 @@
 	
     <!-- $_rbox_$_modify_$_chenxiao begin,hide bar msg -->
     <string name="hidebar_msg">"系统栏已经被隐藏\n您可以在屏幕上下边缘拖拉再次显示它。" </string>
+
+    <string name="cleartasks_msg">"已清空后台任务"</string>
 	
     <!-- $_rbox_$_modify_$_chenxiao begin,usb unmount msg -->
     <string name="dlg_confirm_unmount_title" product="nosdcard" msgid="3077285629197874055">"要卸载 USB 存储设备吗？"</string>
@@ -387,4 +389,6 @@
     <string name="quick_settings_reset_confirmation_title" msgid="748792586749897883">"要隐藏“<xliff:g id="TILE_LABEL">%1$s</xliff:g>”吗？"</string>
     <string name="quick_settings_reset_confirmation_message" msgid="2235970126803317374">"下次在设置中将其开启后，此快捷设置条目将会重新显示。"</string>
     <string name="quick_settings_reset_confirmation_button" msgid="2660339101868367515">"隐藏"</string>
+    <string name="popuwindow_close_app">关闭应用</string>
+    <string name="popuwindow_lock_app">解除锁定</string>
 </resources>

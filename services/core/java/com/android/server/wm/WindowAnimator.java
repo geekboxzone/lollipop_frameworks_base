@@ -46,6 +46,8 @@ import com.android.server.wm.WindowManagerService.LayoutFields;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import android.provider.Settings;
+import android.view.View;
 
 /**
  * Singleton class that carries out the animations and Surface operations in a separate task
@@ -676,8 +678,12 @@ public class WindowAnimator {
 
                 final WindowList windows = mService.getWindowListLocked(displayId);
                 final int N = windows.size();
-                for (int j = 0; j < N; j++) {
+                for (int j = N-1; j >= 0; j--) {
                     windows.get(j).mWinAnimator.prepareSurfaceLocked(true);
+					WindowState ww = windows.get(j);
+					if(ww.mSurfaceViewBackWindow != null){
+						ww.mSurfaceViewBackWindow.SetLayer(ww.mLayer- 2);
+					}				
                 }
             }
 

@@ -692,6 +692,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class View implements Drawable.Callback, KeyEvent.Callback,
         AccessibilityEventSource {
     private static final boolean DBG = false;
+	private static final boolean DEBUG_ZJY = true;
+	private void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Log.d(VIEW_LOG_TAG,msg);
+		}
+	}
 
     /**
      * The logging tag used by this class with android.util.Log.
@@ -2599,6 +2605,11 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * with one or both of those flags.</p>
      */
     public static final int SYSTEM_UI_FLAG_IMMERSIVE_STICKY = 0x00001000;
+	
+	/**
+	*@hide
+	*/
+	public static final int SYSTEM_UI_FLAG_MULTI_HALF_WINDOW = 0x00000800;
 
     /**
      * @deprecated Use {@link #SYSTEM_UI_FLAG_LOW_PROFILE} instead.
@@ -2906,6 +2917,17 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * {@hide}
      */
     AttachInfo mAttachInfo;
+	private boolean isDecorView = false;
+	private int mTopPadding = 0;
+
+	public void setIsDecorView(boolean flag){
+		isDecorView = flag;
+	}
+
+	public void setTopPadding(int topPadding){
+		mBackgroundSizeChanged = true;
+		mTopPadding = topPadding;
+	}
 
     /**
      * {@hide}
@@ -8666,7 +8688,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * @return True if the event was handled by the view, false otherwise.
      * @hide
      */
-    public final boolean dispatchPointerEvent(MotionEvent event) {
+    public  boolean dispatchPointerEvent(MotionEvent event, boolean block) {
         if (event.isTouchEvent()) {
             return dispatchTouchEvent(event);
         } else {
@@ -8855,7 +8877,20 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
         Display d = DisplayManagerGlobal.getInstance().getRealDisplay(Display.DEFAULT_DISPLAY);
         d.getRectSize(outRect);
     }
-
+	/**
+	*@hide
+	*/
+	public void getWindowVisibleSurfaceFrame(Rect outRect){
+		if(mAttachInfo != null){
+			try{
+				mAttachInfo.mSession.getSurfaceFrame(mAttachInfo.mWindow, outRect);
+			}catch(RemoteException e){
+				return ;
+			}
+		}
+		//Display d = WindowManagerImpl.getDefault().getDefaultDisplay();
+        //d.getRectSize(outRect);
+	}
     /**
      * Dispatch a notification about a resource configuration change down
      * the view hierarchy.
@@ -13520,8 +13555,59 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     public IWindow getWindow(){
 	return mAttachInfo != null ? mAttachInfo.mWindow : null;
     }
+	/**
+	*add by fjz
+	*@hide
+	*/
+	public Rect getContentInsetsRect(){
+		return mAttachInfo != null ? mAttachInfo.mContentInsets : null;
+	}
+	/**
+	* add by fjz
+	* @hide
+	* need override by PhoneWindow.DecorView 
+	*/
+	void dispatchAppAlignChanged(int align,boolean rotate){
+	LOGD("=============================dispatchAppAlignChanged==================="+align);
+		onAppAlignChanged(align,rotate);
+	}
 
+	/**
+	* add by fjz
+	* @hide
+	*/
+	protected void onAppAlignChanged(int align,boolean rotate){}
 
+	/**
+	* add by zjy
+	* @hide
+	* need override by PhoneWindow.DecorView 
+	*/
+	void dispatchHalfScreenWindowPositionChanged(int posX,int posY){
+		onHalfScreenWindowPositionChanged(posX,posY);
+	}
+	
+	/**
+	* add by zjy
+	* @hide
+	*/
+	protected void onHalfScreenWindowPositionChanged(int posX,int posY){}
+
+		/**
+	* add by lly
+	* @hide
+	* need override by PhoneWindow.DecorView 
+	*/
+	void dispatchTopAllWindow(int taskid){
+		onTopAllWindowChanged(taskid);
+	}
+	
+	/**
+	* add by lly
+	* @hide
+	*/
+	protected void onTopAllWindowChanged(int taskid){}
+	
     /**
      * @param info the {@link android.view.View.AttachInfo} to associated with
      *        this view
@@ -15423,7 +15509,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
         }
 
         if (mBackgroundSizeChanged) {
-            background.setBounds(0, 0,  mRight - mLeft, mBottom - mTop);
+           // background.setBounds(0, 0,  mRight - mLeft, mBottom - mTop);
+		   if(isDecorView){
+						background.setBounds(0, mTopPadding,mRight - mLeft, mBottom - mTop);
+					}else{
+                    	background.setBounds(0, 0,  mRight - mLeft, mBottom - mTop);
+					}
             mBackgroundSizeChanged = false;
             rebuildOutline();
         }

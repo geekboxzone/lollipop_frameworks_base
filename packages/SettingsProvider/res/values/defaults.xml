@@ -19,7 +19,15 @@
 <resources>
     <!-- should show the screenshot button default -->
     <bool name="def_screenshot_button_show">false</bool>
-    <!-- the store location of screen capture by default-->
+    <bool name="def_multi_window_button_show">false</bool>
+    <bool name="def_multi_window_used">false</bool>
+    <bool name="def_multi_window_config">false</bool>
+    <integer name="def_multi_window_mode">0</integer>
+    <bool name="def_half_screen_window_enable">false</bool>
+    <bool name="def_four_screen_window_enable">false</bool>
+    <string name="def_half_screen_window_position">0,0</string>
+	<string name="def_four_screen_window_position">0,0</string>
+    <integer name="def_half_screen_app_location">0</integer>
     <string name="def_screenshot_location">/mnt/sdcard</string>
     <bool name="def_dim_screen">true</bool>
     <integer name="def_screen_off_timeout">60000</integer>
@@ -34,9 +42,6 @@
     <bool name="def_accelerometer_rotation">true</bool>
     <!-- Default screen brightness, from 0 to 255.  102 is 40%. -->
     <integer name="def_screen_brightness">102</integer>
-    <!-- Default to not enabling automatic brightness mode.
-         Note: This value is ignored if the platform does not have the system feature
-               PackageManager.FEATURE_SENSOR_LIGHT -->
     <bool name="def_screen_brightness_automatic_mode">false</bool>
     <fraction name="def_window_animation_scale">100%</fraction>
     <fraction name="def_window_transition_scale">100%</fraction>

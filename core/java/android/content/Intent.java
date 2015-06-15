@@ -3623,6 +3623,17 @@ public class Intent implements Parcelable, Cloneable {
      */
     public static final int FLAG_GRANT_PREFIX_URI_PERMISSION = 0x00000080;
 
+	/**
+	*@hide 
+	*use by AppBar to launche the app with half screen size .
+	*/
+	public static final int FLAG_USE_HALF_SCREEN = 0x00000080;
+
+
+	public static final int FLAG_ALIGN_LEFT_TOP_WINDOW = 0x00000100;
+	public static final int FLAG_ALIGN_RIGHT_TOP_WINDOW = 0x00000200;
+	public static final int FLAG_ALIGN_LEFT_BOTTOM_WINDOW = 0x00000400;
+	public static final int FLAG_ALIGN_RIGHT_BOTTOM_WINDOW = 0x00000800;
     /**
      * If set, the new activity is not kept in the history stack.  As soon as
      * the user navigates away from it, the activity is finished.  This may also

@@ -105,7 +105,16 @@ public final class WindowManagerImpl implements WindowManager {
             }
         }
     }
-
+	@Override
+	public void updateAppLayout(@NonNull WindowManager.LayoutParams wmprams){
+	applyDefaultToken(wmprams);
+		mGlobal.updateAppLayout(wmprams);
+	}
+	
+	@Override
+	public void removeApp(String packageName){
+		mGlobal.removeApp(packageName);
+	}
     @Override
     public void removeView(View view) {
         mGlobal.removeView(view, false);

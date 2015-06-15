@@ -232,6 +232,12 @@ public class DisplayMetrics {
         noncompatXdpi = o.noncompatXdpi;
         noncompatYdpi = o.noncompatYdpi;
     }
+
+    public void changeWidthHeight() {
+    	int w = widthPixels;
+	widthPixels = heightPixels;
+	heightPixels = w;
+    }
     
     public void setToDefaults() {
         widthPixels = 0;

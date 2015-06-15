@@ -167,7 +167,7 @@ public class Dialog implements DialogInterface, Window.Callback,
         w.setCallback(this);
         w.setOnWindowDismissedCallback(this);
         w.setWindowManager(mWindowManager, null, null);
-        w.setGravity(Gravity.CENTER);
+        w.setGravity(Gravity.GRAVITY_BY_PARENT);
         mListenersHandler = new ListenersHandler(this);
     }
 
@@ -293,7 +293,7 @@ public class Dialog implements DialogInterface, Window.Callback,
                     WindowManager.LayoutParams.SOFT_INPUT_IS_FORWARD_NAVIGATION;
             l = nl;
         }
-
+		l.flags |= WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
         try {
             mWindowManager.addView(mDecor, l);
             mShowing = true;

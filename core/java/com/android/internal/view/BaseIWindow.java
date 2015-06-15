@@ -32,6 +32,10 @@ public class BaseIWindow extends IWindow.Stub {
     public void setSession(IWindowSession session) {
         mSession = session;
     }
+	
+	@Override
+	public void switchToPhoneMode(int width,int height){
+		}
 
     @Override
     public void resized(Rect frame, Rect overscanInsets, Rect contentInsets,
@@ -52,6 +56,14 @@ public class BaseIWindow extends IWindow.Stub {
     public void dispatchAppVisibility(boolean visible) {
     }
 
+	@Override
+	public void dispatchDrawBounds(boolean drawBounds){
+	}
+	
+	@Override 
+	public void dispatchDrawBlend(boolean drawBlend){
+	}
+	
     @Override
     public void dispatchGetNewSurface() {
     }

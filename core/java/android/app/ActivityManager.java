@@ -831,7 +831,10 @@ public class ActivityManager {
          * @hide
          */
         public int affiliatedTaskColor;
-
+		/**
+		* @hide
+		*/
+		public int topOfLauncher;
         public RecentTaskInfo() {
         }
 
@@ -865,6 +868,7 @@ public class ActivityManager {
             dest.writeLong(lastActiveTime);
             dest.writeInt(affiliatedTaskId);
             dest.writeInt(affiliatedTaskColor);
+			dest.writeInt(topOfLauncher);
         }
 
         public void readFromParcel(Parcel source) {
@@ -881,6 +885,7 @@ public class ActivityManager {
             lastActiveTime = source.readLong();
             affiliatedTaskId = source.readInt();
             affiliatedTaskColor = source.readInt();
+			topOfLauncher = source.readInt();
         }
 
         public static final Creator<RecentTaskInfo> CREATOR
@@ -1357,6 +1362,13 @@ public class ActivityManager {
      */
     public static final int MOVE_TASK_NO_USER_ACTION = 0x00000002;
 
+	/**
+	*@hide
+	* Flag for {@link #moveTaskToFront(int, int)}:don't callback the activitys
+	*method when switch the focus.
+	*useless  now
+	*/
+	public static final int MOVE_TASK_NO_ANIMATION = 0x00000004;
     /**
      * Equivalent to calling {@link #moveTaskToFront(int, int, Bundle)}
      * with a null options argument.

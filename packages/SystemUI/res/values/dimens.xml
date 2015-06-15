@@ -151,9 +151,16 @@
     <integer name="standard_notification_panel_layout_gravity">0x31</integer><!-- top|center_horizontal -->
     <integer name="notification_panel_layout_gravity">0x37</integer><!-- fill_horizontal|top -->
 
+    <dimen name="notification_panel_padding_top">0dp</dimen>
+    <dimen name="notification_panel_margin_left">0dp</dimen>
     <!-- Height of the carrier/wifi name label -->
     <dimen name="carrier_label_height">24dp</dimen>
 
+    <dimen name="app_bar_item_width">80dp</dimen>
+    <dimen name="app_bar_item_height">80dp</dimen>
+    <dimen name="max_range_mulcon">200dp</dimen>
+    <dimen name="mul_config_padding">20dp</dimen>
+    <dimen name="mul_image_size">20dp</dimen>
     <!-- The distance you can pull a notification before it pops open -->
     <dimen name="one_finger_pop_limit">0dp</dimen>
 
@@ -560,5 +567,12 @@
     <dimen name="screen_pinning_nav_highlight_size">56dp</dimen>
     <!-- Screen pinning inner nav bar outer circle size -->
     <dimen name="screen_pinning_nav_highlight_outer_size">84dp</dimen>
-
+<dimen name="center_btn_width">52dip</dimen>
+    <dimen name="center_btn_height">52dip</dimen>
+    <dimen name="four_screen_center_panel_width">310dip</dimen>
+    <dimen name="four_screen_center_panel_height">310dip</dimen>
+    <dimen name="min_window_width">70dip</dimen>
+    <dimen name="min_window_height">70dip</dimen>
+    
+    <dimen name="center_menu_circle_radius">17dip</dimen>
 </resources>

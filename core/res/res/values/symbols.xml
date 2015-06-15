@@ -350,9 +350,9 @@
   <java-symbol type="integer" name="config_extraFreeKbytesAbsolute" />
   <java-symbol type="integer" name="config_immersive_mode_confirmation_panic" />
   <java-symbol type="integer" name="config_longPressOnPowerBehavior" />
+  <java-symbol type="integer" name="config_maxCachedApps" />
   <java-symbol type="integer" name="config_lowMemoryKillerMinFreeKbytesAdjust" />
   <java-symbol type="integer" name="config_lowMemoryKillerMinFreeKbytesAbsolute" />
-  <java-symbol type="integer" name="config_maxCachedApps" />
   <java-symbol type="integer" name="config_max_pan_devices" />
   <java-symbol type="integer" name="config_ntpPollingInterval" />
   <java-symbol type="integer" name="config_ntpPollingIntervalShorter" />
@@ -1447,6 +1447,7 @@
   <java-symbol type="dimen" name="navigation_bar_height_landscape" />
   <java-symbol type="dimen" name="navigation_bar_width" />
   <java-symbol type="dimen" name="status_bar_height" />
+  <java-symbol type="dimen" name="app_window_bounds_width"/>
   <java-symbol type="drawable" name="ic_jog_dial_sound_off" />
   <java-symbol type="drawable" name="ic_jog_dial_sound_on" />
   <java-symbol type="drawable" name="ic_jog_dial_unlock" />
@@ -1511,6 +1512,8 @@
   <java-symbol type="layout" name="screen_simple_overlay_action_mode" />
   <java-symbol type="layout" name="screen_swipe_dismiss" />
   <java-symbol type="layout" name="screen_title" />
+  <java-symbol type="layout" name="screen_title_win8" />
+  <java-symbol type="layout" name="screen_title_phone" />
   <java-symbol type="layout" name="screen_title_icons" />
   <java-symbol type="string" name="system_ui_date_pattern" />
   <java-symbol type="string" name="android_start_title" />
@@ -1630,6 +1633,20 @@
   <java-symbol type="drawable" name="stat_sys_throttled" />
   <java-symbol type="drawable" name="vpn_connected" />
   <java-symbol type="drawable" name="vpn_disconnected" />
+  <java-symbol type="drawable" name="circlemenu_narrow" />
+  <java-symbol type="drawable" name="circlemenu_larger" />
+  <java-symbol type="drawable" name="circlemenu_larger_phone" />
+  <java-symbol type="drawable" name="circlemenu_close" />
+  <java-symbol type="drawable" name="circlemenu_settop" />
+  <java-symbol type="drawable" name="circlemenu_settoped" />
+  <java-symbol type="drawable" name="win_title_bg" />
+  
+  <java-symbol type="id" name="min_icon" />
+  <java-symbol type="id" name="attach_icon" />
+  <java-symbol type="id" name="max_icon" />
+  <java-symbol type="id" name="close_icon" />
+ 
+
   <java-symbol type="id" name="ask_checkbox" />
   <java-symbol type="id" name="compat_checkbox" />
   <java-symbol type="id" name="original_app_icon" />
@@ -2282,4 +2299,6 @@
   <java-symbol type="bool" name="config_LTE_eri_for_network_name" />
   <java-symbol type="bool" name="config_defaultInTouchMode" />
   <java-symbol type="bool" name="config_non_data_sim_mms_supported" />
+  <java-symbol type="string" name="application_use_landscape_alert" />
+  <java-symbol type="string" name="application_use_portrait_alert" />
 </resources>

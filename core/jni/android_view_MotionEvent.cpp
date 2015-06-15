@@ -28,6 +28,16 @@
 #include "android_view_MotionEvent.h"
 #include "android_util_Binder.h"
 #include "android/graphics/Matrix.h"
+#include <cutils/log.h>
+
+#define DEBUG_ZJY 1
+#if DEBUG_ZJY
+#undef XLOG
+#define XLOG(...) android_printLog(ANDROID_LOG_DEBUG, "android_view_MotionEvent.cpp", __VA_ARGS__)
+#else
+#undef XLOG
+#define XLOG(...)
+#endif
 
 namespace android {
 
@@ -502,7 +512,11 @@ static void android_view_MotionEvent_nativeOffsetLocation(JNIEnv* env, jclass cl
     MotionEvent* event = reinterpret_cast<MotionEvent*>(nativePtr);
     return event->offsetLocation(deltaX, deltaY);
 }
-
+static void android_view_MotionEvent_nativeTransfromCoordinate(JNIEnv* env, jclass clazz,
+        jlong nativePtr, jfloat posX, jfloat posY, jfloat scaleX, jfloat scaleY){
+		MotionEvent* event = reinterpret_cast<MotionEvent*>(nativePtr);
+		event->transformCoordinate(posX, posY, scaleX, scaleY);
+}
 static jfloat android_view_MotionEvent_nativeGetXOffset(JNIEnv* env, jclass clazz,
         jlong nativePtr) {
     MotionEvent* event = reinterpret_cast<MotionEvent*>(nativePtr);
@@ -787,6 +801,9 @@ static JNINativeMethod gMotionEventMethods[] = {
     { "nativeOffsetLocation",
             "(JFF)V",
             (void*)android_view_MotionEvent_nativeOffsetLocation },
+    { "nativeTransfromCoordinate",
+    		"(JFFFF)V",
+    		(void*)android_view_MotionEvent_nativeTransfromCoordinate },
     { "nativeGetXOffset",
             "(J)F",
             (void*)android_view_MotionEvent_nativeGetXOffset },

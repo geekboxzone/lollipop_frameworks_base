@@ -20,7 +20,9 @@ package android.view;
 import android.content.ClipData;
 import android.content.res.Configuration;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Region;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.view.InputChannel;
 import android.view.IWindow;
@@ -28,6 +30,9 @@ import android.view.IWindowId;
 import android.view.MotionEvent;
 import android.view.WindowManager;
 import android.view.Surface;
+import android.view.MultiWindowInfo;
+import android.view.IAppAlignWatcher;
+import android.graphics.Point;
 
 /**
  * System private per-application interface to the window manager.
@@ -129,7 +134,30 @@ interface IWindowSession {
      * accounting for screen decorations around it.
      */
     void getDisplayFrame(IWindow window, out Rect outDisplayFrame);
+    void getTransFormInfo(IWindow window, out MultiWindowInfo transFormInfo);
 
+    int getOrientationFormInfo(IWindow window);
+
+    void setTransFormInfo(IWindow window, in MultiWindowInfo transFormInfo); 
+  
+    boolean isMultiWindowMode();
+     
+    void setHalfScreenTransFormInfo(IWindow window, int posX, int posY);
+ 
+    int getAppTokenGroupId(IWindow window);
+   
+    boolean isSameTaskWithHome(IWindow window);
+
+    void registerAppAlignWatcher(IWindow window , IAppAlignWatcher watcher);
+
+    void unregisterAppAlignWatcher(IWindow window);
+
+    void notifyAppAlignChanged(IWindow window, int align);
+
+    void updateHalfScreenWindow(IWindow window, int align);
+
+    int multiWindowMenuOperation(IWindow window, int opertion);
+    void getSurfaceFrame(IWindow window, out Rect outSurfaceFrame);
     void finishDrawing(IWindow window);
 
     void setInTouchMode(boolean showFocus);
@@ -156,7 +184,7 @@ interface IWindowSession {
      * consumed is 'true' when the drop was accepted by a valid recipient,
      * 'false' otherwise.
      */
-	void reportDropResult(IWindow window, boolean consumed);
+     void reportDropResult(IWindow window, boolean consumed);
 
     /**
      * Tell the OS that we've just dragged into a View that is willing to accept the drop

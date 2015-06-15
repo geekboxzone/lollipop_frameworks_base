@@ -37,6 +37,8 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.RemoteViews.RemoteView;
 
+import android.util.Log;
+
 import com.android.internal.R;
 
 

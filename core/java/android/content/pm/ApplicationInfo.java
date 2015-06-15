@@ -317,6 +317,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      * exist on the device.
      */
     public static final int FLAG_IS_DATA_ONLY = 1<<24;
+	public static final int FLAG_SUPPORT_HALF_SCREEN = 1<<25;
 
     /**
      * Value for {@link #flags}: true if the application was declared to be a game, or
@@ -587,6 +588,8 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
      */
     public int installLocation = PackageInfo.INSTALL_LOCATION_UNSPECIFIED;
 
+    public boolean phoneMode = false;
+
     public void dump(Printer pw, String prefix) {
         super.dumpFront(pw, prefix);
         if (className != null) {
@@ -705,6 +708,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         enabled = orig.enabled;
         enabledSetting = orig.enabledSetting;
         installLocation = orig.installLocation;
+        phoneMode = orig.phoneMode;
         manageSpaceActivityName = orig.manageSpaceActivityName;
         descriptionRes = orig.descriptionRes;
         uiOptions = orig.uiOptions;
@@ -755,6 +759,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         dest.writeInt(enabled ? 1 : 0);
         dest.writeInt(enabledSetting);
         dest.writeInt(installLocation);
+        dest.writeInt(phoneMode? 1 : 0);
         dest.writeString(manageSpaceActivityName);
         dest.writeString(backupAgentName);
         dest.writeInt(descriptionRes);
@@ -804,6 +809,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         enabled = source.readInt() != 0;
         enabledSetting = source.readInt();
         installLocation = source.readInt();
+        phoneMode = source.readInt() != 0;
         manageSpaceActivityName = source.readString();
         backupAgentName = source.readString();
         descriptionRes = source.readInt();

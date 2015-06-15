@@ -144,7 +144,7 @@ public class LocalActivityManager {
             
             if (desiredState == RESUMED) {
                 if (localLOGV) Log.v(TAG, r.id + ": resuming");
-                mActivityThread.performResumeActivity(r, true);
+                mActivityThread.performResumeActivity(r, true,false);
                 r.curState = RESUMED;
             }
             
@@ -167,7 +167,7 @@ public class LocalActivityManager {
                 if (desiredState == RESUMED) {
                     if (localLOGV) Log.v(TAG, r.id + ": restarting and resuming");
                     mActivityThread.performRestartActivity(r);
-                    mActivityThread.performResumeActivity(r, true);
+                    mActivityThread.performResumeActivity(r, true,false);
                     r.curState = RESUMED;
                 }
                 return;
@@ -176,7 +176,7 @@ public class LocalActivityManager {
                 if (desiredState == RESUMED) {
                     // Need to resume it...
                     if (localLOGV) Log.v(TAG, r.id + ": resuming");
-                    mActivityThread.performResumeActivity(r, true);
+                    mActivityThread.performResumeActivity(r, true,false);
                     r.instanceState = null;
                     r.curState = RESUMED;
                 }

@@ -114,9 +114,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import android.util.Log;
 
 public final class ActivityStackSupervisor implements DisplayListener {
+    static final String TAG = "ActivityStackSupervisor";
     static final boolean DEBUG = ActivityManagerService.DEBUG || false;
+	static final boolean DEBUG_ZJY = true;
     static final boolean DEBUG_ADD_REMOVE = DEBUG || false;
     static final boolean DEBUG_APP = DEBUG || false;
     static final boolean DEBUG_CONTAINERS = DEBUG || false;
@@ -126,6 +129,11 @@ public final class ActivityStackSupervisor implements DisplayListener {
     static final boolean DEBUG_SCREENSHOTS = DEBUG || false;
     static final boolean DEBUG_STATES = DEBUG || false;
     static final boolean DEBUG_VISIBLE_BEHIND = DEBUG || false;
+	private void LOGD(String msg){
+        if(DEBUG_ZJY){
+           Slog.v(TAG,"+++++++++++++++++++++++"+msg);
+        }	
+	}
 
     public static final int HOME_STACK_ID = 0;
 
@@ -411,6 +419,7 @@ public final class ActivityStackSupervisor implements DisplayListener {
         }
         ActivityStack topStack = stacks.get(topNdx);
         final boolean homeInFront = topStack == mHomeStack;
+		new RuntimeException(topStack+"=="+topNdx).printStackTrace();
         if (homeInFront != toFront) {
             mLastFocusedStack = topStack;
             stacks.remove(mHomeStack);
@@ -418,6 +427,7 @@ public final class ActivityStackSupervisor implements DisplayListener {
             mFocusedStack = stacks.get(topNdx);
             if (DEBUG_STACK) Slog.d(TAG, "moveHomeTask: topStack old=" + topStack + " new="
                     + mFocusedStack);
+			putAllBehindHome();
         }
         EventLog.writeEvent(EventLogTags.AM_HOME_STACK_MOVED,
                 mCurrentUser, toFront ? 1 : 0, stacks.get(topNdx).getStackId(),
@@ -430,7 +440,24 @@ public final class ActivityStackSupervisor implements DisplayListener {
             }
         }
     }
-
+	void putAllBehindHome(){
+		if(mService.mConfiguration.enableMultiWindow()){
+                    int numDisplays = mActivityDisplays.size();
+                for (int displayNdx = 0; displayNdx < numDisplays; ++displayNdx) {
+                ArrayList<ActivityStack> stacks = mActivityDisplays.valueAt(displayNdx).mStacks;
+			for (int stackNdx = stacks.size() - 1; stackNdx >= 0; --stackNdx) {
+				ActivityStack stack = stacks.get(stackNdx);
+				ArrayList<TaskRecord> mTasks = stack.mTaskHistory;
+				for(int i = 0;i < mTasks.size();i++){
+					TaskRecord task = mTasks.get(i);
+					if(!task.isHomeTask()){
+						task.mTopOfLauncher = false;
+					}
+				}
+			}
+		}
+             }
+	}
     void moveHomeStackTaskToTop(int homeStackTaskType, String reason) {
         if (homeStackTaskType == RECENTS_ACTIVITY_TYPE) {
             mWindowManager.showRecentApps();
@@ -456,8 +483,9 @@ public final class ActivityStackSupervisor implements DisplayListener {
         }
 
         ActivityRecord r = mHomeStack.topRunningActivityLocked(null);
-        // if (r != null && (r.isHomeActivity() || r.isRecentsActivity())) {
-        if (r != null && r.isHomeActivity()) {
+		if (DEBUG_ZJY) Slog.v(TAG, "resumeHomeStackTask   r =" + r );
+        if (r != null && (r.isHomeActivity() || r.isRecentsActivity())) {
+        //if (r != null && r.isHomeActivity()) {
             mService.setFocusedActivityLocked(r, reason);
             return resumeTopActivitiesLocked(mHomeStack, prev, null);
         }
@@ -1189,11 +1217,13 @@ public final class ActivityStackSupervisor implements DisplayListener {
                     ? new ProfilerInfo(profileFile, profileFd, mService.mSamplingInterval,
                     mService.mAutoStopProfiler) : null;
             app.forceProcessStateUpTo(ActivityManager.PROCESS_STATE_TOP);
+			int align = mWindowManager.getHalfScreenWindowAlignFromSameTask(r.appToken,r.task.taskId);
             app.thread.scheduleLaunchActivity(new Intent(r.intent), r.appToken,
+ r.task.taskId,r.isHomeActivity,
                     System.identityHashCode(r), r.info, new Configuration(mService.mConfiguration),
                     r.compat, r.launchedFromPackage, r.task.voiceInteractor, app.repProcState,
                     r.icicle, r.persistentState, results, newIntents, !andResume,
-                    mService.isNextTransitionForward(), profilerInfo);
+                    mService.isNextTransitionForward(), profilerInfo,align);
 
             if ((app.info.flags&ApplicationInfo.FLAG_CANT_SAVE_STATE) != 0) {
                 // This may be a heavy-weight process!  Note that the package
@@ -1870,11 +1900,19 @@ public final class ActivityStackSupervisor implements DisplayListener {
                     ActivityRecord curTop = lastStack == null?
                             null : lastStack.topRunningNonDelayedActivityLocked(notTop);
                     boolean movedToFront = false;
-                    if (curTop != null && (curTop.task != intentActivity.task ||
-                            curTop.task != lastStack.topTask())) {
+					boolean flag = false;
+					if(mService.mConfiguration.enableMultiWindow()){
+						flag = !intentActivity.task.mTopOfLauncher;
+					}
+                    if ((curTop != null && (curTop.task != intentActivity.task ||
+                            curTop.task != lastStack.topTask())) || flag) {
                         r.intent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-                        if (sourceRecord == null || (sourceStack.topActivity() != null &&
-                                sourceStack.topActivity().task == sourceRecord.task)) {
+						intentActivity.task.mTopOfLauncher = true;
+						boolean callerAtFront = sourceRecord == null
+                                || (sourceStack.topActivity() != null &&
+                                		sourceStack.topActivity().task == sourceRecord.task)
+                                || mService.mConfiguration.enableMultiWindow();
+                        if (callerAtFront) {
                             // We really do want to push this one into the
                             // user's face, right now.
                             if (launchTaskBehind && sourceRecord != null) {
@@ -2479,6 +2517,7 @@ public final class ActivityStackSupervisor implements DisplayListener {
         if (targetStack == null) {
             targetStack = getFocusedStack();
         }
+		//new RuntimeException("here").fillInStackTrace();
         // Do targetStack first.
         boolean result = false;
         if (isFrontStack(targetStack)) {

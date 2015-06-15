@@ -311,6 +311,8 @@
          for more information on how to control this flag programmatically.</p> -->
     <attr name="hardwareAccelerated" format="boolean" />
 
+    <attr name="allowHalfScreen" format="boolean" />
+
     <!-- Flag indicating whether the given application component is available
          to other applications.  If false, it can only be accessed by
          applications with its same user id (which usually means only by
@@ -1089,6 +1091,7 @@
         <attr name="debuggable" />
         <attr name="vmSafeMode" />
         <attr name="hardwareAccelerated" />
+        <attr name="allowHalfScreen" />
         <!-- Name of activity to be launched for managing the application's space on the device. -->
         <attr name="manageSpaceActivity" />
         <attr name="allowClearUserData" />
@@ -1685,6 +1688,7 @@
         <attr name="windowSoftInputMode" />
         <attr name="immersive" />
         <attr name="hardwareAccelerated" />
+        <attr name="allowHalfScreen"	/>
         <attr name="uiOptions" />
         <attr name="parentActivityName" />
         <attr name="singleUser" />

@@ -539,6 +539,8 @@ public class ActivityInfo extends ComponentInfo
      * {@link android.R.attr#configChanges} attribute.
      */
     public static final int CONFIG_LAYOUT_DIRECTION = 0x2000;
+
+	public static final int CONFIG_MULTI_WINDOW = 0x8000;
     /**
      * Bit in {@link #configChanges} that indicates that the activity
      * can itself handle changes to the font scaling factor.  Set from the
@@ -568,6 +570,7 @@ public class ActivityInfo extends ComponentInfo
         Configuration.NATIVE_CONFIG_SMALLEST_SCREEN_SIZE,   // SMALLEST SCREEN SIZE
         Configuration.NATIVE_CONFIG_DENSITY,                // DENSITY
         Configuration.NATIVE_CONFIG_LAYOUTDIR,              // LAYOUT DIRECTION
+        0x8000, // MULTI WINDOW 
     };
     /** @hide
      * Convert Java change bits to native.
@@ -640,12 +643,17 @@ public class ActivityInfo extends ComponentInfo
      * If defined, the activity named here is the logical parent of this activity.
      */
     public String parentActivityName;
+	/**
+	*@hide
+	*/
+	public int align = -1;
 
     public ActivityInfo() {
     }
 
     public ActivityInfo(ActivityInfo orig) {
         super(orig);
+		align = orig.align;
         theme = orig.theme;
         launchMode = orig.launchMode;
         permission = orig.permission;
@@ -717,6 +725,7 @@ public class ActivityInfo extends ComponentInfo
 
     public void writeToParcel(Parcel dest, int parcelableFlags) {
         super.writeToParcel(dest, parcelableFlags);
+		dest.writeInt(align);
         dest.writeInt(theme);
         dest.writeInt(launchMode);
         dest.writeString(permission);
@@ -744,6 +753,7 @@ public class ActivityInfo extends ComponentInfo
 
     private ActivityInfo(Parcel source) {
         super(source);
+		align = source.readInt();
         theme = source.readInt();
         launchMode = source.readInt();
         permission = source.readString();

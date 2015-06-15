@@ -55,7 +55,8 @@ import android.util.Slog;
 import android.util.TimeUtils;
 import android.view.IApplicationToken;
 import android.view.WindowManager;
-
+import android.view.WindowManagerPolicy;
+import android.provider.Settings;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlSerializer;
@@ -71,11 +72,16 @@ import java.util.Objects;
  * An entry in the history stack, representing an activity.
  */
 final class ActivityRecord {
-    static final String TAG = ActivityManagerService.TAG;
+	static final String TAG = "ActivityRecord";
+	static final String LOG = "ActivityRecord";
     static final boolean DEBUG_SAVED_STATE = ActivityStackSupervisor.DEBUG_SAVED_STATE;
     final public static String RECENTS_PACKAGE_NAME = "com.android.systemui.recents";
-
-    private static final String TAG_ACTIVITY = "activity";
+	static final boolean DEBUG_ZJY = false;
+	static final void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Slog.d(LOG,msg);
+		}
+	}
     private static final String ATTR_ID = "id";
     private static final String TAG_INTENT = "intent";
     private static final String ATTR_USERID = "user_id";
@@ -109,7 +115,7 @@ final class ActivityRecord {
     static final int HOME_ACTIVITY_TYPE = 1;
     static final int RECENTS_ACTIVITY_TYPE = 2;
     int mActivityType;
-
+	final boolean isHomeActivity; // do we consider this to be a home activity?
     CharSequence nonLocalizedLabel;  // the label information from the package mgr.
     int labelRes;           // the label information from the package mgr.
     int icon;               // resource identifier of activity's icon.
@@ -200,6 +206,7 @@ final class ActivityRecord {
         pw.print(prefix); pw.print("stateNotNeeded="); pw.print(stateNotNeeded);
                 pw.print(" componentSpecified="); pw.print(componentSpecified);
                 pw.print(" mActivityType="); pw.println(mActivityType);
+				pw.print(" isHomeActivity="); pw.println(isHomeActivity);
         pw.print(prefix); pw.print("compat="); pw.print(compat);
                 pw.print(" labelRes=0x"); pw.print(Integer.toHexString(labelRes));
                 pw.print(" icon=0x"); pw.print(Integer.toHexString(icon));
@@ -330,6 +337,14 @@ final class ActivityRecord {
             if (activity != null) {
                 activity.windowsVisible();
             }
+        }
+
+		@Override public boolean isHomeActivity() throws RemoteException {
+            ActivityRecord activity = weakActivity.get();
+            if (activity != null && activity.isHomeActivity) {
+                return true;
+            }
+            return false;
         }
 
         @Override public void windowsGone() {
@@ -468,7 +483,43 @@ final class ActivityRecord {
             if (intent != null && (aInfo.flags & ActivityInfo.FLAG_EXCLUDE_FROM_RECENTS) != 0) {
                 intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
             }
-
+            if(intent != null && (intent.getFlags()&Intent.FLAG_USE_HALF_SCREEN)!=0){
+				windowFlags |= WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
+				boolean def = Settings.System.getInt(service.mContext.getContentResolver(),
+												Settings.System.HALF_SCREEN_APP_LOCATION,0)==0;
+				
+				if(service.mConfiguration.orientation == Configuration.ORIENTATION_LANDSCAPE){
+					if(def){
+						info.align = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
+					}else{
+						info.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					}
+				}else if(service.mConfiguration.orientation == Configuration.ORIENTATION_PORTRAIT){
+					if(def){
+						info.align = WindowManagerPolicy.WINDOW_ALIGN_TOP;
+					}else{
+						info.align = WindowManagerPolicy.WINDOW_ALIGN_BOTTOM;
+					}
+				}
+				LOGD("have the flag info.align="+info.align+" packageName="+aInfo.applicationInfo.packageName);
+				
+			}
+			if(intent != null){
+ 				if((intent.getFlags() & Intent.FLAG_ALIGN_LEFT_TOP_WINDOW)!=0){
+					info.align = WindowManagerPolicy.ALIGN_LEFT_TOP_WINDOW;
+ 				}else if((intent.getFlags() & Intent.FLAG_ALIGN_RIGHT_TOP_WINDOW)!=0){
+					info.align = WindowManagerPolicy.ALIGN_RIGHT_TOP_WINDOW;
+ 				}else if((intent.getFlags() & Intent.FLAG_ALIGN_LEFT_BOTTOM_WINDOW)!=0){
+					info.align = WindowManagerPolicy.ALIGN_LEFT_BOTTOM_WINDOW;
+ 				}else if((intent.getFlags() & Intent.FLAG_ALIGN_RIGHT_BOTTOM_WINDOW)!=0){
+					info.align = WindowManagerPolicy.ALIGN_RIGHT_BOTTOM_WINDOW;
+ 				}
+				LOGD("have the flag info.align="+info.align+" packageName="+aInfo.applicationInfo.packageName);
+			}
+			if( appInfo.phoneMode/* || info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT*/){
+				Log.e("shenzhicheng", "ActivityRecord --------- phoneMode");
+			    info.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+		    }
             packageName = aInfo.applicationInfo.packageName;
             launchMode = aInfo.launchMode;
 
@@ -492,10 +543,13 @@ final class ActivityRecord {
                     isNotResolverActivity()) {
                 // This sure looks like a home activity!
                 mActivityType = HOME_ACTIVITY_TYPE;
+				isHomeActivity = true;
             } else if (realActivity.getClassName().contains(RECENTS_PACKAGE_NAME)) {
                 mActivityType = RECENTS_ACTIVITY_TYPE;
+				isHomeActivity = false;
             } else {
                 mActivityType = APPLICATION_ACTIVITY_TYPE;
+				isHomeActivity = false;
             }
 
             immersive = (aInfo.flags & ActivityInfo.FLAG_IMMERSIVE) != 0;
@@ -509,6 +563,7 @@ final class ActivityRecord {
             fullscreen = true;
             noDisplay = false;
             mActivityType = APPLICATION_ACTIVITY_TYPE;
+			isHomeActivity = false;
             immersive = false;
         }
     }

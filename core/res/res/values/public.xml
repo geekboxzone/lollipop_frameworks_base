@@ -791,6 +791,7 @@
   <public type="drawable" name="ic_menu_camera" id="0x01080037" />
   <public type="drawable" name="ic_menu_close_clear_cancel" id="0x01080038" />
   <public type="drawable" name="ic_menu_compass" id="0x01080039" />
+<public type="drawable" name="ic_menu_copy"  id="0x0108009e" />
   <public type="drawable" name="ic_menu_crop" id="0x0108003a" />
   <public type="drawable" name="ic_menu_day" id="0x0108003b" />
   <public type="drawable" name="ic_menu_delete" id="0x0108003c" />
@@ -894,6 +895,8 @@
   <public type="drawable" name="ic_dialog_info" id="0x0108009b" />
   <public type="drawable" name="ic_menu_sort_alphabetically" id="0x0108009c" />
   <public type="drawable" name="ic_menu_sort_by_size" id="0x0108009d" />
+  <public type="drawable" name="circlemenu_settoped" id="0x01080101" />
+  <public type="drawable" name="circlemenu_settop" id="0x01080100" />
 
   <public type="layout" name="activity_list_item" id="0x01090000" />
   <public type="layout" name="expandable_list_content" id="0x01090001" />

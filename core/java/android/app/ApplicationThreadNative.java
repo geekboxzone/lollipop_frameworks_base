@@ -119,7 +119,8 @@ public abstract class ApplicationThreadNative extends Binder
             int procState = data.readInt();
             boolean isForward = data.readInt() != 0;
             Bundle resumeArgs = data.readBundle();
-            scheduleResumeActivity(b, procState, isForward, resumeArgs);
+			boolean ignoreCallback = data.readInt() != 0;
+            scheduleResumeActivity(b, procState, isForward, resumeArgs, ignoreCallback);
             return true;
         }
         
@@ -137,6 +138,8 @@ public abstract class ApplicationThreadNative extends Binder
             data.enforceInterface(IApplicationThread.descriptor);
             Intent intent = Intent.CREATOR.createFromParcel(data);
             IBinder b = data.readStrongBinder();
+			int taskId = data.readInt();
+			boolean isHomeActivity = data.readInt() != 0;
             int ident = data.readInt();
             ActivityInfo info = ActivityInfo.CREATOR.createFromParcel(data);
             Configuration curConfig = Configuration.CREATOR.createFromParcel(data);
@@ -153,9 +156,10 @@ public abstract class ApplicationThreadNative extends Binder
             boolean isForward = data.readInt() != 0;
             ProfilerInfo profilerInfo = data.readInt() != 0
                     ? ProfilerInfo.CREATOR.createFromParcel(data) : null;
-            scheduleLaunchActivity(intent, b, ident, info, curConfig, compatInfo, referrer,
+int align = data.readInt();
+            scheduleLaunchActivity(intent, b, taskId,isHomeActivity,ident, info, curConfig, compatInfo, referrer,
                     voiceInteractor, procState, state, persistentState, ri, pi,
-                    notResumed, isForward, profilerInfo);
+                    notResumed, isForward, profilerInfo,align);
             return true;
         }
 
@@ -741,7 +745,7 @@ class ApplicationThreadProxy implements IApplicationThread {
     }
 
     public final void scheduleResumeActivity(IBinder token, int procState, boolean isForward,
-            Bundle resumeArgs)
+            Bundle resumeArgs,boolean ignoreCallback)
             throws RemoteException {
         Parcel data = Parcel.obtain();
         data.writeInterfaceToken(IApplicationThread.descriptor);
@@ -749,6 +753,7 @@ class ApplicationThreadProxy implements IApplicationThread {
         data.writeInt(procState);
         data.writeInt(isForward ? 1 : 0);
         data.writeBundle(resumeArgs);
+			data.writeInt(ignoreCallback ? 1 : 0);
         mRemote.transact(SCHEDULE_RESUME_ACTIVITY_TRANSACTION, data, null,
                 IBinder.FLAG_ONEWAY);
         data.recycle();
@@ -765,16 +770,19 @@ class ApplicationThreadProxy implements IApplicationThread {
         data.recycle();
     }
 
-    public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,
+    public final void scheduleLaunchActivity(Intent intent, IBinder token, 
+			int taskId, boolean isHomeActivity,int ident,
             ActivityInfo info, Configuration curConfig, CompatibilityInfo compatInfo,
             String referrer, IVoiceInteractor voiceInteractor, int procState, Bundle state,
             PersistableBundle persistentState, List<ResultInfo> pendingResults,
             List<ReferrerIntent> pendingNewIntents, boolean notResumed, boolean isForward,
-            ProfilerInfo profilerInfo) throws RemoteException {
+            ProfilerInfo profilerInfo,int align) throws RemoteException {
         Parcel data = Parcel.obtain();
         data.writeInterfaceToken(IApplicationThread.descriptor);
         intent.writeToParcel(data, 0);
         data.writeStrongBinder(token);
+		data.writeInt(taskId);
+		data.writeInt(isHomeActivity ? 1 : 0);
         data.writeInt(ident);
         info.writeToParcel(data, 0);
         curConfig.writeToParcel(data, 0);
@@ -794,6 +802,7 @@ class ApplicationThreadProxy implements IApplicationThread {
         } else {
             data.writeInt(0);
         }
+	data.writeInt(align);
         mRemote.transact(SCHEDULE_LAUNCH_ACTIVITY_TRANSACTION, data, null,
                 IBinder.FLAG_ONEWAY);
         data.recycle();

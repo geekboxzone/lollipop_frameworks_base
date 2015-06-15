@@ -151,7 +151,7 @@ public class ResourcesManager {
      */
     public Resources getTopLevelResources(String resDir, String[] splitResDirs,
             String[] overlayDirs, String[] libDirs, int displayId,
-            Configuration overrideConfiguration, CompatibilityInfo compatInfo, IBinder token) {
+            Configuration overrideConfiguration, CompatibilityInfo compatInfo, IBinder token, String packageName) {
         final float scale = compatInfo.applicationScale;
         ResourcesKey key = new ResourcesKey(resDir, displayId, overrideConfiguration, scale, token);
         Resources r;
@@ -226,7 +226,8 @@ public class ResourcesManager {
         } else {
             config = getConfiguration();
         }
-        r = new Resources(assets, dm, config, compatInfo, token);
+        //r = new Resources(assets, dm, config, compatInfo, token);
+        r = new Resources(assets, dm, config, compatInfo, token, packageName);
         if (false) {
             Slog.i(TAG, "Created app resources " + resDir + " " + r + ": "
                     + r.getConfiguration() + " appScale="

@@ -40,7 +40,7 @@ class DisplayContentList extends ArrayList<DisplayContent> {
  * IMPORTANT: No method from this class should ever be used without holding
  * WindowManagerService.mWindowMap.
  */
-class DisplayContent {
+public class DisplayContent {
 
     /** Unique identifier of this stack. */
     private final int mDisplayId;
@@ -125,11 +125,11 @@ class DisplayContent {
         return mWindows;
     }
 
-    Display getDisplay() {
+    public Display getDisplay() {
         return mDisplay;
     }
 
-    DisplayInfo getDisplayInfo() {
+   public DisplayInfo getDisplayInfo() {
         return mDisplayInfo;
     }
 

@@ -27,10 +27,11 @@ final class StartingData {
     final int icon;
     final int logo;
     final int windowFlags;
+	final int align;
 
     StartingData(String _pkg, int _theme, CompatibilityInfo _compatInfo,
             CharSequence _nonLocalizedLabel,
-            int _labelRes, int _icon, int _logo, int _windowFlags) {
+            int _labelRes, int _icon, int _logo, int _windowFlags,int _align) {
         pkg = _pkg;
         theme = _theme;
         compatInfo = _compatInfo;
@@ -39,5 +40,6 @@ final class StartingData {
         icon = _icon;
         logo = _logo;
         windowFlags = _windowFlags;
+		align = _align;
     }
 }

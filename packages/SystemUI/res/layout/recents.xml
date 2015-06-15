@@ -48,7 +48,7 @@
 	<LinearLayout
 			android:id="@+id/close_all_lay"
 			android:layout_width="match_parent"
-			android:layout_height="60dp"				
+			android:layout_height="0dp"				
 			android:fitsSystemWindows="true"
 			android:layout_gravity="bottom"
 			android:gravity="center"

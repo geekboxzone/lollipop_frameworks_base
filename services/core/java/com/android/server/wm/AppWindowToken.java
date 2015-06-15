@@ -39,22 +39,24 @@ class AppTokenList extends ArrayList<AppWindowToken> {
  * Version of WindowToken that is specifically for a particular application (or
  * really activity) that is displaying windows.
  */
-class AppWindowToken extends WindowToken {
+public class AppWindowToken extends WindowToken {
     // Non-null only for application tokens.
-    final IApplicationToken appToken;
+    public final IApplicationToken appToken;
 
     // All of the windows and child windows that are included in this
     // application token.  Note this list is NOT sorted!
-    final WindowList allAppWindows = new WindowList();
+    public final WindowList allAppWindows = new WindowList();
     final AppWindowAnimator mAppAnimator;
 
     final WindowAnimator mAnimator;
 
     final boolean voiceInteraction;
 
-    int groupId = -1;
+    public int groupId = -1;
     boolean appFullscreen;
-    int requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+    public int requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+	int mOriginalOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
+	public boolean mForceRotation = true;
     boolean layoutConfigChanges;
     boolean showWhenLocked;
 
@@ -82,7 +84,7 @@ class AppWindowToken extends WindowToken {
     // it will sometimes be true a little earlier: when the token has
     // been shown, but is still waiting for its app transition to execute
     // before making its windows shown.
-    boolean hiddenRequested;
+    public boolean hiddenRequested;
 
     // Have we told the window clients to hide themselves?
     boolean clientHidden;
@@ -224,7 +226,7 @@ class AppWindowToken extends WindowToken {
         }
     }
 
-    WindowState findMainWindow() {
+    public WindowState findMainWindow() {
         int j = windows.size();
         while (j > 0) {
             j--;
@@ -252,6 +254,41 @@ class AppWindowToken extends WindowToken {
         return false;
     }
 
+     WindowState findTouchableMainWindow(){
+	        int j = windows.size();
+	        while (j > 0) {
+	            j--;
+	            WindowState win = windows.get(j);
+	            if (win.mAttrs.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION) {
+	                return win;
+	            }
+	        }
+	        return null;
+
+		}
+		WindowState findAnimMainWindow(){
+		int j = windows.size();
+		WindowState w = null;
+		while(j>0){
+			j--;
+			WindowState win = windows.get(j);
+			if (win.mAttrs.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION
+				|| win.mAttrs.type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING) {
+					w = win;
+			}
+			//google maps may run below
+			if(win.mAttrs.type == WindowManager.LayoutParams.TYPE_APPLICATION &&
+				win.mAttrs.width == -1 && win.mAttrs.height == -1){
+				if(win.getAttrs().windowAnimations == com.android.internal.R.style.Animation_TranslucentLeft||
+					win.getAttrs().windowAnimations == com.android.internal.R.style.Animation_TranslucentRight){
+					w = win;
+					break;
+				}
+			}
+
+		}
+		return w;
+	}
     @Override
     void removeAllWindows() {
         for (int winNdx = allAppWindows.size() - 1; winNdx >= 0;

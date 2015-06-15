@@ -49,6 +49,7 @@ static struct {
     jfieldID hasFocus;
     jfieldID hasWallpaper;
     jfieldID paused;
+	jfieldID isHomeWindow;
     jfieldID layer;
     jfieldID ownerPid;
     jfieldID ownerUid;
@@ -148,6 +149,8 @@ bool NativeInputWindowHandle::updateInfo() {
             gInputWindowHandleClassInfo.hasWallpaper);
     mInfo->paused = env->GetBooleanField(obj,
             gInputWindowHandleClassInfo.paused);
+	mInfo->isHomeWindow = env->GetBooleanField(obj,
+			gInputWindowHandleClassInfo.isHomeWindow);
     mInfo->layer = env->GetIntField(obj,
             gInputWindowHandleClassInfo.layer);
     mInfo->ownerPid = env->GetIntField(obj,
@@ -286,7 +289,8 @@ int register_android_server_InputWindowHandle(JNIEnv* env) {
 
     GET_FIELD_ID(gInputWindowHandleClassInfo.paused, clazz,
             "paused", "Z");
-
+	GET_FIELD_ID(gInputWindowHandleClassInfo.isHomeWindow, clazz,
+			"isHomeWindow", "Z");
     GET_FIELD_ID(gInputWindowHandleClassInfo.layer, clazz,
             "layer", "I");
 

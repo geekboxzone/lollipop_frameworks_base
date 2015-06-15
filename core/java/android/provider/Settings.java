@@ -1458,6 +1458,7 @@ public final class Settings {
          * @return true if the value was set, false on database errors
          */
         public static boolean putInt(ContentResolver cr, String name, int value) {
+           java.lang.System.out.println(name+"==============================================="+value);
             return putIntForUser(cr, name, value, UserHandle.myUserId());
         }
 
@@ -1791,6 +1792,112 @@ public final class Settings {
          * @hide
          */
         public static final String LAUNCHER_CLICK_APP ="launcher.click.app";
+   /**
+	    	*@hide
+	    	*/
+	    public static final String MULTI_WINDOW_BUTTON_SHOW = "multi_window_button_show";
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_USED = "multi_window_used";
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_CONFIG = "multi_window_config";
+		/**
+		*@hide
+		*/
+		public static final String MULITI_WINDOW_MODE = "multi_window_mode";
+
+		/**
+		*@hide
+		*/
+		public static final int MULITI_WINDOW_FULL_SCREEN_MODE = 0;
+
+		/**
+		*@hide
+		*/
+		public static final int MULITI_WINDOW_HALF_SCREEN_MODE = 1;
+
+		/**
+		*@hide
+		*/
+		public static final int MULITI_WINDOW_FOUR_SCREEN_MODE = 2;
+
+		/**
+		*@hide
+		*/
+		public static final String HALF_SCREEN_WINDOW_ENABLE = "half_screen_window_enable";
+
+		/**
+		*@hide
+		*/
+		public static final String FOUR_SCREEN_WINDOW_ENABLE = "four_screen_window_enable";
+
+		/**
+		*@hide
+		*/
+		public static final String HALF_SCREEN_WINDOW_POSITION = "half_screen_window_position";
+
+		/**
+		*@hide
+		*/
+		public static final String FOUR_SCREEN_WINDOW_POSITION = "four_screen_window_position";
+
+		/**
+		*@hide
+		*/
+		public static final String FOUR_SCREEN_WINDOW_AREAS = "four_screen_window_areas";
+
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_OPERATION = "multi_window_operation";
+
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_MIN_OPERATION_PACKAGE = "multi_window_min_operation_package";
+
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_MIN_OPERATION_MOVE_PACKAGE = "multi_window_min_operation_move_package";
+
+
+		/**
+		*@hide
+		*/
+		public static final int MULTI_WINDOW_CLOSE = 0;
+
+		/**
+		*@hide
+		*/
+		public static final int MULTI_WINDOW_MIN = 1;
+
+
+		/**
+		*@hide
+		*/
+		public static final int MULTI_WINDOW_MAX = 2;
+
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_SIDE_SLIP = "multi_window_side_slip";
+
+		/**
+		*@hide
+		*/
+		public static final String HALF_SCREEN_APP_LOCATION = "half_screen_app_location";
+		/**
+		*@hide
+		*/
+		public static final String MULTI_WINDOW_TOP_APP = "multi_screen_top_app";
+                /**
+                *@hide
+                */
+                public static final String TOP_MULTI_APP_ENABLE = "top_multi_window_enable";
         /**
          * @deprecated Use {@link android.provider.Settings.Global#AIRPLANE_MODE_ON} instead
          */
@@ -2162,26 +2269,26 @@ public final class Settings {
          * changing this value will not change the vibrate. See AudioManager.
          */
         public static final String VIBRATE_ON = "vibrate_on";
+        /**
+         * @hide
+          */    
+         public static final String VIBRATE_WHEN_CALLS_CONNECTED = "vibrate_when_calls_connected";
+               
+         /**
+         * @hide
+         */    
+         public static final String FLIP_MUTE_INCOMMING_CALL = "flip_mute_incomming_call";
+               
+         /**
+         * @hide
+         */    
+               public static final String EMERGENCY_CALL= "emergency_call";
 
-		 /**
+               /**
          * @hide
-         */	
-		public static final String VIBRATE_WHEN_CALLS_CONNECTED = "vibrate_when_calls_connected";
-		
-		/**
-         * @hide
-         */	
-		public static final String FLIP_MUTE_INCOMMING_CALL = "flip_mute_incomming_call";
-		
-		/**
-         * @hide
-         */	
-		public static final String EMERGENCY_CALL= "emergency_call";
+         */    
+               public static final String AUTO_CALL_RECORD = "auto_call_record";
 
-		/**
-         * @hide
-         */	
-		public static final String AUTO_CALL_RECORD = "auto_call_record";
 
 
         /**
@@ -3385,6 +3492,7 @@ public final class Settings {
          * @return true if the value was set, false on database errors
          */
         public static boolean putInt(ContentResolver cr, String name, int value) {
+           java.lang.System.out.println(name+"==============================================="+value);
             return putIntForUser(cr, name, value, UserHandle.myUserId());
         }
 
@@ -5302,11 +5410,12 @@ public final class Settings {
          * Value for {@link #WIFI_SLEEP_POLICY} to never go to sleep.
          */
         public static final int WIFI_SLEEP_POLICY_NEVER = 2;
-
-        /**
+    
+         /**
          * Value for {@link #WIFI_SLEEP_POLICY} wifi to use intelligent sleep.
          */
         public static final int WIFI_SLEEP_POLICY_INTELLIGENT = 3;
+
 
         /**
          * Value to specify if the user prefers the date, time and time zone
@@ -6989,6 +7098,7 @@ public final class Settings {
          * @return true if the value was set, false on database errors
          */
         public static boolean putInt(ContentResolver cr, String name, int value) {
+           java.lang.System.out.println(name+"==============================================="+value);
             return putString(cr, name, Integer.toString(value));
         }
 

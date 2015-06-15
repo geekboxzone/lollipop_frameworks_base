@@ -77,6 +77,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:visibility="gone" />
+        <include layout="@layout/app_bar"
+        	android:layout_width="@dimen/notification_panel_width"
+        	android:layout_height="wrap_content"
+        	android:layout_gravity = "center_horizontal|top"
+        	android:visibility="gone"/>
     </com.android.systemui.statusbar.phone.PanelHolder>
 
     <com.android.systemui.statusbar.ScrimView android:id="@+id/scrim_in_front"

@@ -46,6 +46,19 @@ import java.util.Locale;
 public final class Configuration implements Parcelable, Comparable<Configuration> {
     /** @hide */
     public static final Configuration EMPTY = new Configuration();
+	/** @hide */
+	public static final int UNDEFINE_MULTI_WINDOW = 0x00;
+	/** @hide */
+	public static final int DISABLE_MULTI_WINDOW = 0x01;
+	/** @hide */
+	public static final int ENABLE_MULTI_WINDOW = 0x02;
+
+	/**
+	*@hide
+	*/
+	public int multiwindowflag;
+
+	public int phoneMode;
 
     /**
      * Current user preference for the scaling factor for fonts, relative
@@ -620,6 +633,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
     }
 
     public void setTo(Configuration o) {
+		multiwindowflag = o.multiwindowflag;
+		phoneMode = o.phoneMode;
         fontScale = o.fontScale;
         mcc = o.mcc;
         mnc = o.mnc;
@@ -651,6 +666,19 @@ public final class Configuration implements Parcelable, Comparable<Configuration
         sb.append("{");
         sb.append(fontScale);
         sb.append(" ");
+		if(multiwindowflag != UNDEFINE_MULTI_WINDOW){
+			sb.append("multiwindowflag=");
+			if(multiwindowflag == UNDEFINE_MULTI_WINDOW){
+				sb.append("UNDEFINE ");
+			}else if(multiwindowflag == ENABLE_MULTI_WINDOW){
+				sb.append("ENABLE ");
+			}else if(multiwindowflag == DISABLE_MULTI_WINDOW){
+				sb.append("DISABLE ");
+			}
+		}
+	if (phoneMode != 0) {
+		sb.append("phoneMode ");
+	}
         if (mcc != 0) {
             sb.append(mcc);
             sb.append("mcc");
@@ -788,6 +816,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
      * Set this object to the system defaults.
      */
     public void setToDefaults() {
+    	multiwindowflag = UNDEFINE_MULTI_WINDOW;
+	phoneMode = 0;
         fontScale = 1;
         mcc = mnc = 0;
         locale = null;
@@ -823,6 +853,13 @@ public final class Configuration implements Parcelable, Comparable<Configuration
      */
     public int updateFrom(Configuration delta) {
         int changed = 0;
+		if(delta.multiwindowflag != UNDEFINE_MULTI_WINDOW && multiwindowflag != delta.multiwindowflag){
+			changed |= ActivityInfo.CONFIG_MULTI_WINDOW;
+			multiwindowflag = delta.multiwindowflag;
+		}
+		if(delta.phoneMode != 0 && phoneMode != delta.phoneMode) {
+			phoneMode = delta.phoneMode;
+		}
         if (delta.fontScale > 0 && fontScale != delta.fontScale) {
             changed |= ActivityInfo.CONFIG_FONT_SCALE;
             fontScale = delta.fontScale;
@@ -985,6 +1022,13 @@ public final class Configuration implements Parcelable, Comparable<Configuration
      */
     public int diff(Configuration delta) {
         int changed = 0;
+		if(delta.multiwindowflag != UNDEFINE_MULTI_WINDOW && multiwindowflag != delta.multiwindowflag){
+			changed |= ActivityInfo.CONFIG_MULTI_WINDOW;
+		}
+		if(phoneMode == 0
+        				&& delta.phoneMode != 0 
+        				&& phoneMode != delta.phoneMode) {
+		}
         if (delta.fontScale > 0 && fontScale != delta.fontScale) {
             changed |= ActivityInfo.CONFIG_FONT_SCALE;
         }
@@ -1028,7 +1072,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
                 && navigationHidden != delta.navigationHidden) {
             changed |= ActivityInfo.CONFIG_KEYBOARD_HIDDEN;
         }
-        if (delta.orientation != ORIENTATION_UNDEFINED
+        if (phoneMode == 0
+        				&& delta.orientation != ORIENTATION_UNDEFINED
                 && orientation != delta.orientation) {
             changed |= ActivityInfo.CONFIG_ORIENTATION;
         }
@@ -1042,15 +1087,18 @@ public final class Configuration implements Parcelable, Comparable<Configuration
                 && uiMode != delta.uiMode) {
             changed |= ActivityInfo.CONFIG_UI_MODE;
         }
-        if (delta.screenWidthDp != SCREEN_WIDTH_DP_UNDEFINED
+        if (phoneMode == 0 
+        				&& delta.screenWidthDp != SCREEN_WIDTH_DP_UNDEFINED
                 && screenWidthDp != delta.screenWidthDp) {
             changed |= ActivityInfo.CONFIG_SCREEN_SIZE;
         }
-        if (delta.screenHeightDp != SCREEN_HEIGHT_DP_UNDEFINED
+        if (phoneMode == 0 
+        				&& delta.screenHeightDp != SCREEN_HEIGHT_DP_UNDEFINED
                 && screenHeightDp != delta.screenHeightDp) {
             changed |= ActivityInfo.CONFIG_SCREEN_SIZE;
         }
-        if (delta.smallestScreenWidthDp != SMALLEST_SCREEN_WIDTH_DP_UNDEFINED
+        if (phoneMode == 0 
+        				&& delta.smallestScreenWidthDp != SMALLEST_SCREEN_WIDTH_DP_UNDEFINED
                 && smallestScreenWidthDp != delta.smallestScreenWidthDp) {
             changed |= ActivityInfo.CONFIG_SMALLEST_SCREEN_SIZE;
         }
@@ -1114,6 +1162,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
     }
 
     public void writeToParcel(Parcel dest, int flags) {
+		dest.writeInt(multiwindowflag);
+		dest.writeInt(phoneMode);
         dest.writeFloat(fontScale);
         dest.writeInt(mcc);
         dest.writeInt(mnc);
@@ -1150,6 +1200,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
     }
 
     public void readFromParcel(Parcel source) {
+		multiwindowflag = source.readInt();
+		phoneMode = source.readInt();
         fontScale = source.readFloat();
         mcc = source.readInt();
         mnc = source.readInt();
@@ -1197,6 +1249,10 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 
     public int compareTo(Configuration that) {
         int n;
+		n = this.multiwindowflag - that.multiwindowflag;
+		if(n != 0)return n;
+		n = this.phoneMode - that.phoneMode;
+		if(n != 0)return n;
         float a = this.fontScale;
         float b = that.fontScale;
         if (a < b) return -1;
@@ -1262,6 +1318,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
     
     public int hashCode() {
         int result = 17;
+		result = 31 * result + multiwindowflag;
+		result = 31 * result + phoneMode;
         result = 31 * result + Float.floatToIntBits(fontScale);
         result = 31 * result + mcc;
         result = 31 * result + mnc;
@@ -1294,7 +1352,15 @@ public final class Configuration implements Parcelable, Comparable<Configuration
         userSetLocale = true;
         setLayoutDirection(locale);
     }
-
+	/**
+	*@hide
+	*/
+	public void setMultiWindowFlag(boolean enable){
+		multiwindowflag = enable ? ENABLE_MULTI_WINDOW : DISABLE_MULTI_WINDOW;
+	}
+	public boolean enableMultiWindow(){
+		return multiwindowflag == ENABLE_MULTI_WINDOW;
+	}
     /**
      * Return the layout direction. Will be either {@link View#LAYOUT_DIRECTION_LTR} or
      * {@link View#LAYOUT_DIRECTION_RTL}.

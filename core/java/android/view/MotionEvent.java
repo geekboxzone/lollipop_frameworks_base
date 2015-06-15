@@ -1358,6 +1358,7 @@ public final class MotionEvent extends InputEvent implements Parcelable {
     private static native int nativeGetMetaState(long nativePtr);
     private static native int nativeGetButtonState(long nativePtr);
     private static native void nativeOffsetLocation(long nativePtr, float deltaX, float deltaY);
+	private static native void nativeTransfromCoordinate(long nativePtr, float posX, float posY, float scaleX, float scaleY);
     private static native float nativeGetXOffset(long nativePtr);
     private static native float nativeGetYOffset(long nativePtr);
     private static native float nativeGetXPrecision(long nativePtr);
@@ -2723,6 +2724,12 @@ public final class MotionEvent extends InputEvent implements Parcelable {
         }
     }
 
+	/**
+	*@hide
+	*/
+	public final void transformCoordinate(float posX, float posY, float scaleX, float scaleY){
+		nativeTransfromCoordinate(mNativePtr, posX, posY, scaleX, scaleY);
+	}
     /**
      * Set this event's location.  Applies {@link #offsetLocation} with a
      * delta from the current location to the given new location.

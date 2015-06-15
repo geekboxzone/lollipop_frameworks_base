@@ -56,6 +56,7 @@ import static com.android.internal.content.NativeLibraryHelper.LIB_DIR_NAME;
 import static com.android.internal.util.ArrayUtils.appendInt;
 import static com.android.internal.util.ArrayUtils.removeInt;
 
+import android.util.Xml;
 import android.util.ArrayMap;
 
 import com.android.internal.R;
@@ -78,6 +79,8 @@ import com.android.server.pm.Settings.DatabaseVersion;
 import com.android.server.storage.DeviceStorageMonitorInternal;
 
 import org.xmlpull.v1.XmlSerializer;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.ActivityManager;
 import android.app.ActivityManagerNative;
@@ -119,6 +122,7 @@ import android.content.pm.PackageManager.LegacyPackageDeleteObserver;
 import android.content.pm.PackageParser.ActivityIntentInfo;
 import android.content.pm.PackageParser.PackageLite;
 import android.content.pm.PackageParser.PackageParserException;
+import android.content.pm.PackageParser.ScanPkg;
 import android.content.pm.PackageParser;
 import android.content.pm.PackageStats;
 import android.content.pm.PackageUserState;
@@ -200,6 +204,7 @@ import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.HashMap;	
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -232,7 +237,8 @@ adb shell am instrument -w -e class com.android.unit_tests.PackageManagerTests c
  * 
  * {@hide}
  */
-public class PackageManagerService extends IPackageManager.Stub {
+public class PackageManagerService extends IPackageManager.Stub 
+	implements ScanPkg {
     static final String TAG = "PackageManager";
     static final boolean DEBUG_SETTINGS = false;
     static final boolean DEBUG_PREFERRED = false;
@@ -1351,6 +1357,8 @@ public class PackageManagerService extends IPackageManager.Stub {
         mGlobalGids = systemConfig.getGlobalGids();
         mSystemPermissions = systemConfig.getSystemPermissions();
         mAvailableFeatures = systemConfig.getAvailableFeatures();
+
+	checkAppSupportPhonemode(null);
 
         synchronized (mInstallLock) {
         // writer
@@ -4412,6 +4420,7 @@ public class PackageManagerService extends IPackageManager.Stub {
         pp.setSeparateProcesses(mSeparateProcesses);
         pp.setOnlyCoreApps(mOnlyCore);
         pp.setDisplayMetrics(mMetrics);
+	pp.setModeList(this);
 
         if ((scanFlags & SCAN_TRUSTED_OVERLAY) != 0) {
             parseFlags |= PackageParser.PARSE_TRUSTED_OVERLAY;
@@ -4840,7 +4849,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                     Log.w(TAG, "Not running dexopt on remaining apps due to low memory: " + usableSpace);
                     break;
                 }
-                performBootDexOpt(pkg, ++i, total);
+                //performBootDexOpt(pkg, ++i, total);
             }
         }
     }
@@ -13902,5 +13911,57 @@ public class PackageManagerService extends IPackageManager.Stub {
             mSettings.mPerformancePackages.add(0, setting);
         }
         mSettings.writeLPr();
+    }
+	
+    public int scanModePkg(String pkg) {
+		return checkAppSupportPhonemode(pkg);
+    }
+
+   private HashMap<String,Boolean> phoneModeList;// = new ArrayList<String>();
+   public int checkAppSupportPhonemode(String pkgName) {
+	File configureDir = Environment.getRootDirectory();
+	File phoneModeWhiteList = new File(configureDir, "etc/package_phonemode.xml");
+        if (phoneModeList == null && phoneModeWhiteList.exists()) {
+	    phoneModeList = new HashMap<String,Boolean>();
+	    phoneModeList.clear();
+            try {
+                FileInputStream stream = new FileInputStream(phoneModeWhiteList);
+                XmlPullParser parser = Xml.newPullParser();
+                parser.setInput(stream, null);
+
+                int type;
+                do {
+                    type = parser.next();
+                    if (type == XmlPullParser.START_TAG) {
+                        String tag = parser.getName();
+                        if ("app".equals(tag)) {
+			    if (parser.getAttributeCount() > 0) {
+                        	String pkgname = parser.getAttributeValue(0);//null, "package");
+                        	String pkgmode = parser.getAttributeValue(1);
+				//Log.e("shenzhicheng", tag + ", pkgname = " + pkgname + ", pkgmode = " + pkgmode);
+				//Log.e("shenzhicheng", tag + " ,count: " + parser.getAttributeCount() + ", ----------------- PMS pkgName from xml is " + pkgName);
+			    	if(pkgname != null)
+                       phoneModeList.put(pkgname,Boolean.parseBoolean(pkgmode));
+			    }
+                        }
+                    }
+                } while (type != XmlPullParser.END_DOCUMENT);
+            } catch (NullPointerException e) {
+                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+            } catch (NumberFormatException e) {
+                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+            } catch (XmlPullParserException e) {
+                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+            } catch (IOException e) {
+                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+            } catch (IndexOutOfBoundsException e) {
+                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+            }
+        }
+		if(pkgName == null || phoneModeList == null) return -1;
+		Boolean mode = phoneModeList.get(pkgName);
+		int phonemode = mode==null?-1:(mode?1:0);
+		//Log.e("shenzhicheng",  ", pkgname = " + pkgName + ", pkgmode = " + phonemode);
+		return phonemode;
     }
 }

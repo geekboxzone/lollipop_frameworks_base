@@ -27,6 +27,11 @@ import java.util.Arrays;
 import libcore.util.EmptyArray;
 import libcore.util.Objects;
 
+import android.app.ActivityManagerNative;
+import android.os.Process;
+import android.os.RemoteException;
+import android.util.Log;
+
 /**
  * Describes the characteristics of a particular logical display.
  * @hide
@@ -68,12 +73,14 @@ public final class DisplayInfo implements Parcelable {
      * Represents the size of the display minus any system decorations.
      */
     public int appWidth;
+    public int appWidthTemp;
 
     /**
      * The height of the portion of the display that is available to applications, in pixels.
      * Represents the size of the display minus any system decorations.
      */
     public int appHeight;
+    public int appHeightTemp;
 
     /**
      * The smallest value of {@link #appWidth} that an application is likely to encounter,
@@ -227,6 +234,7 @@ public final class DisplayInfo implements Parcelable {
      * </p>
      */
     public String ownerPackageName;
+    private boolean isSystem = false;
 
     public static final Creator<DisplayInfo> CREATOR = new Creator<DisplayInfo>() {
         @Override
@@ -300,7 +308,9 @@ public final class DisplayInfo implements Parcelable {
         name = other.name;
         uniqueId = other.uniqueId;
         appWidth = other.appWidth;
+        appWidthTemp = appWidth;
         appHeight = other.appHeight;
+        appHeightTemp = appHeight;
         smallestNominalAppWidth = other.smallestNominalAppWidth;
         smallestNominalAppHeight = other.smallestNominalAppHeight;
         largestNominalAppWidth = other.largestNominalAppWidth;
@@ -332,7 +342,9 @@ public final class DisplayInfo implements Parcelable {
         address = source.readString();
         name = source.readString();
         appWidth = source.readInt();
+        appWidthTemp = appWidth;
         appHeight = source.readInt();
+        appHeightTemp = appHeight;
         smallestNominalAppWidth = source.readInt();
         smallestNominalAppHeight = source.readInt();
         largestNominalAppWidth = source.readInt();
@@ -355,6 +367,15 @@ public final class DisplayInfo implements Parcelable {
         ownerUid = source.readInt();
         ownerPackageName = source.readString();
         uniqueId = source.readString();
+	try {
+	if (ActivityManagerNative.getDefault().phoneUID(Process.myUid())) {
+		appWidth = logicalWidth/2 - 200;
+		appHeight = logicalHeight - 50;
+		rotation = 1;
+	}
+	} catch (RemoteException re) {
+		Log.e("shenzhicheng", "remoteException when judge this uid can support phonemode");
+	}
     }
 
     @Override
@@ -402,6 +423,11 @@ public final class DisplayInfo implements Parcelable {
     public void getAppMetrics(DisplayMetrics outMetrics, DisplayAdjustments displayAdjustments) {
         getMetricsWithSize(outMetrics, displayAdjustments.getCompatibilityInfo(),
                 displayAdjustments.getActivityToken(), appWidth, appHeight);
+    }
+
+    public void getAppMetrics(DisplayMetrics outMetrics, DisplayAdjustments displayAdjustments, boolean system) {
+        getMetricsWithSize(outMetrics, displayAdjustments.getCompatibilityInfo(),
+                displayAdjustments.getActivityToken(), appWidthTemp, appHeightTemp);
     }
 
     public void getAppMetrics(DisplayMetrics outMetrics, CompatibilityInfo ci, IBinder token) {

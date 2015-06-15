@@ -509,6 +509,8 @@ public class TaskStackView extends FrameLayout implements TaskStack.TaskStackCal
 
         int direction = (forward ? -1 : 1);
         int newIndex = mFocusedTaskIndex + direction;
+        if(newIndex < 0)
+	    newIndex = numTasks - 1;
         if (newIndex >= 0 && newIndex <= (numTasks - 1)) {
             newIndex = Math.max(0, Math.min(numTasks - 1, newIndex));
             focusTask(newIndex, true, animateFocusedState);

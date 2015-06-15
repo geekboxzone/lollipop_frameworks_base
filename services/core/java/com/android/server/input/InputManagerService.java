@@ -77,6 +77,7 @@ import android.view.InputChannel;
 import android.view.InputDevice;
 import android.view.InputEvent;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.PointerIcon;
 import android.view.Surface;
 import android.view.ViewConfiguration;
@@ -178,6 +179,8 @@ public class InputManagerService extends IInputManager.Stub
             int injectorPid, int injectorUid, int syncMode, int timeoutMillis,
             int policyFlags);
     private static native void nativeSetInputWindows(long ptr, InputWindowHandle[] windowHandles);
+	private static native void nativeSetDontFocusedHome(long ptr, boolean dontNeedFocusHome);
+	private static native void nativeSetMultiWindowConfig(long ptr, boolean enable);
     private static native void nativeSetInputDispatchMode(long ptr, boolean enabled, boolean frozen);
     private static native void nativeSetSystemUiVisibility(long ptr, int visibility);
     private static native void nativeSetFocusedApplication(long ptr,
@@ -1186,6 +1189,12 @@ public class InputManagerService extends IInputManager.Stub
         nativeSetInputWindows(mPtr, windowHandles);
     }
 
+	public void setDontFocusedHome(boolean dontNeedFocusHome){
+		nativeSetDontFocusedHome(mPtr,dontNeedFocusHome);
+	}
+	public void setMultiWindowConfig(boolean enable){
+		nativeSetMultiWindowConfig(mPtr, enable);
+	}
     public void setFocusedApplication(InputApplicationHandle application) {
         nativeSetFocusedApplication(mPtr, application);
     }
@@ -1478,7 +1487,11 @@ public class InputManagerService extends IInputManager.Stub
             KeyEvent event, int policyFlags) {
         return mWindowManagerCallbacks.interceptKeyBeforeDispatching(focus, event, policyFlags);
     }
-
+	//Native callback
+	private long interceptMotionBeforeDispatching(InputWindowHandle focus,
+			MotionEvent event, int policyFlags){
+		return mWindowManagerCallbacks.interceptMotionBeforeDispatching(focus, event, policyFlags);
+	}
     // Native callback.
     private KeyEvent dispatchUnhandledKey(InputWindowHandle focus,
             KeyEvent event, int policyFlags) {
@@ -1636,7 +1649,8 @@ public class InputManagerService extends IInputManager.Stub
 
         public long interceptKeyBeforeDispatching(InputWindowHandle focus,
                 KeyEvent event, int policyFlags);
-
+		public long interceptMotionBeforeDispatching(InputWindowHandle focus,
+				MotionEvent event, int policyFlags);
         public KeyEvent dispatchUnhandledKey(InputWindowHandle focus,
                 KeyEvent event, int policyFlags);
 

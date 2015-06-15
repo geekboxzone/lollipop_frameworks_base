@@ -81,6 +81,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.jar.StrictJarFile;
 import java.util.zip.ZipEntry;
 
+import android.os.SystemProperties;
+
 /**
  * Parser for package files (APKs) on disk. This supports apps packaged either
  * as a single "monolithic" APK, or apps packaged as a "cluster" of multiple
@@ -360,6 +362,12 @@ public class PackageParser {
 
     public void setDisplayMetrics(DisplayMetrics metrics) {
         mMetrics = metrics;
+    }
+
+    private ScanPkg mScanPkg;
+    private int pkgSupportPhone = -1;
+    public void setModeList(ScanPkg scanpkg) {
+	mScanPkg = scanpkg;
     }
 
     public static final boolean isApkFile(File file) {
@@ -2402,6 +2410,10 @@ public class PackageParser {
         final ApplicationInfo ai = owner.applicationInfo;
         final String pkgName = owner.applicationInfo.packageName;
 
+	if (mScanPkg != null) {
+	    pkgSupportPhone = mScanPkg.scanModePkg(pkgName);
+	}
+
         TypedArray sa = res.obtainAttributes(attrs,
                 com.android.internal.R.styleable.AndroidManifestApplication);
 
@@ -2776,6 +2788,10 @@ public class PackageParser {
         TypedArray sa = res.obtainAttributes(attrs,
                 com.android.internal.R.styleable.AndroidManifestApplication);
 
+	if (mScanPkg != null) {
+	    pkgSupportPhone = mScanPkg.scanModePkg(owner.packageName);
+	}
+
         if (sa.getBoolean(
                 com.android.internal.R.styleable.AndroidManifestApplication_hasCode, true)) {
             owner.splitFlags[splitIndex] |= ApplicationInfo.FLAG_HAS_CODE;
@@ -3101,6 +3117,17 @@ public class PackageParser {
             a.info.screenOrientation = sa.getInt(
                     com.android.internal.R.styleable.AndroidManifestActivity_screenOrientation,
                     ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+				    
+	    if(pkgSupportPhone  == -1) {
+			if(a.info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT&&SystemProperties.get("persist.sys.phonemode","true").equals("true")) {
+			owner.applicationInfo.phoneMode = true;
+	    	Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
+				}
+	    }else{
+			owner.applicationInfo.phoneMode = pkgSupportPhone ==1;
+			Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
+
+		}
             a.info.configChanges = sa.getInt(
                     com.android.internal.R.styleable.AndroidManifestActivity_configChanges,
                     0);
@@ -3193,6 +3220,20 @@ public class PackageParser {
                             + mArchiveSourcePath + " "
                             + parser.getPositionDescription());
                 } else {
+				   
+                     if(pkgSupportPhone  == -1) {
+					 	if(intent.hasAction(Intent.ACTION_MAIN) 
+						    && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
+						    && a.info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT&&SystemProperties.get("persist.sys.phonemode","true").equals("true")){
+						owner.applicationInfo.phoneMode = true;
+	    			  Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
+					 		}
+				    }else{
+						owner.applicationInfo.phoneMode = pkgSupportPhone ==1;
+						Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
+
+					}
+			             
                     a.intents.add(intent);
                 }
             } else if (!receiver && parser.getName().equals("preferred")) {
@@ -5041,5 +5082,9 @@ public class PackageParser {
             super(detailMessage, throwable);
             this.error = error;
         }
+    }
+
+    public interface ScanPkg {
+	public abstract int scanModePkg(String pkg);
     }
 }

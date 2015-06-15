@@ -154,6 +154,12 @@ public final class ActivityThread {
     private static final android.graphics.Bitmap.Config THUMBNAIL_FORMAT = Bitmap.Config.RGB_565;
     static final boolean localLOGV = false;
     static final boolean DEBUG_MESSAGES = false;
+	static final boolean DEBUG_ZJY = false;
+	private static void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Log.d(TAG, msg);
+		}
+	}
     /** @hide */
     public static final boolean DEBUG_BROADCAST = false;
     private static final boolean DEBUG_RESULTS = false;
@@ -280,6 +286,8 @@ public final class ActivityThread {
 
     static final class ActivityClientRecord {
         IBinder token;
+		boolean isHomeActivity;
+		int taskId;
         int ident;
         Intent intent;
         String referrer;
@@ -314,6 +322,7 @@ public final class ActivityThread {
 
         View mPendingRemoveWindow;
         WindowManager mPendingRemoveWindowManager;
+		int align;
 
         ActivityClientRecord() {
             parent = null;
@@ -322,6 +331,9 @@ public final class ActivityThread {
             stopped = false;
             hideForNow = false;
             nextIdle = null;
+			taskId = -1;
+			isHomeActivity = false;
+			align = -1;
         }
 
         public boolean isPreHoneycomb() {
@@ -342,7 +354,7 @@ public final class ActivityThread {
                 + Integer.toHexString(System.identityHashCode(this))
                 + " token=" + token + " " + (componentName == null
                         ? "no component name" : componentName.toShortString())
-                + "}";
+                + "}" +" taskId="+taskId+" isHomeActivity="+isHomeActivity+" align="+align;
         }
     }
 
@@ -604,9 +616,9 @@ public final class ActivityThread {
         }
 
         public final void scheduleResumeActivity(IBinder token, int processState,
-                boolean isForward, Bundle resumeArgs) {
+                boolean isForward, Bundle resumeArgs,boolean ignoreCallback) {
             updateProcessState(processState, false);
-            sendMessage(H.RESUME_ACTIVITY, token, isForward ? 1 : 0);
+            sendMessage(H.RESUME_ACTIVITY, token, isForward ? 1 : 0,ignoreCallback? 1 : 0);
         }
 
         public final void scheduleSendResult(IBinder token, List<ResultInfo> results) {
@@ -618,18 +630,21 @@ public final class ActivityThread {
 
         // we use token to identify this activity without having to send the
         // activity itself back to the activity manager. (matters more with ipc)
-        public final void scheduleLaunchActivity(Intent intent, IBinder token, int ident,
+        public final void scheduleLaunchActivity(Intent intent, IBinder token,int taskId,
+        		boolean isHomeActivity,  int ident,
                 ActivityInfo info, Configuration curConfig, CompatibilityInfo compatInfo,
                 String referrer, IVoiceInteractor voiceInteractor, int procState, Bundle state,
                 PersistableBundle persistentState, List<ResultInfo> pendingResults,
                 List<ReferrerIntent> pendingNewIntents, boolean notResumed, boolean isForward,
-                ProfilerInfo profilerInfo) {
+                ProfilerInfo profilerInfo,int align) {
 
             updateProcessState(procState, false);
 
             ActivityClientRecord r = new ActivityClientRecord();
 
             r.token = token;
+			r.taskId = taskId;
+			r.isHomeActivity = isHomeActivity;
             r.ident = ident;
             r.intent = intent;
             r.referrer = referrer;
@@ -646,6 +661,7 @@ public final class ActivityThread {
             r.isForward = isForward;
 
             r.profilerInfo = profilerInfo;
+			r.align = align;
 
             updatePendingConfiguration(curConfig);
 
@@ -1344,7 +1360,7 @@ public final class ActivityThread {
                     break;
                 case RESUME_ACTIVITY:
                     Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, "activityResume");
-                    handleResumeActivity((IBinder) msg.obj, true, msg.arg1 != 0, true);
+                    handleResumeActivity((IBinder) msg.obj, true, msg.arg1 != 0, msg.arg2 != 0, true);
                     Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
                     break;
                 case SEND_RESULT:
@@ -1648,7 +1664,7 @@ public final class ActivityThread {
             String[] libDirs, int displayId, Configuration overrideConfiguration,
             LoadedApk pkgInfo) {
         return mResourcesManager.getTopLevelResources(resDir, splitResDirs, overlayDirs, libDirs,
-                displayId, overrideConfiguration, pkgInfo.getCompatibilityInfo(), null);
+                displayId, overrideConfiguration, pkgInfo.getCompatibilityInfo(), null, pkgInfo.getPackageName());
     }
 
     final Handler getHandler() {
@@ -2259,7 +2275,7 @@ public final class ActivityThread {
                 activity.attach(appContext, this, getInstrumentation(), r.token,
                         r.ident, app, r.intent, r.activityInfo, title, r.parent,
                         r.embeddedID, r.lastNonConfigurationInstances, config,
-                        r.referrer, r.voiceInteractor);
+                        r.referrer, r.voiceInteractor,r.align);
 
                 if (customIntent != null) {
                     activity.mIntent = customIntent;
@@ -2272,6 +2288,7 @@ public final class ActivityThread {
                 }
 
                 activity.mCalled = false;
+		activity.getWindow().setHomeWindow(r.isHomeActivity);
                 if (r.isPersistable()) {
                     mInstrumentation.callActivityOnCreate(activity, r.state, r.persistentState);
                 } else {
@@ -2283,6 +2300,8 @@ public final class ActivityThread {
                         " did not call through to super.onCreate()");
                 }
                 r.activity = activity;
+				activity.getWindow().getAttributes().taskId = r.taskId;
+				//activity.getWindow().setHomeWindow(r.isHomeActivity);
                 r.stopped = true;
                 if (!r.activity.mFinished) {
                     activity.performStart();
@@ -2389,7 +2408,7 @@ public final class ActivityThread {
         if (a != null) {
             r.createdConfig = new Configuration(mConfiguration);
             Bundle oldState = r.state;
-            handleResumeActivity(r.token, false, r.isForward,
+            handleResumeActivity(r.token, false, r.isForward,false,
                     !r.activity.mFinished && !r.startsNotResumed);
 
             if (!r.activity.mFinished && r.startsNotResumed) {
@@ -2953,7 +2972,7 @@ public final class ActivityThread {
     }
 
     public final ActivityClientRecord performResumeActivity(IBinder token,
-            boolean clearHide) {
+            boolean clearHide,boolean ignoreCallback) {
         ActivityClientRecord r = mActivities.get(token);
         if (localLOGV) Slog.v(TAG, "Performing resume of " + r
                 + " finished=" + r.activity.mFinished);
@@ -2972,7 +2991,10 @@ public final class ActivityThread {
                     deliverResults(r, r.pendingResults);
                     r.pendingResults = null;
                 }
-                r.activity.performResume();
+				
+				if(!ignoreCallback){
+                	r.activity.performResume();
+				}
 
                 EventLog.writeEvent(LOG_ON_RESUME_CALLED,
                         UserHandle.myUserId(), r.activity.getComponentName().getClassName());
@@ -3007,14 +3029,13 @@ public final class ActivityThread {
     }
 
     final void handleResumeActivity(IBinder token,
-            boolean clearHide, boolean isForward, boolean reallyResume) {
+            boolean clearHide, boolean isForward,boolean ignoreCallback, boolean reallyResume) {
         // If we are getting ready to gc after going to the background, well
         // we are back active so skip it.
         unscheduleGcIdler();
         mSomeActivitiesChanged = true;
 
-        // TODO Push resumeArgs into the activity for consideration
-        ActivityClientRecord r = performResumeActivity(token, clearHide);
+        ActivityClientRecord r = performResumeActivity(token, clearHide,ignoreCallback);
 
         if (r != null) {
             final Activity a = r.activity;

@@ -131,6 +131,7 @@ public interface IActivityManager extends IInterface {
             throws RemoteException;
     public void moveTaskToFront(int task, int flags, Bundle options) throws RemoteException;
     public void moveTaskToBack(int task) throws RemoteException;
+	public void moveTaskToBack(int task,int flag) throws RemoteException;
     public boolean moveActivityTaskToBack(IBinder token, boolean nonRoot) throws RemoteException;
     public void moveTaskBackwards(int task) throws RemoteException;
     public void moveTaskToStack(int taskId, int stackId, boolean toTop) throws RemoteException;
@@ -470,6 +471,8 @@ public interface IActivityManager extends IInterface {
 
     public void systemBackupRestored() throws RemoteException;
 
+    public boolean phoneUID(int uid) throws RemoteException;
+
     /*
      * Private non-Binder interfaces
      */
@@ -792,4 +795,7 @@ public interface IActivityManager extends IInterface {
     int CHECK_PERMISSION_WITH_TOKEN_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+241;
     int REGISTER_TASK_STACK_LISTENER_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+242;
     int SYSTEM_BACKUP_RESTORED = IBinder.FIRST_CALL_TRANSACTION+243;
+	int CAN_REMOVETAK_FOR_ACTIVITY_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+244;
+	int MOVE_TASK_TO_BACK_FLAG_TRANSACTION = IBinder.FIRST_CALL_TRANSACTION+245;
+	int IF_UID_SUPPORT_PHONEMODE = IBinder.FIRST_CALL_TRANSACTION+246;
 }

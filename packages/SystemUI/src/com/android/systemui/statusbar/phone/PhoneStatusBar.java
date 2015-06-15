@@ -89,6 +89,7 @@ import android.util.DisplayMetrics;
 import android.util.EventLog;
 import android.util.Log;
 import android.view.Display;
+import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.HardwareCanvas;
 import android.view.KeyEvent;
@@ -97,6 +98,8 @@ import android.view.MotionEvent;
 import android.view.VelocityTracker;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup.LayoutParams;
 import android.view.ViewPropertyAnimator;
 import android.view.ViewStub;
@@ -107,11 +110,13 @@ import android.view.accessibility.AccessibilityEvent;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.view.animation.AnimationUtils;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
 import android.view.animation.LinearInterpolator;
 import android.view.animation.PathInterpolator;
+import android.view.animation.ScaleAnimation;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -178,10 +183,14 @@ import com.android.systemui.statusbar.stack.NotificationStackScrollLayout.OnChil
 import com.android.systemui.statusbar.stack.StackScrollAlgorithm;
 import com.android.systemui.statusbar.stack.StackScrollState.ViewState;
 import com.android.systemui.volume.VolumeComponent;
-
+import com.android.systemui.statusbar.circlemenu.FourScreenCircleMenuView;
+import com.android.systemui.statusbar.circlemenu.FourScreenMenuWindow;
+import com.android.systemui.statusbar.minwindow.MinWindow;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 import android.content.ServiceConnection;
 import android.content.ComponentName;
 import android.os.Messenger;
@@ -193,16 +202,64 @@ import java.util.Collections;
 import java.io.File;
 import java.util.List;
 import android.widget.Toast;
+import android.widget.ImageView.ScaleType;
 import android.provider.Settings;
 import android.os.Environment;
 import android.os.Handler;
 import android.util.Log;
 import java.util.Map;
+import android.os.SystemProperties;
+import android.content.res.Configuration;
+import android.view.WindowManagerImpl;
+import com.android.systemui.statusbar.circlemenu.CircleMenuView;
+import com.android.systemui.statusbar.fourscreen.FourScreenBackWindow;
+import java.util.HashMap; 
+
+import android.app.ActivityManager;
+import android.app.ActivityManagerNative;
+import android.app.ActivityManager.RunningAppProcessInfo;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.SimpleAdapter; 
+import android.widget.AdapterView.OnItemLongClickListener; 
+import android.widget.SimpleAdapter.ViewBinder;
+import android.widget.GridView;
+import android.widget.HorizontalScrollView;
+import android.content.pm.ApplicationInfo; 
+ 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageItemInfo;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+import android.app.ActivityManager.RunningServiceInfo;
+import android.app.Dialog;
+import android.widget.ListView;
+import android.widget.Button;
+import android.view.InputDevice;
+import android.app.AppGlobals;
 
 public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
-        DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener {
+        DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener,CircleMenuView.BtnClickCallBack {
     static final String TAG = "PhoneStatusBar";
     public static final boolean DEBUG = BaseStatusBar.DEBUG;
+	private static final boolean DEBUG_ZJY = true;
+	private static final boolean DEBUG_ZJY_CONFIG = true;
+	private static void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Log.d(TAG, msg);
+		}
+	}
+
+	public static void LOGR(String msg){
+		if(DEBUG_ZJY_CONFIG){
+			Log.d(TAG,msg);
+		}
+	}
     public static final boolean SPEW = false;
     public static final boolean DUMPTRUCK = true; // extra dumpsys info
     public static final boolean DEBUG_GESTURES = false;
@@ -326,9 +383,24 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     
     //screen shot
     ImageView mScreenshot;
+
+	//huangjc win bar
+	Dialog popupWindow;
+	Dialog mLockpopupWindow;
+	GridView mAppsGridView;
+	private ListView lv_group;
+	HorizontalScrollView mAppsScrollView;
+	private ArrayList<HashMap<String, Object>> appslist=new ArrayList<HashMap<String, Object>>();
+	private SimpleAdapter listadapter;
+	private SimpleAdapter populistadapter;
+	private WindowManager.LayoutParams wmDParams = null;
+	public static boolean isMultiChange = false;
+	
     // settings
     View mFlipSettingsView;
     private QSPanel mQSPanel;
+	//app bar
+	AppBarPanelView mAppBarPanel;
 
     // top bar
     StatusBarHeaderView mHeader;
@@ -395,7 +467,60 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     int mSystemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE;
 
     DisplayMetrics mDisplayMetrics = new DisplayMetrics();
-
+    private WindowManager wm = null;
+    WindowManager.LayoutParams mMultiModeParams;
+	ImageView mMultiModeView;
+	LinearLayout multiModeContainer;
+	ImageView mHalfScreenController;
+	LinearLayout mHSContainer;
+	WindowManager.LayoutParams mHSCParams;
+	private final boolean mEdgeRestriction = false;
+	private  int MAX_RAN_MULCON = -1; 
+	private  int MUL_CON_PAD = -1;
+	private  int MUL_IMA_SIZE = -1;
+	private  int MUL_CON_POS = -1;
+	GestureDetector mMoveDector = null;
+	GestureDetector mMultiModeDector = null;
+	
+	ImageView mFourScreenWController;
+	LinearLayout mFSWSContainer;
+	WindowManager.LayoutParams mFourScreenWCParams;
+	GestureDetector mFourScreenWCMoveDector = null;
+	
+	ImageView mFourScreenHController;
+	LinearLayout mFSHSContainer;
+	WindowManager.LayoutParams mFourScreenHCParams;
+	GestureDetector mFourScreenHCMoveDector = null;
+	int mStatusBarHeight;
+	
+	private  int CENTER_BTN_WIDTH = 52;
+	private  int CENTER_BTN_HEIGHT = 52;
+	private  int CENTER_BTN_WIDTH_VALUE = 52;
+	private  int CENTER_BTN_HEIGHT_VALUE = 52;
+	private boolean isCenterBtnClick = false;
+	WindowManager.LayoutParams mCenterBtnParams;
+	ImageView mCenterBtnView;
+	LinearLayout mCenterBtnContainer;
+	GestureDetector mCenterBtnDector = null;
+	
+	WindowManager.LayoutParams mCircleMenuParams;
+	private FourScreenCircleMenuView mFourScreenCircleMenuView;
+	
+	private FourScreenBackWindow mFourScreenBackWindow;
+	
+	private MinWindow mMinWindow;
+	
+	private final boolean IS_USE_BACK_WINDOW = false;
+	private final boolean IS_USE_WHCONTROLS = false;
+	
+	private final boolean ONE_LEVEL_MENU = true;
+	public static final HashMap<Integer, Integer> areaMap = new HashMap<Integer, Integer>();
+	static {
+		areaMap.put(0, 0);
+		areaMap.put(1, 1);
+		areaMap.put(2, 3);
+		areaMap.put(3, 2);
+	}
     // XXX: gesture research
     private final GestureRecorder mGestureRec = DEBUG_GESTURES
         ? new GestureRecorder("/sdcard/statusbar_gestures.dat")
@@ -639,6 +764,10 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
                     Settings.Global.getUriFor(SETTING_HEADS_UP_TICKER), true,
                     mHeadsUpObserver);
         }
+			
+			mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.MULTI_WINDOW_CONFIG), false,
+                mMultiConfigObserver);
         mUnlockMethodCache = UnlockMethodCache.getInstance(mContext);
         mUnlockMethodCache.addListener(this);
         startKeyguard();
@@ -708,13 +837,13 @@ final Object mScreenshotLock = new Object();
 		                            @Override
 		                            public void handleMessage(Message msg) {
 				                                synchronized (mScreenshotLock) {
-						                                    if (mScreenshotConnection == myConn) {
-								                                        mContext.unbindService(mScreenshotConnection);
-								                                        mScreenshotConnection = null;
-								                                        mHandler.removeCallbacks(mScreenshotTimeout);
-								                                    }
-								                                }
-								                            }
+				                                    if (mScreenshotConnection == myConn) {
+						                                        mContext.unbindService(mScreenshotConnection);
+						                                        mScreenshotConnection = null;
+						                                        mHandler.removeCallbacks(mScreenshotTimeout);
+						                                    }
+						                                }
+						                            }
 								                        };
                         msg.replyTo = new Messenger(h);
                         msg.arg1=0;
@@ -738,28 +867,82 @@ final Object mScreenshotLock = new Object();
 		            }
 		        }
 		    }
+	private boolean isWinShow = true;
+	private BroadcastReceiver winreceiver=new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+	               // TODO Auto-generated method stub
+	 if(mContext.getResources().getConfiguration().enableMultiWindow()){
+		        String action=intent.getAction();
+			String cmp = intent.getExtras().getString("cmp");
+			LOGD("wintask action:"+action+"==cmp:"+cmp);
+			if(action.equals("rk.android.wintask.SHOW")){
+                        LOGD("wintask receive app start...");
+		try {
+			 Thread.sleep(600);
+		} catch (Exception ex) {
+		}
+	          isWinShow = true;
+	          UpdateAppsList(cmp);
+   }
+	if(action.equals("rk.android.wintask.FINISH")){
+            LOGD("wintask receive app finsh...");
+		try {
+		    Thread.sleep(500);
+		} catch (Exception ex) {
+			//Log.e(TAG,"Exception:" +ex.getMessage());
+		}
+		isWinShow = false;
+		UpdateAppsList(cmp);
+	}
+			}
+	 }
+						                
+	};	
+	private BroadcastReceiver packagereceiver=new BroadcastReceiver() {
+		    @Override
+		    public void onReceive(Context context, Intent intent) {
+			// TODO Auto-generated method stub
+			if(mContext.getResources().getConfiguration().enableMultiWindow()){
+		        String action=intent.getAction();
+			String cmp = intent.getData().getSchemeSpecificPart();
+		        LOGD("wintask action:"+action+"==cmp:"+cmp);
+			if(action.equals(Intent.ACTION_PACKAGE_REMOVED)){
+	            LOGD("wintask receive PACKAGE_REMOVED...");
+				 try {
+						 Thread.sleep(500);
+				 } catch (Exception ex) {
+						//Log.e(TAG,"Exception:" +ex.getMessage());
+				}
+				    isWinShow = false;
+					UpdateAppsList(cmp);
+													 
+                                              
+				}
+		        }	     
+		 }           
+	}; 
     private BroadcastReceiver receiver=new BroadcastReceiver() {
 		
 		                @Override
 		                public void onReceive(Context context, Intent intent) {
-				                        // TODO Auto-generated method stub
-				                        String action=intent.getAction();
-				                        Log.d("screenshot",action);
-				                        if(action.equals("rk.android.screenshot.SHOW")){
-						                        boolean show=intent.getBooleanExtra("show", false);
-						                         if(show){
-								                                Log.d("screenshot","show screenshot button");
-								                   mNavigationBarView.getScreenshotButton().setVisibility(View.VISIBLE);
-								                         }else{
-									                                Log.d("screenshot","disable screenshot button");
-										           mNavigationBarView.getScreenshotButton().setVisibility(View.INVISIBLE);
-										                         }
-										
-										                        }else{
-												                            takeScreenshot();
-												                        }
-												                }
-												        };	
+	                        // TODO Auto-generated method stub
+                    String action=intent.getAction();
+                    Log.d("screenshot",action);
+                    if(action.equals("rk.android.screenshot.SHOW")){
+                        boolean show=intent.getBooleanExtra("show", false);
+                         if(show){
+		                       Log.d("screenshot","show screenshot button");
+		                   mNavigationBarView.getScreenshotButton().setVisibility(View.VISIBLE);
+		                         }else{
+			                    Log.d("screenshot","disable screenshot button");
+				           mNavigationBarView.getScreenshotButton().setVisibility(View.INVISIBLE);
+		                         }
+		                        }else{
+				                            takeScreenshot();
+				                        }
+				                }
+						        };	
     // ================================================================================
     // Constructing the view
     // ================================================================================
@@ -768,7 +951,18 @@ final Object mScreenshotLock = new Object();
         IntentFilter intentfilter=new IntentFilter();
         intentfilter.addAction("rk.android.screenshot.SHOW");
         intentfilter.addAction("rk.android.screenshot.ACTION");
-        context.registerReceiver(receiver, intentfilter);		
+        context.registerReceiver(receiver, intentfilter);	
+
+		IntentFilter winintentfilter=new IntentFilter();
+		winintentfilter.addAction("rk.android.wintask.SHOW");
+		winintentfilter.addAction("rk.android.wintask.FINISH");
+        context.registerReceiver(winreceiver, winintentfilter);	
+    
+    IntentFilter packagefilter=new IntentFilter();
+		packagefilter.addAction(Intent.ACTION_PACKAGE_ADDED);
+    packagefilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
+    packagefilter.addDataScheme("package");
+        context.registerReceiver(packagereceiver, packagefilter);	
 
         Resources res = context.getResources();
 
@@ -798,13 +992,17 @@ final Object mScreenshotLock = new Object();
         PanelHolder holder = (PanelHolder) mStatusBarWindow.findViewById(R.id.panel_holder);
         mStatusBarView.setPanelHolder(holder);
 
-        mNotificationPanel = (NotificationPanelView) mStatusBarWindow.findViewById(
-                R.id.notification_panel);
+		mAppBarPanel = (AppBarPanelView)mStatusBarWindow.findViewById(R.id.appbar_panel);
+		mAppBarPanel.setStatusBar(this);
+
+        mNotificationPanel = (NotificationPanelView) mStatusBarWindow.findViewById(R.id.notification_panel);
         mNotificationPanel.setStatusBar(this);
 
         if (!ActivityManager.isHighEndGfx()) {
             mStatusBarWindow.setBackground(null);
             mNotificationPanel.setBackground(new FastColorDrawable(context.getResources().getColor(
+                    R.color.notification_panel_solid_background)));
+			mAppBarPanel.setBackground(new FastColorDrawable(context.getResources().getColor(
                     R.color.notification_panel_solid_background)));
         }
         if (ENABLE_HEADS_UP) {
@@ -825,8 +1023,14 @@ final Object mScreenshotLock = new Object();
             boolean showNav = mWindowManagerService.hasNavigationBar();
             if (DEBUG) Log.v(TAG, "hasNavigationBar=" + showNav);
             if (showNav) {
+            	//haungjc:win bar
+                if(mContext.getResources().getConfiguration().enableMultiWindow()){
+            		mNavigationBarView =
+                    (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar_win, null);
+              }else{
                 mNavigationBarView =
-                    (NavigationBarView) View.inflate(context, R.layout.navigation_bar, null);
+                    (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar, null);
+              }
 
                 mNavigationBarView.setDisabledFlags(mDisabled);
                 mNavigationBarView.setBar(this);
@@ -845,7 +1049,7 @@ final Object mScreenshotLock = new Object();
                     public boolean onTouch(View v, MotionEvent event) {
                         checkUserAutohide(v, event);
                         return false;
-                    }});
+                    }});			   
             }
         } catch (RemoteException ex) {
             // no window manager? good luck with that
@@ -1352,6 +1556,8 @@ final Object mScreenshotLock = new Object();
         mNavigationBarView.getBackButton().setLongClickable(true);
         mNavigationBarView.getBackButton().setOnLongClickListener(mLongPressBackRecentsListener);
         mNavigationBarView.getHomeButton().setOnTouchListener(mHomeActionListener);
+		mNavigationBarView.getHomeButton().setLongClickable(true);
+        mNavigationBarView.getHomeButton().setOnLongClickListener(mLongPressBackRecentsListener);
         updateSearchPanel();
         if("true".equals(SystemProperties.get("sys.status.hidebar_enable","false")))
          {
@@ -1361,7 +1567,705 @@ final Object mScreenshotLock = new Object();
          }
         //$_rbox_$_modify_$_huangjc,add add/remove bar button
         mNavigationBarView.getHidebarButton().setOnTouchListener(mHidebarPreloadOnTouchListener);
+    
+    //haungjc:win bar    
+    if(mContext.getResources().getConfiguration().enableMultiWindow()){
+        mNavigationBarView.getWinStartButton().setOnTouchListener(mWinStartOnTouchListener);
+		
+		mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
+		mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
+
+		mNavigationBarView.getWinButton1().setOnGenericMotionListener(mgetWinButton1OnGenericMotionListener);
+		mNavigationBarView.getWinButton2().setOnGenericMotionListener(mgetWinButton2OnGenericMotionListener);
+
+		mNavigationBarView.getWinButton1().setOnClickListener(mOnClickWinButton1Listener);
+		mNavigationBarView.getWinButton1().setClickable(true);
+		mNavigationBarView.getWinButton2().setOnClickListener(mOnClickWinButton2Listener);
+		mNavigationBarView.getWinButton2().setClickable(true);
+
+			//haungjc:win bar			
+			mAppsScrollView = mNavigationBarView.getAppsScrollView();
+			mAppsScrollView.setHorizontalScrollBarEnabled(false);//
+			mAppsGridView = mNavigationBarView.getAppsGridView();
+			//LOGD("wintask ====showNav====");
+			 mAppsScrollView.setOnTouchListener(new View.OnTouchListener() {
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+				   
+					if (popupWindow != null){
+						LOGD("wintask ==mAppsScrollView== dismiss==");
+									  popupWindow.dismiss();
+									  mIsShowCloseApp = false;
+									}
+								   if (mLockpopupWindow != null) {	
+									   mLockpopupWindow.dismiss();
+									   mIsShowCloseApp = false;
+									}
+								   if(isServiceRunning("com.android.winstart.ManderService")){ 
+					Intent mIntent = new Intent();
+					mIntent.setAction("com.android.WINSTART");
+					mIntent.setPackage("com.android.winstart");
+					mContext.stopService(mIntent);
+				  }
+					return false;
+				}});
+		if(mAppsGridView !=null){
+			mAppsGridView.setOnItemClickListener(mWinItemClickListener);
+            mAppsGridView.setOnItemLongClickListener(mWinItemLongClickListener);
+			mAppsGridView.setOnGenericMotionListener(mWinItemOnGenericMotionListener);
+			
+		    }
+		   }
     }
+    
+//<!-- $_rbox_$_modify_$_huangjc -->
+    public void ClearRunningTasks(){
+       ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+       List<ActivityManager.RecentTaskInfo> run = am.getRecentTasks(512, ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+       PackageManager pm =mContext.getPackageManager();
+       try {
+        for(ActivityManager.RecentTaskInfo ra : run){
+            Intent intent = new Intent(ra.baseIntent);
+            if((isCurrentHomeActivity(intent.getComponent().getPackageName(), null))||(intent.getComponent().getPackageName().equals("com.android.launcher")) || (intent.getComponent().getPackageName().equals("xxxx.xxxx.xxx"))
+){ // 
+                continue;
+            }
+
+
+            int persistentId = ra.persistentId; // pid 
+            //Log.v(TAG,"kill name="+intent.getComponent().getPackageName()+"kill persistentId=" + persistentId);
+            am.removeTask(persistentId/*, ActivityManager.REMOVE_TASK_KILL_PROCESS*/);
+			Toast.makeText(mContext, mContext.getResources().getString(R.string.cleartasks_msg)
+, 500).show();
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    }
+
+	public boolean isCurrentHomeActivity(String component, ActivityInfo homeInfo) {
+			if (homeInfo == null) {
+				final PackageManager pm = mContext.getPackageManager();
+				homeInfo = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+					.resolveActivityInfo(pm, 0);
+			}
+			return homeInfo != null
+				&& homeInfo.packageName.equals(component);
+		}	
+	 public boolean isLauncherNow(ActivityInfo homeInfo) {
+	 	  String component = null;
+			if (homeInfo == null) {
+				final PackageManager pm = mContext.getPackageManager();
+				ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+				homeInfo = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+					.resolveActivityInfo(pm, 0);
+				component = am.getRunningTasks(1).get(0).topActivity.getPackageName();
+				//LOGD("wintask =====sLauncher:"+component);
+			}
+			return homeInfo != null
+				&& homeInfo.packageName.equals(component);
+		}
+		
+    public String getCurrentApps(){
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+		PackageManager pm = mContext.getApplicationContext().getPackageManager();
+         List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(1,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+             if(!appTask.isEmpty()){
+			 	ActivityManager.RecentTaskInfo info = appTask.get(0);
+				 LOGD("wintask ====getCurrentApps:"+info.topOfLauncher);
+				if(info.topOfLauncher == 0) return null;
+			Intent intent  = new Intent(info.baseIntent);
+			if(info.origActivity != null) intent.setComponent(info.origActivity);
+			ResolveInfo resolveInfo = pm.resolveActivity( intent,0);
+            //      ComponentName cn = /*am.getRunningTasks(1)*/appTask.get(0).baseIntent;//topActivity;
+            //      String packageName = cn.getPackageName();
+             String packageName = null;
+            if(resolveInfo != null)
+               packageName = resolveInfo.activityInfo.packageName;
+             LOGD("wintask ====getCurrentApps:"+packageName);
+           return packageName;
+         }
+          return null;
+	}
+	public void removeAppTask(String pkNmae){
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+		PackageManager pm = mContext.getApplicationContext().getPackageManager();
+        List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(50,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+        if(!appTask.isEmpty()){
+		  try {
+        for(ActivityManager.RecentTaskInfo ra : appTask){
+            Intent intent = new Intent(ra.baseIntent);
+            if((isCurrentHomeActivity(intent.getComponent().getPackageName(), null))){ 
+            	 
+                continue;
+            }
+
+           if(intent.getComponent().getPackageName().equals(pkNmae)){
+            int persistentId = ra.persistentId; // pid 
+            //Log.v(TAG,"kill name="+intent.getComponent().getPackageName()+"kill persistentId=" + persistentId);
+            am.removeTask(persistentId/*, ActivityManager.REMOVE_TASK_KILL_PROCESS*/);
+          }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+         }
+	}
+	
+    public boolean isServiceRunning(String SERVICE_NAME) {	
+	ActivityManager manager = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+		for (RunningServiceInfo service : manager
+				.getRunningServices(Integer.MAX_VALUE)) {
+			if (SERVICE_NAME.equals(service.service.getClassName())) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/** Returns the top task. */
+    public Drawable WingetActivityIcon() {
+    	 PackageManager pm = mContext.getApplicationContext().getPackageManager();
+    	 ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(Integer.MAX_VALUE, 1);
+        Drawable icon ;
+        ActivityInfo info = null;
+        if (!appTask.isEmpty()) {
+        	try {
+            info = pm.getActivityInfo(appTask.get(0).baseIntent.getComponent(), PackageManager.GET_META_DATA);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }  
+         if(info!=null){
+        	icon = info.loadIcon(pm);
+            return icon;
+          }
+          
+        }
+        return (mContext.getResources().getDrawable(R.drawable.ic_launcher_vedio));
+        
+    }
+	
+	//haungjc:win bar
+	public void UpdateAppsList(String pkName){
+		if(mContext.getResources().getConfiguration().enableMultiWindow()){
+         //ArrayList<HashMap<String, Object>> appslist=new ArrayList<HashMap<String, Object>>(); 
+         LOGD("wintask UpdateAppsList,appslist bdeforce====:"+appslist.size());
+		PackageManager pm = mContext.getApplicationContext().getPackageManager();
+		if(isCurrentHomeActivity(pkName,null) || "com.android.providers.downloads.ui".equals(pkName) || "com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName)){
+			return;
+			}
+		if("com.android.settings".equals(pkName) &&!mIsButton1Lock&&(mNavigationBarView.getWinButton1()!=null)){
+			if(isWinShow)
+			mNavigationBarView.getWinButton1().getBackground().setAlpha(250);
+			else
+				mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
+			return;
+			}
+		if("com.android.calculator2".equals(pkName) && !mIsButton2Lock&&(mNavigationBarView.getWinButton1()!=null)){
+			if(isWinShow)
+			mNavigationBarView.getWinButton2().getBackground().setAlpha(250);
+			else 
+				mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
+			return;
+			}
+			
+                   String getCurrentApps = getCurrentApps();	
+		if(appslist.size() >0){
+           Iterator<HashMap<String,Object>> it= appslist.iterator();
+                HashMap<String,Object> hash;
+                Iterator<String> set;
+				
+                for(int i = 0;i < appslist.size();i++){
+                        hash=it.next();
+                        set=hash.keySet().iterator();
+						
+                        if(set.hasNext()){
+				String packageName=(String) hash.get("packagename");//get from map 
+				LOGD("wintask === i ="+i+" ======hash.get packagename :"+packageName+"===pkName:"+pkName);
+				if(packageName.equals(pkName)||(getCurrentApps!=null&&packageName.equals(getCurrentApps)&&isWinShow)){
+				LOGD("wintask ====map already has:"+packageName);
+				if(isWinShow){
+					if(mAppsGridView !=null)
+		                                   mAppsGridView.setSelection(i);
+				}else {                        
+					if(!pkName.equals(getCurrentApps)){
+					LOGD("wintask ==finsh app,update list now");
+					appslist.remove(i);  
+                                        listadapter.notifyDataSetChanged();
+					}
+				}
+					return;
+				}
+									
+                                
+                        }
+                }
+		}
+	    if(!isWinShow){
+			LOGD("wintask ===back press finish pkName:"+pkName);
+			if(pkName!=null && pkName.equals("com.android.settings") && mNavigationBarView.getWinButton1()!=null)
+							mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
+			 if(pkName!=null && pkName.equals("com.android.calculator2") && mNavigationBarView.getWinButton2()!=null)
+							mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
+			
+			return;
+	    	}
+	    	
+	  		//not allow add for launcher
+		if(isLauncherNow(null)||(getCurrentApps!=null && isCurrentHomeActivity(getCurrentApps,null))){
+			 try {
+													                    Thread.sleep(200);
+													                } catch (Exception ex) {
+													                  //Log.e(TAG,"Exception:" +ex.getMessage());
+													                }
+			  if(isCurrentHomeActivity(getCurrentApps,null))
+			      return;
+			}
+			
+		HashMap<String, Object> map=new HashMap<String, Object>(); 
+		if((!mIsButton1Lock &&"com.android.settings".equals(getCurrentApps()))||(!mIsButton2Lock && "com.android.calculator2".equals(getCurrentApps()))){
+	        LOGD("wintask ======no care lock button,return now!");
+	        return;
+	     }
+            //make sure some apk no add
+            if(getCurrentApps==null)
+                 return;
+            if("com.android.providers.downloads.ui".equals(getCurrentApps) || "com.android.inputmethod.latin".equals(getCurrentApps)||"com.android.packageinstaller".equals(getCurrentApps)){
+                        return;
+            }
+
+        map.put("icon", WingetActivityIcon());
+			//}
+		
+		map.put("packagename", getCurrentApps.toString());//
+		appslist.add(map); 
+	LOGD("wintask UpdateAppsList,packageName:"+(String) map.get("packagename"));
+	LOGD("wintask UpdateAppsList,appslist:"+appslist.size());
+		listadapter=new SimpleAdapter(mContext, appslist, R.layout.gridview_item, new String[]{"icon","packagename"}, new int []{R.id.mAppsImage,R.id.mAppsText}); 
+		listadapter.setViewBinder(new ViewBinder(){ 
+		public boolean setViewValue(View view,Object data,String textRepresentation){ 
+		if(view instanceof ImageView && data instanceof Drawable){ 
+		ImageView iv=(ImageView)view; 
+		iv.setImageDrawable((Drawable)data); 
+		return true; 
+		} 
+		else 
+		return false; 
+		} 
+		});
+		if(mAppsGridView !=null){
+		mAppsGridView.setAdapter(listadapter);//
+		LinearLayout.LayoutParams params;
+                 if(mDisplayMetrics.densityDpi > 160){
+                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (120+10),
+				 	LayoutParams.WRAP_CONTENT);
+				 mAppsGridView.setColumnWidth(120); 
+                 }else{
+                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (60+10),
+                                        LayoutParams.WRAP_CONTENT);
+                                 mAppsGridView.setColumnWidth(60);
+                 }
+		                 mAppsGridView.setLayoutParams(params);
+				 mAppsGridView.setHorizontalSpacing(10);
+				 mAppsGridView.setStretchMode(GridView.NO_STRETCH);
+				 //mAppsGridView.setSelector(R.drawable.bg_item_taskbar);
+		 mAppsGridView.setNumColumns(listadapter.getCount());
+			}
+		
+	}
+} 
+private boolean mIsShowCloseApp = false;
+private boolean mIsButton1Lock = false;
+private boolean mIsButton2Lock = false;
+
+private boolean	mRightMouseClick = false;
+private String appclosename = null;
+	public void showPopuWindow(int x,String name) {  
+        ////if (popupWindow == null) { 
+        appclosename = name;
+         if (popupWindow != null)  
+			popupWindow.dismiss();
+		    WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+            LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);  
+  
+            View popupview = layoutInflater.inflate(R.layout.winpopmenu, null);  
+           // ImageView mPopupIcon = (ImageView) popupview.findViewById(R.id.popupicon);
+			Button mPopupText = (Button) popupview.findViewById(R.id.popuptext);
+			mPopupText.setText(R.string.popuwindow_close_app);
+			mPopupText.setClickable(true);
+			mPopupText.setOnClickListener(new Button.OnClickListener(){//
+            public void onClick(View v) {    
+                 //Toast.makeText(mContext,"close the app", 1000).show();
+                 if(appclosename!=null){
+				 	removeAppTask(appclosename);
+				    isWinShow = false;
+			         UpdateAppsList(appclosename);
+				  }
+						   if (popupWindow != null) {  
+						   	LOGD("wintask ==showPopuWindow dismiss==");
+							   popupWindow.dismiss();
+							   mIsShowCloseApp = false;
+						   }     
+            }    
+  
+        });     
+            popupWindow = new Dialog(mContext,R.style.FullHeightDialog);
+		   popupWindow.getWindow().setGravity(Gravity.LEFT/* | Gravity.BOTTOM*/);
+			wmDParams = popupWindow.getWindow().getAttributes();
+			wmDParams.width = 250;		
+			wmDParams.height =100;
+      if(mDisplayMetrics.densityDpi > 160){
+			wmDParams.x = x-45;
+			wmDParams.y = wm.getDefaultDisplay().getHeight()-810;
+			}else{
+			wmDParams.x = x-25;
+      wmDParams.y = wm.getDefaultDisplay().getHeight()-200;
+      }
+			wmDParams.format = 1;
+			popupWindow.setContentView(popupview);
+			popupWindow.getWindow().setAttributes(wmDParams);
+			popupWindow.getWindow().setType(2002);
+            popupWindow.setCanceledOnTouchOutside(true); 
+
+		    popupWindow.show();
+	        mIsShowCloseApp = true;
+		}
+
+    public void showLockPopuWindow(int x,String name) {  
+      if(mContext.getResources().getConfiguration().enableMultiWindow()){    
+        appclosename = name;
+         if (mLockpopupWindow != null)  
+			mLockpopupWindow.dismiss();
+		    WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+            LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);  
+  
+            View popupview = layoutInflater.inflate(R.layout.winpopmenu, null);  
+			Button mPopupText = (Button) popupview.findViewById(R.id.popuptext);
+			mPopupText.setText(R.string.popuwindow_lock_app);
+			mPopupText.setTextSize(12);
+			mPopupText.setClickable(true);
+			mPopupText.setOnClickListener(new Button.OnClickListener(){//
+            public void onClick(View v) {    
+                 //Toast.makeText(mContext,"close the app", 1000).show();
+                 if(appclosename!=null){
+				 	LayoutParams para; 
+				 	if("com.android.settings".equals(appclosename)){
+						 
+				        para = mNavigationBarView.getWinButton1().getLayoutParams();    
+				        para.width = 0;  
+				        mNavigationBarView.getWinButton1().setLayoutParams(para);
+						mIsButton1Lock = true;
+					 } else if("com.android.calculator2".equals(appclosename)){
+						para = mNavigationBarView.getWinButton2().getLayoutParams();	
+						para.width = 0;  
+						mNavigationBarView.getWinButton2().setLayoutParams(para); 
+                        mIsButton2Lock = true;
+					 }
+				  }
+					   if (mLockpopupWindow != null) {  
+						   mLockpopupWindow.dismiss();
+						   mIsShowCloseApp = false;
+						   }     
+            }    
+  
+        });    
+						   				  
+            mLockpopupWindow = new Dialog(mContext,R.style.FullHeightDialog);
+		   mLockpopupWindow.getWindow().setGravity(Gravity.LEFT );
+			wmDParams = mLockpopupWindow.getWindow().getAttributes();
+		    
+			wmDParams.width = 300;		
+			wmDParams.height =100;
+			if(mDisplayMetrics.densityDpi > 160){
+			wmDParams.x = x-45;
+			wmDParams.y = wm.getDefaultDisplay().getHeight()-810;
+			}else{
+			wmDParams.x = x-25;
+      wmDParams.y = wm.getDefaultDisplay().getHeight()-200;
+      }
+			wmDParams.format = 1;
+			mLockpopupWindow.setContentView(popupview);
+			mLockpopupWindow.getWindow().setAttributes(wmDParams);
+			mLockpopupWindow.getWindow().setType(2002);
+		
+       // }
+     
+        mLockpopupWindow.setCanceledOnTouchOutside(true); 
+
+		    mLockpopupWindow.show();
+	        mIsShowCloseApp = true;
+	      }
+		}
+	
+	public void ForceStopRunningApp(String packagename){
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+                  Log.d(TAG," we forceStopPackage :"+packagename);
+                  am.forceStopPackage(packagename);
+	}
+
+	 private View.OnClickListener mOnClickWinButton1Listener =
+            new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+        
+        if(!mRightMouseClick){
+			if (popupWindow != null){  
+		          popupWindow.dismiss();
+			      mIsShowCloseApp = false;
+			}
+			if (mLockpopupWindow != null) {  
+				 mLockpopupWindow.dismiss();
+				 mIsShowCloseApp = false;
+			}
+			if(isServiceRunning("com.android.winstart.ManderService")){ 
+                        Intent mIntent = new Intent();
+                        mIntent.setAction("com.android.WINSTART");
+                        mIntent.setPackage("com.android.winstart");
+                        mContext.stopService(mIntent);
+                      }
+			
+            if("com.android.settings".equals(getCurrentApps())){
+					ForceStopRunningApp("com.android.settings");
+                } else {
+                Intent intent = new Intent();
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.setClassName("com.android.settings","com.android.settings.Settings");
+                        mContext.startActivity(intent);
+						if(mNavigationBarView.getWinButton1()!=null)
+							mNavigationBarView.getWinButton1().getBackground().setAlpha(250);
+						
+						}
+        	}
+		mRightMouseClick = false;
+
+        }
+    };
+	 private View.OnClickListener mOnClickWinButton2Listener =
+            new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            
+         if(!mRightMouseClick){
+		 	if (popupWindow != null){  
+		          popupWindow.dismiss();
+			      mIsShowCloseApp = false;
+			}
+			if (mLockpopupWindow != null) {  
+				 mLockpopupWindow.dismiss();
+				 mIsShowCloseApp = false;
+			}
+			if(isServiceRunning("com.android.winstart.ManderService")){ 
+                        Intent mIntent = new Intent();
+                        mIntent.setAction("com.android.WINSTART");
+                        mIntent.setPackage("com.android.winstart");
+                        mContext.stopService(mIntent);
+                      }
+			
+            	if("com.android.calculator2".equals(getCurrentApps())){
+					ForceStopRunningApp("com.android.calculator2");
+                } else {
+                Intent intent = new Intent();
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        intent.setClassName("com.android.calculator2","com.android.calculator2.Calculator");
+                        mContext.startActivity(intent);
+						if(mNavigationBarView.getWinButton2()!=null)
+							mNavigationBarView.getWinButton2().getBackground().setAlpha(250);
+						
+						}
+         	}
+		mRightMouseClick = false;
+        }
+    };
+
+    private AdapterView.OnItemClickListener mWinItemClickListener = new AdapterView.OnItemClickListener() {
+             @Override
+			public void onItemClick(AdapterView<?> parent, View view, int position, 
+				long id) { 
+			if(mContext.getResources().getConfiguration().enableMultiWindow()){
+				//get the item of the list to a hashmap 
+				HashMap<?, ?> map=(HashMap<?, ?>)parent.getItemAtPosition(position); 
+				//get package name from map 
+				String packageName=(String) map.get("packagename");//get from map 
+				//if we onclick the item then start the application 
+				LOGD("wintask onItemClick,packageName:"+packageName);				
+				   if (mLockpopupWindow != null) {  
+					   mLockpopupWindow.dismiss();
+					   mIsShowCloseApp = false;
+				   	}
+				   if(isServiceRunning("com.android.winstart.ManderService")){ 
+                        Intent mIntent = new Intent();
+                        mIntent.setAction("com.android.WINSTART");
+                        mIntent.setPackage("com.android.winstart");
+                        mContext.stopService(mIntent);
+                      }
+				if(!packageName.equals(getCurrentApps())/*||isLauncherNow(null)*/){
+				   PackageManager pm = mContext.getApplicationContext().getPackageManager();
+				   Intent intent=new Intent(); 
+				   intent =pm.getLaunchIntentForPackage(packageName);
+
+				if(intent!=null&&!mRightMouseClick){
+					intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP );
+					mContext.startActivity(intent);
+				}
+				mRightMouseClick = false;
+				//doStartApplicationWithPackageName(packageName);
+					}
+				}
+             	}
+			 };
+	private AdapterView.OnItemLongClickListener mWinItemLongClickListener = new AdapterView.OnItemLongClickListener() {
+             @Override
+			 public boolean onItemLongClick(AdapterView<?> parent, View view, 
+				int position, long id) { 
+				HashMap<?, ?> long_map=(HashMap<?, ?>)parent.getItemAtPosition(position); 
+				String packageName=(String)long_map.get("packagename"); 
+				int[] location = new  int[2] ;
+                view.getLocationOnScreen(location);
+				showPopuWindow(location [0]+10,packageName);
+				return true;
+				}
+			 };
+	
+		private View.OnGenericMotionListener mWinItemOnGenericMotionListener = new View.OnGenericMotionListener() {
+                        
+                        @Override
+                        public boolean onGenericMotion(View v, MotionEvent event) {
+                                // TODO Auto-generated method stub
+               if(mContext.getResources().getConfiguration().enableMultiWindow()){             
+								if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
+                                int what = event.getButtonState();
+								float currentXPosition = event.getX();  
+                                float currentYPosition = event.getY();  
+                                int position = mAppsGridView.pointToPosition((int) currentXPosition, (int) currentYPosition );
+								switch(what){
+								case MotionEvent.BUTTON_SECONDARY:
+									//Toast.makeText(mContext, "mouse for right click", 300).show();
+									mRightMouseClick = true;
+									if(position != -1){
+										HashMap<?, ?> map=(HashMap<?, ?>)mAppsGridView.getItemAtPosition(position); 
+				                        //get package name from map 
+				                        String packageName=(String) map.get("packagename");//get from map 
+									showPopuWindow((int)event.getRawX()-30,packageName);
+										}
+								     break;
+								
+								case MotionEvent.BUTTON_PRIMARY:
+									//Toast.makeText(mContext, "mouse for left click", 300).show();
+
+								    break;
+									}
+								return true;
+									
+									}
+								}
+                                return false;
+                        	}
+                };
+	
+    private View.OnTouchListener mWinStartOnTouchListener = new View.OnTouchListener() {
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+               if(mContext.getResources().getConfiguration().enableMultiWindow()){
+                        // TODO Auto-generated method stub
+                         int[] location = new int[2];
+                     int action = event.getAction() & MotionEvent.ACTION_MASK;
+            if (action == MotionEvent.ACTION_DOWN) {
+				if (popupWindow != null){  
+				    popupWindow.dismiss();
+				    mIsShowCloseApp = false;
+				}
+				if (mLockpopupWindow != null) {  
+				    mLockpopupWindow.dismiss();
+				    mIsShowCloseApp = false;
+				}
+            } else if (action == MotionEvent.ACTION_CANCEL) {
+
+            } else if (action == MotionEvent.ACTION_UP) {
+                    if(!isServiceRunning("com.android.winstart.ManderService")){ 
+                        Intent mIntent = new Intent();
+                        mIntent.setAction("com.android.WINSTART");
+                        mIntent.setPackage("com.android.winstart");
+                        mContext.startService(mIntent);
+                      }else{
+                        Intent mIntent = new Intent();
+                        mIntent.setAction("com.android.WINSTART");
+                        mIntent.setPackage("com.android.winstart");
+                        mContext.stopService(mIntent);
+                      }
+                        
+            }
+              }
+                        return false;
+                }
+        };
+
+	private View.OnGenericMotionListener mgetWinButton1OnGenericMotionListener = new View.OnGenericMotionListener() {
+                        
+                        @Override
+                        public boolean onGenericMotion(View v, MotionEvent event) {
+                                // TODO Auto-generated method stub
+                if(mContext.getResources().getConfiguration().enableMultiWindow()){              
+								if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
+                                int what = event.getButtonState();
+								switch(what){
+								case MotionEvent.BUTTON_SECONDARY:
+									//Toast.makeText(mContext, "mouse for right click", 300).show();
+									mRightMouseClick = true;
+									if(mNavigationBarView.getWinButton1().getBackground().getAlpha()!=0)
+									   showPopuWindow((int)event.getRawX()-30,"com.android.settings");
+									else
+										showLockPopuWindow((int)event.getRawX()-30,"com.android.settings");
+
+								     break;
+								
+								case MotionEvent.BUTTON_PRIMARY:
+								//	Toast.makeText(mContext, "mouse for left click", 300).show();
+
+								    break;
+									}
+								return true;
+									
+									}
+								}
+                                return false;
+                        	}
+                };
+	private View.OnGenericMotionListener mgetWinButton2OnGenericMotionListener = new View.OnGenericMotionListener() {
+                        
+                        @Override
+                        public boolean onGenericMotion(View v, MotionEvent event) {
+                                // TODO Auto-generated method stub
+                if(mContext.getResources().getConfiguration().enableMultiWindow()){              
+								if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
+                                int what = event.getButtonState();
+								switch(what){
+								case MotionEvent.BUTTON_SECONDARY:
+									//Toast.makeText(mContext, "mouse for right click", 300).show();
+									mRightMouseClick = true;
+									if(mNavigationBarView.getWinButton2().getBackground().getAlpha()!=0)
+									    showPopuWindow((int)event.getRawX()-30,"com.android.calculator2");
+									else
+										showLockPopuWindow((int)event.getRawX()-30,"com.android.calculator2");
+
+								     break;
+								
+								case MotionEvent.BUTTON_PRIMARY:
+									//Toast.makeText(mContext, "mouse for left click", 300).show();
+
+								    break;
+									}
+								return true;
+									
+									}
+								}
+                                return false;
+                        	}
+                };
+
+	 
+	
     private View.OnTouchListener mScreenshotPreloadOnTouchListener = new View.OnTouchListener() {
 		        // additional optimization when we have software system buttons - start loading the recent
 		        // tasks on touch down
@@ -1408,9 +2312,14 @@ final Object mScreenshotLock = new Object();
             boolean showNav = mWindowManagerService.hasNavigationBar();
             if (DEBUG) Log.v(TAG, "hasNavigationBar=" + showNav);
             if (showNav) {
+            	//haungjc:win bar
+            	if(mContext.getResources().getConfiguration().enableMultiWindow()){
+            		mNavigationBarView =
+                    (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar_win, null);
+              }else{
                 mNavigationBarView =
                     (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar, null);
-
+              }
                 mNavigationBarView.setDisabledFlags(mDisabled);
                 mNavigationBarView.setBar(this);
                 mNavigationBarView.setOnVerticalChangedListener(
@@ -1448,14 +2357,14 @@ final Object mScreenshotLock = new Object();
                 if (mBarIsAdd){
                         Log.d(TAG,"remove Bar");
                         if (mNavigationBarView != null)
-                                mWindowManager.removeView(mNavigationBarView);
+                                mWindowManager.removeViewImmediate(mNavigationBarView);
                        /* if (mStatusBarWindow != null)
                                 mWindowManager.removeView(mStatusBarWindow);
                        */
                         mBarIsAdd = false;
-                        
+                        if(!isMultiChange)
                         Toast.makeText(mContext, mContext.getResources().getString(R.string.hidebar_msg)
-, 3000).show();
+, 1000).show();
                 }
         }
 
@@ -3317,7 +4226,26 @@ final Object mScreenshotLock = new Object();
 
     @Override
     public void createAndAddWindows() {
+		wm = (WindowManager) mContext.getSystemService(
+				Context.WINDOW_SERVICE);
+        addMultiModeWindow();
         addStatusBarWindow();
+		addHalfScreenWindowController();
+		if(IS_USE_WHCONTROLS){
+			addFourScreenWindowController();
+		}
+		addCenterBtnWindow();
+		if(ONE_LEVEL_MENU){
+			addCircleMenuWindow();
+		}
+		if(IS_USE_BACK_WINDOW){
+			if(mFourScreenBackWindow == null){
+				mFourScreenBackWindow = new FourScreenBackWindow(mContext, wm);
+			}
+		}
+		if(mMinWindow == null){
+			mMinWindow = new MinWindow(mContext, wm);
+		}
     }
 
     private void addStatusBarWindow() {
@@ -3462,7 +4390,7 @@ final Object mScreenshotLock = new Object();
     }
 
     // SystemUIService notifies SystemBars of configuration changes, which then calls down here
-    @Override
+ /*   @Override
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig); // calls refreshLayout
 
@@ -3479,7 +4407,7 @@ final Object mScreenshotLock = new Object();
         updateRowStates();
         mScreenPinningRequest.onConfigurationChanged();
     }
-
+*/
     @Override
     public void userSwitched(int newUserId) {
         super.userSwitched(newUserId);
@@ -3586,6 +4514,13 @@ final Object mScreenshotLock = new Object();
         if (mNotificationPanelMinHeightFrac < 0f || mNotificationPanelMinHeightFrac > 1f) {
             mNotificationPanelMinHeightFrac = 0f;
         }
+		MAX_RAN_MULCON = (int)res.getDimension(R.dimen.max_range_mulcon);
+		MUL_CON_PAD = (int)res.getDimension(R.dimen.mul_config_padding);
+		MUL_IMA_SIZE = (int)res.getDimension(R.dimen.mul_image_size);
+		CENTER_BTN_WIDTH_VALUE = CENTER_BTN_WIDTH = (int)res.getDimension(R.dimen.center_btn_width);
+		CENTER_BTN_HEIGHT_VALUE = CENTER_BTN_HEIGHT = (int)res.getDimension(R.dimen.center_btn_height);
+		mStatusBarHeight = (int)res.getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);
+		MUL_CON_POS = MUL_CON_PAD+ (int)(MUL_IMA_SIZE/2);
 
         mHeadsUpNotificationDecay = res.getInteger(R.integer.heads_up_notification_decay);
         mRowMinHeight =  res.getDimensionPixelSize(R.dimen.notification_min_height);
@@ -4403,7 +5338,16 @@ final Object mScreenshotLock = new Object();
                 mLastLockToAppLongPress = time;
             } else {
                 // If this is back still need to handle sending the long-press event.
-                if (v.getId() == R.id.back) {
+                if (v.getId() == R.id.home&&mContext.getResources().getConfiguration().enableMultiWindow()) {
+					LOGD("wintask Longpress home button for clear tasks!");
+					ClearRunningTasks();
+					mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
+					mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
+					if(appslist!=null && appslist.size() > 0){
+					 appslist.clear();  
+		             listadapter.notifyDataSetChanged();
+				  }
+                } else if (v.getId() == R.id.back) {
                     sendBackLongPress = true;
                 } else if (isAccessiblityEnabled && activityManager.isInLockTaskMode()) {
                     // When in accessibility mode a long press that is recents (not back)
@@ -4612,8 +5556,7 @@ final Object mScreenshotLock = new Object();
                 updateDozingState();
             }
         }
-
-        private final class H extends Handler {
+         private final class H extends Handler {
             private static final int MSG_START_DOZING = 1;
             private static final int MSG_PULSE_WHILE_DOZING = 2;
             private static final int MSG_STOP_DOZING = 3;
@@ -4634,7 +5577,6 @@ final Object mScreenshotLock = new Object();
             }
         }
     }
-
     private View.OnClickListener mSimSwitchListener = new View.OnClickListener() {
         public void onClick(View v) {
             int value = 0;
@@ -4728,4 +5670,1143 @@ final Object mScreenshotLock = new Object();
         mSimSwitchNotification.setVisibility(View.VISIBLE);
     }
 
+	private class MyGestureDetectorListener  extends SimpleOnGestureListener{
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2,
+				float distanceX, float distanceY) {
+			int startX = (int)e1.getX();
+			int startY = (int)e1.getY();
+			int currentX = (int)e2.getRawX();
+			int currentY = (int)e2.getRawY();
+			mHSCParams.x = currentX - startX;
+			mHSCParams.y = currentY - startY;
+			//portarial
+			if(mHSCParams.width == -1){
+				int height = wm.getDefaultDisplay().getHeight() - MAX_RAN_MULCON;
+				mHSCParams.x = 0;
+				if(mHSCParams.y < MAX_RAN_MULCON){
+					mHSCParams.y = MAX_RAN_MULCON;
+				}else if(mHSCParams.y > height){
+					mHSCParams.y = height;
+				}
+			}
+			//lanscape
+			if(mHSCParams.height == -1){
+				int width = wm.getDefaultDisplay().getWidth() - MAX_RAN_MULCON;
+				mHSCParams.y = 0;
+				if(mHSCParams.x < MAX_RAN_MULCON){
+					mHSCParams.x = MAX_RAN_MULCON;
+				}else if(mHSCParams.x > width){
+					mHSCParams.x = width;
+				}
+			}
+			if(mHSContainer!=null){
+				wm.updateViewLayout(mHSContainer, mHSCParams);
+			}
+			return true;
+		}
+    }
+	
+	private class MyGestureOfFourScreenWDetectorListener  extends SimpleOnGestureListener{
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2,
+				float distanceX, float distanceY) {
+			LOGD("---------MyGestureOfFourScreenWDetectorListener-------onScroll------------");
+			if(mFourScreenWCParams == null){
+				return true;
+			}
+			int startX = (int)e1.getX();
+			int startY = (int)e1.getY();
+			int currentX = (int)e2.getRawX();
+			int currentY = (int)e2.getRawY();
+			mFourScreenWCParams.y = currentY - startY;
+			if(mEdgeRestriction){
+				int height = wm.getDefaultDisplay().getHeight() - MAX_RAN_MULCON;
+				mFourScreenWCParams.x = 0;
+				if(mFourScreenWCParams.y < MAX_RAN_MULCON){
+					mFourScreenWCParams.y = MAX_RAN_MULCON;
+				}else if(mFourScreenWCParams.y > height){
+					mFourScreenWCParams.y = height;
+				}
+			}else{
+				if(mFourScreenWCParams.y < mStatusBarHeight){
+					mFourScreenWCParams.y = mStatusBarHeight;
+				}else if(mFourScreenWCParams.y+MUL_CON_POS*2 > wm.getDefaultDisplay().getHeight()){
+					mFourScreenWCParams.y = wm.getDefaultDisplay().getHeight()-MUL_CON_POS*2;
+				}
+			}
+			updateCenterBtnView();
+			updateCircleMenu();
+			updateFourScreenControllers(null);
+			return true;
+		}
+    }
+	
+	private class MyGestureOfFourScreenHDetectorListener  extends SimpleOnGestureListener{
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2,
+				float distanceX, float distanceY) {
+			if(mFourScreenHCParams == null){
+				return true;
+			}
+			int startX = (int)e1.getX();
+			int startY = (int)e1.getY();
+			int currentX = (int)e2.getRawX();
+			int currentY = (int)e2.getRawY();
+			mFourScreenHCParams.x = currentX - startX;
+			if(mEdgeRestriction){
+				int width = wm.getDefaultDisplay().getWidth() - MAX_RAN_MULCON;
+				mFourScreenHCParams.y = 0;
+				if(mFourScreenHCParams.x < MAX_RAN_MULCON){
+					mFourScreenHCParams.x = MAX_RAN_MULCON;
+				}else if(mFourScreenHCParams.x > width){
+					mFourScreenHCParams.x = width;
+				}
+			}else{
+				if(mFourScreenHCParams.x < 0){
+					mFourScreenHCParams.x = 0;
+				}else if(mFourScreenHCParams.x+MUL_CON_POS*2 > wm.getDefaultDisplay().getWidth()){
+					mFourScreenHCParams.x = wm.getDefaultDisplay().getWidth()-MUL_CON_POS*2;
+				}
+			}
+			updateCenterBtnView();
+			updateCircleMenu();
+			updateFourScreenControllers(null);
+			return true;
+		}
+    }
+	
+	private void updateCenterBtnView(){
+		if(mCenterBtnParams != null){
+			if(mFourScreenHCParams != null)
+				mCenterBtnParams.x = mFourScreenHCParams.x + MUL_CON_POS - CENTER_BTN_WIDTH/2;
+			if(mFourScreenWCParams != null)
+				mCenterBtnParams.y = mFourScreenWCParams.y + MUL_CON_POS - CENTER_BTN_HEIGHT/2;
+			if (wm != null && mCenterBtnContainer.getParent() != null) {
+				wm.updateViewLayout(mCenterBtnContainer, mCenterBtnParams);
+			}
+		}
+	}
+
+	private class CenterBtnGestureDetectorListener extends
+			SimpleOnGestureListener {
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2,
+				float distanceX, float distanceY) {
+			Log.v("zjy","-----------onScroll-----------------");
+			if(isCenterBtnClick){
+				CENTER_BTN_WIDTH =  CENTER_BTN_WIDTH_VALUE ;
+				CENTER_BTN_HEIGHT =	CENTER_BTN_HEIGHT_VALUE ;
+				mCenterBtnView.setLayoutParams(new LinearLayout.LayoutParams(CENTER_BTN_WIDTH,CENTER_BTN_HEIGHT));
+				mCenterBtnView.setBackgroundResource(R.drawable.center_btn_pressed);
+				mCenterBtnParams.x -= (CENTER_BTN_WIDTH - CENTER_BTN_WIDTH_VALUE)/2;
+				mCenterBtnParams.y -= (CENTER_BTN_HEIGHT - CENTER_BTN_HEIGHT_VALUE)/2;
+				updateCenterBtnView();
+				isCenterBtnClick = false;
+			}
+			int startX = (int) e1.getX();
+			int startY = (int) e1.getY();
+			int currentX = (int) e2.getRawX();
+			int currentY = (int) e2.getRawY();
+			
+			if(mFourScreenWCParams != null && mFourScreenHCParams != null){
+				mFourScreenWCParams.y = currentY - startY;
+				mFourScreenHCParams.x = currentX - startX;
+				if(mEdgeRestriction){
+					int height = wm.getDefaultDisplay().getHeight() - MAX_RAN_MULCON;
+					mFourScreenWCParams.x = 0;
+					if(mFourScreenWCParams.y < MAX_RAN_MULCON){
+						mFourScreenWCParams.y = MAX_RAN_MULCON;
+					}else if(mFourScreenWCParams.y > height){
+						mFourScreenWCParams.y = height;
+					}
+					int width = wm.getDefaultDisplay().getWidth() - MAX_RAN_MULCON;
+					mFourScreenHCParams.y =0;
+					if(mFourScreenHCParams.x < MAX_RAN_MULCON){
+						mFourScreenHCParams.x = MAX_RAN_MULCON;
+					}else if(mFourScreenHCParams.x > width){
+						mFourScreenHCParams.x = width;
+					}
+				}else{
+					if(mFourScreenHCParams.x < 0){
+						mFourScreenHCParams.x = 0;
+					}else if(mFourScreenHCParams.x+MUL_CON_POS*2 > wm.getDefaultDisplay().getWidth()){
+						mFourScreenHCParams.x = wm.getDefaultDisplay().getWidth()-MUL_CON_POS*2;
+					}
+					if(mFourScreenWCParams.y < mStatusBarHeight){
+						mFourScreenWCParams.y = mStatusBarHeight;
+					}else if(mFourScreenWCParams.y+MUL_CON_POS*2 > wm.getDefaultDisplay().getHeight()){
+						mFourScreenWCParams.y = wm.getDefaultDisplay().getHeight()-MUL_CON_POS*2;
+					}
+				}
+				updateCenterBtnView();
+				updateCircleMenu();
+				updateFourScreenControllers(null);
+			}else{
+				mCenterBtnParams.x = currentX - startX;
+				mCenterBtnParams.y = currentY - startY;
+				if(mCenterBtnParams.x < 0){
+					mCenterBtnParams.x = 0;
+				}else if(mCenterBtnParams.x+CENTER_BTN_WIDTH > wm.getDefaultDisplay().getWidth()){
+					mCenterBtnParams.x = wm.getDefaultDisplay().getWidth()-CENTER_BTN_WIDTH;
+				}
+				if(mCenterBtnParams.y < mStatusBarHeight){
+					mCenterBtnParams.y = mStatusBarHeight;
+				}else if(mCenterBtnParams.y+CENTER_BTN_HEIGHT > wm.getDefaultDisplay().getHeight()){
+					mCenterBtnParams.y = wm.getDefaultDisplay().getHeight()-CENTER_BTN_HEIGHT;
+				}
+				if (wm != null && mCenterBtnContainer.getParent() != null) {
+					wm.updateViewLayout(mCenterBtnContainer, mCenterBtnParams);
+				}
+				if(mCircleMenuParams != null){
+					mCircleMenuParams.x = mCenterBtnParams.x + CENTER_BTN_WIDTH_VALUE/2 - FourScreenCircleMenuView.WIDTH/2;
+					mCircleMenuParams.y = mCenterBtnParams.y +  CENTER_BTN_HEIGHT_VALUE/2 - FourScreenCircleMenuView.HEIGHT/2;
+				}
+				if(mFourScreenCircleMenuView!=null && mFourScreenCircleMenuView.getParent()!=null){
+					removeViewHandler.removeMessages(remove_view_msg);
+					removeViewHandler.removeMessages(send_hide_view_msg);
+					wm.updateViewLayout(mFourScreenCircleMenuView, mCircleMenuParams);
+					if(mFourScreenCircleMenuView != null){
+						mFourScreenCircleMenuView.show();
+					}
+					removeViewHandler.sendEmptyMessageDelayed(send_hide_view_msg, CIRCLE_MENU_HIDE_DELAY);
+				}
+			}
+			
+			return true;
+		}
+
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent e) {
+			LOGD("onSingleTapUp");
+			if(ONE_LEVEL_MENU){
+				if(mFourScreenCircleMenuView!=null){
+					if(mFourScreenCircleMenuView.getParent() == null){
+						showCircleMenu();
+					}else{
+						hideCircleMenu();
+					}
+				}
+			}
+			return true;
+		}
+
+		@Override
+		public void onLongPress(MotionEvent e) {
+			LOGD("onLongPress");
+			if(ONE_LEVEL_MENU){
+				if(mFourScreenCircleMenuView!=null){
+					if(mFourScreenCircleMenuView.getParent() == null){
+						showCircleMenu();
+					}else{
+						hideCircleMenu();
+					}
+				}
+			}
+		}
+	}
+	
+	private class MultiModeGestureDetectorListener extends
+			SimpleOnGestureListener {
+		@Override
+		public boolean onScroll(MotionEvent e1, MotionEvent e2,
+				float distanceX, float distanceY) {
+			int startX = (int) e1.getX();
+			int startY = (int) e1.getY();
+			int currentX = (int) e2.getRawX();
+			int currentY = (int) e2.getRawY();
+			mMultiModeParams.x = currentX - startX;
+			mMultiModeParams.y = currentY - startY;
+			if (multiModeContainer.getParent() != null) {
+				wm.updateViewLayout(multiModeContainer,mMultiModeParams);
+			}
+			return true;
+		}
+
+		@Override
+		public boolean onSingleTapConfirmed(MotionEvent e) {
+			LOGD("onSingletapConfirm");
+			// TODO Auto-generated method stub
+			LOGD("onSingleTapUp");
+			if (multiModeContainer.getParent() != null) {
+				int mode = Settings.System.getInt(
+						mContext.getContentResolver(),
+						Settings.System.MULITI_WINDOW_MODE, 0);
+				Log.d("turing---->", "multiwindow mode  used=" + mode);
+				//Settings.System.putInt(mContext.getContentResolver(),
+				//		Settings.System.MULITI_WINDOW_MODE, (mode + 1) % 3);
+                                if(mode == 3){
+					Settings.System.putInt(mContext.getContentResolver(),
+							Settings.System.MULITI_WINDOW_MODE, 4);
+				}else{
+					Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.MULITI_WINDOW_MODE, 3);
+				}
+				setMultiModeView();
+			}
+			return true;
+		}
+
+		@Override
+		public void onLongPress(MotionEvent e) {
+			LOGD("onLongPress");
+		}
+	}
+	
+	private void changeMultiModeViewDrawable(MotionEvent event){
+		setMultiModeView();
+	}
+	
+	private int getMultiMode(){
+		return Settings.System.getInt(mContext.getContentResolver(),
+    			Settings.System.MULITI_WINDOW_MODE, Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE);
+	}
+	
+	private void setMultiModeView(){
+		int res = -1;
+		int mode = Settings.System.getInt(mContext.getContentResolver(),
+    			Settings.System.MULITI_WINDOW_MODE, Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE);
+		if(mode == Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE){
+			
+		}else if(mode == Settings.System.MULITI_WINDOW_HALF_SCREEN_MODE){
+			res = R.drawable.compose_normal;
+		}else if(mode == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+			res = R.drawable.stretch_normal;
+		}
+		if(mMultiModeView != null){
+			if(res != -1){
+				mMultiModeView.setImageResource(res);
+			}else{
+				mMultiModeView.setImageBitmap(null);
+			}
+		}
+	}
+	
+	private void addCircleMenuWindow(){
+		if(mFourScreenCircleMenuView == null){
+			mFourScreenCircleMenuView = new FourScreenCircleMenuView(mContext);
+			mFourScreenCircleMenuView.setBtnClickCallBack(this);
+			mFourScreenCircleMenuView.setOnTouchListener(new View.OnTouchListener() {
+				@Override
+				public boolean onTouch(View arg0, MotionEvent arg1) {
+					Log.v("zjy", "------mFourScreenCircleMenuView onTouch-------arg1:"+arg1);
+					hideCircleMenu();
+					return true;
+				}
+			});
+		}
+		if(mCircleMenuParams == null){
+			mCircleMenuParams = new WindowManager.LayoutParams();
+			mCircleMenuParams.type=WindowManager.LayoutParams.TYPE_MULTIWINDOW_FOURSCREEN_CENTER_BUTTON;//2002|WindowManager.LayoutParams.TYPE_SYSTEM_ALERT ;
+			mCircleMenuParams.format=PixelFormat.TRANSLUCENT;
+			mCircleMenuParams.flags|=8;
+			mCircleMenuParams.flags |=WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			mCircleMenuParams.flags |= WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+			mCircleMenuParams.width = FourScreenCircleMenuView.WIDTH;
+			mCircleMenuParams.height = FourScreenCircleMenuView.HEIGHT;
+			mCircleMenuParams.x = mContext.getResources().getDisplayMetrics().widthPixels/2-FourScreenCircleMenuView.WIDTH/2;
+			mCircleMenuParams.y = (mContext.getResources().getDisplayMetrics().heightPixels+mStatusBarHeight)/2 -FourScreenCircleMenuView.HEIGHT/2;
+			mCircleMenuParams.setTitle("CircleMenu");
+			mCircleMenuParams.gravity=Gravity.LEFT|Gravity.TOP;
+		}
+	}
+	
+	private void addCenterBtnWindow(){
+		if(mCenterBtnContainer == null){
+			mCenterBtnContainer = new LinearLayout(mContext);
+			mCenterBtnView = new ImageView(mContext);
+			mCenterBtnView.setLayoutParams(new LinearLayout.LayoutParams(CENTER_BTN_WIDTH,CENTER_BTN_HEIGHT));
+			mCenterBtnView.setBackgroundResource(R.drawable.center_btn_normal);
+			mCenterBtnView.setScaleType(ScaleType.CENTER);
+			mCenterBtnContainer.addView(mCenterBtnView);
+			mCenterBtnContainer.setFocusable(true);
+			mCenterBtnContainer.setClickable(true);
+			mCenterBtnContainer.setOnTouchListener(new OnTouchListener() {		
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+							Log.v("zjy", "-------mCenterBtnContainer---onTouch-----------------event.getAction():"+event.getAction());
+							switch(event.getAction()){
+							case MotionEvent.ACTION_CANCEL:
+							case MotionEvent.ACTION_UP:
+								Log.v("zjy", "-------ACTION_UP------------CENTER_BTN_WIDTH:"+CENTER_BTN_WIDTH +",CENTER_BTN_WIDTH_VALUE:"+CENTER_BTN_WIDTH_VALUE);
+								
+								AnimationSet set = new AnimationSet(true);
+								ScaleAnimation animation =new ScaleAnimation(1.0f, 0.5f, 1.0f, 0.5f,
+										Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
+								set.addAnimation(animation);
+								set.setDuration(300);
+								set.setAnimationListener(new Animation.AnimationListener() {
+									@Override
+									public void onAnimationStart(Animation animation) {
+									}
+
+									@Override
+									public void onAnimationRepeat(Animation animation) {
+									}
+
+									@Override
+									public void onAnimationEnd(Animation animation) {
+										mCenterBtnParams.x += (CENTER_BTN_WIDTH - CENTER_BTN_WIDTH_VALUE)/2;
+										mCenterBtnParams.y += (CENTER_BTN_HEIGHT - CENTER_BTN_HEIGHT_VALUE)/2;
+										CENTER_BTN_WIDTH =  CENTER_BTN_WIDTH_VALUE;
+										CENTER_BTN_HEIGHT =	CENTER_BTN_HEIGHT_VALUE;
+										mCenterBtnView.setLayoutParams(new LinearLayout.LayoutParams(CENTER_BTN_WIDTH,CENTER_BTN_HEIGHT));
+										mCenterBtnView.setBackgroundResource(R.drawable.center_btn_normal);
+										updateCenterBtnView();
+									}
+								});
+								mCenterBtnView.startAnimation(set);
+								updateFourScreenSettingsSystem(LAND_CONTROL_TYPE);
+								if(mFourScreenWController != null)
+									mFourScreenWController.setBackgroundResource(R.drawable.control_bg_normal);	
+								updateFourScreenSettingsSystem(PORT_CONTROL_TYPE);
+								if(mFourScreenHController != null)
+									mFourScreenHController.setBackgroundResource(R.drawable.control_bg_normal);
+								break;
+							case MotionEvent.ACTION_MOVE:
+								break;
+							case MotionEvent.ACTION_DOWN:
+								isCenterBtnClick = true;
+								if(mFourScreenWController != null)
+									mFourScreenWController.setBackgroundResource(R.drawable.control_bg_pressed);
+								if(mFourScreenHController != null)
+									mFourScreenHController.setBackgroundResource(R.drawable.control_bg_pressed);
+								break;
+							}
+							mCenterBtnDector.onTouchEvent(event);
+							return false;
+						}
+					});
+		}
+		if(mCenterBtnParams == null){
+			mCenterBtnParams = new WindowManager.LayoutParams();
+			mCenterBtnParams.type=WindowManager.LayoutParams.TYPE_MULTIWINDOW_FOURSCREEN_CENTER_BUTTON;//2002|WindowManager.LayoutParams.TYPE_SYSTEM_ALERT ;
+			mCenterBtnParams.format=PixelFormat.TRANSLUCENT;
+			mCenterBtnParams.flags|=8;
+			mCenterBtnParams.flags |=WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			mCenterBtnParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+			mCenterBtnParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+			mCenterBtnParams.x = mContext.getResources().getDisplayMetrics().widthPixels/2 - CENTER_BTN_WIDTH/2;
+			mCenterBtnParams.y = (mContext.getResources().getDisplayMetrics().heightPixels+mStatusBarHeight)/2 - CENTER_BTN_HEIGHT/2;
+			mCenterBtnParams.windowAnimations = 0;
+			mCenterBtnParams.setTitle("CenterViewButton");
+			mCenterBtnParams.gravity=Gravity.LEFT|Gravity.TOP;
+
+		}
+		if(mCenterBtnDector == null){
+			mCenterBtnDector = new GestureDetector(new CenterBtnGestureDetectorListener());
+		}
+	}
+	
+	private void showCircleMenu(){
+		if(!ONE_LEVEL_MENU){
+			return;
+		}
+		if(mFourScreenCircleMenuView!=null && mFourScreenCircleMenuView.getParent()==null){
+			wm.addView(mFourScreenCircleMenuView, mCircleMenuParams);
+		}
+		updateCircleMenu();
+	}
+	
+	private void updateCircleMenu(){
+		if(!ONE_LEVEL_MENU){
+			return;
+		}
+		if(mCircleMenuParams != null && mFourScreenHCParams != null){
+			mCircleMenuParams.x = mFourScreenHCParams.x + MUL_CON_POS-FourScreenCircleMenuView.WIDTH/2;
+			mCircleMenuParams.y = mFourScreenWCParams.y + MUL_CON_POS-FourScreenCircleMenuView.HEIGHT/2;
+		}else if(mCircleMenuParams != null && mCenterBtnParams != null){
+			mCircleMenuParams.x = mCenterBtnParams.x + MUL_CON_POS-FourScreenCircleMenuView.WIDTH/2;
+			mCircleMenuParams.y = mCenterBtnParams.y + MUL_CON_POS-FourScreenCircleMenuView.HEIGHT/2;
+		}
+		if(mFourScreenCircleMenuView!=null && mFourScreenCircleMenuView.getParent()!=null){
+			removeViewHandler.removeMessages(remove_view_msg);
+			removeViewHandler.removeMessages(send_hide_view_msg);
+			wm.updateViewLayout(mFourScreenCircleMenuView, mCircleMenuParams);
+			if(mFourScreenCircleMenuView != null){
+				mFourScreenCircleMenuView.show();
+			}
+			removeViewHandler.sendEmptyMessageDelayed(send_hide_view_msg, CIRCLE_MENU_HIDE_DELAY);
+		}
+	}
+	
+	private final int CIRCLE_MENU_HIDE_DELAY = 3000;
+	private void hideCircleMenu(){
+		if(!ONE_LEVEL_MENU){
+			return;
+		}
+		if(mFourScreenCircleMenuView != null){
+			mFourScreenCircleMenuView.hide();
+		}
+		removeViewHandler.sendEmptyMessageDelayed(remove_view_msg, 600);
+	}
+	
+	private final int remove_view_msg = 0x01;
+	private final int send_hide_view_msg = 0x02;
+	private Handler removeViewHandler = new Handler(){
+		@Override
+		public void handleMessage(Message msg) {
+			if(!ONE_LEVEL_MENU){
+				return;
+			}
+			switch (msg.what) {
+			case send_hide_view_msg:
+				hideCircleMenu();
+				break;
+			case remove_view_msg:
+				if(mFourScreenCircleMenuView != null && mFourScreenCircleMenuView.getParent() != null){
+					wm.removeView(mFourScreenCircleMenuView);
+				}
+				break;
+			}
+		}
+	};
+	
+	private void addMultiModeWindow(){
+		if(multiModeContainer == null){
+			multiModeContainer = new LinearLayout(mContext);
+			mMultiModeView = new ImageView(mContext);
+			mMultiModeView.setLayoutParams(new LinearLayout.LayoutParams(68,68));
+			setMultiModeView();
+			mMultiModeView.setBackgroundResource(R.drawable.circle);
+			mMultiModeView.setScaleType(ScaleType.CENTER);
+			multiModeContainer.addView(mMultiModeView);
+			multiModeContainer.setFocusable(true);
+			multiModeContainer.setClickable(true);
+			multiModeContainer.setOnTouchListener(new OnTouchListener() {		
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+						// TODO Auto-generated method stub
+						changeMultiModeViewDrawable(event);
+					mMultiModeDector.onTouchEvent(event);
+							return true;
+						}
+					});
+		}
+		if(mMultiModeParams == null){
+			mMultiModeParams = new WindowManager.LayoutParams();
+			mMultiModeParams.type=WindowManager.LayoutParams.TYPE_MULTIMODE_BUTTON;//2002|WindowManager.LayoutParams.TYPE_SYSTEM_ALERT ;
+			mMultiModeParams.format=PixelFormat.TRANSLUCENT;
+			mMultiModeParams.flags|=8;
+			mMultiModeParams.flags |=WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			mMultiModeParams.width = WindowManager.LayoutParams.WRAP_CONTENT;
+			mMultiModeParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
+			mMultiModeParams.x = wm.getDefaultDisplay().getWidth();;
+			mMultiModeParams.y = wm.getDefaultDisplay().getHeight()/2;
+			mMultiModeParams.setTitle("MultiModeButton");
+			mMultiModeParams.gravity=Gravity.LEFT|Gravity.TOP;
+
+		}
+		boolean show_config = Settings.System.getInt(mContext.getContentResolver(),
+								Settings.System.MULTI_WINDOW_BUTTON_SHOW,0) == 1;
+		if(show_config){
+			multiModeContainer.setVisibility(View.VISIBLE);
+		}else{
+			multiModeContainer.setVisibility(View.GONE);
+		}
+		if(false){
+			wm.addView(multiModeContainer, mMultiModeParams);
+		}
+	}
+	
+	private void addHalfScreenWindowController(){
+		LOGD("addHalfScreenWindowController");
+		if(mHSCParams == null){
+			mHSCParams= new WindowManager.LayoutParams();
+			mHSCParams.type=WindowManager.LayoutParams.TYPE_MULTIWINDOW_CONTROLLER;//2002|WindowManager.LayoutParams.TYPE_SYSTEM_ALERT ;
+			mHSCParams.format=PixelFormat.TRANSLUCENT;
+			mHSCParams.flags|=8;
+			mHSCParams.flags |=WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			mHSCParams.flags|= WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
+			mHSCParams.flags|= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+			
+			//wmParams.flags |=WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
+			//mHSCParams.windowAnimations = android.R.style.Animation_Translucent;
+			mHSCParams.setTitle("MultiWidow/Controller");
+			mHSCParams.gravity=Gravity.LEFT|Gravity.TOP;		 
+			mHSCParams.width=-2;
+			mHSCParams.height=-1;
+			if(mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
+				mHSCParams.x= mContext.getResources().getDisplayMetrics().widthPixels/2;
+				mHSCParams.y= 0;
+			}else if(mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT){
+				mHSCParams.x = 0;
+				mHSCParams.y = mContext.getResources().getDisplayMetrics().heightPixels/2;
+			}
+			updateSettingsSystem();
+		}
+		if(mHSContainer == null){
+			loadDimens();
+			mHSContainer = new LinearLayout(mContext);
+			LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+			//llay.setMargins(20, 0, 20, 0);
+			mHSContainer.setLayoutParams(llay);
+			mHSContainer.setPadding(MUL_CON_PAD, getStatusBarHeight(), MUL_CON_PAD, 0);
+			mHSContainer.setOnTouchListener(new View.OnTouchListener() {				
+				public boolean onTouch(View v, MotionEvent event) {
+					// TODO Auto-generated method stub
+					switch(event.getAction()){
+						case MotionEvent.ACTION_UP:
+							LOGD("action Up halfscreen controller");
+							updateSettingsSystem();
+							mHalfScreenController.setBackgroundResource(R.drawable.control_bg_normal);							
+							break;
+						case MotionEvent.ACTION_DOWN:
+							LOGD("action down halfscreen contrllr");
+							mHalfScreenController.setBackgroundResource(R.drawable.control_bg_pressed);							
+							break;
+						}
+				mMoveDector.onTouchEvent(event);
+					return true;
+				}
+			});
+			mHalfScreenController = new ImageView(mContext);
+			mHalfScreenController.setLayoutParams(new LinearLayout.LayoutParams(MUL_IMA_SIZE, -1));
+			mHalfScreenController.setBackgroundResource(R.drawable.control_bg_normal);
+			mHSContainer.addView(mHalfScreenController);
+			
+		}
+		if(mMoveDector == null){
+			mMoveDector = new GestureDetector(new MyGestureDetectorListener());
+		}
+		if(mMultiModeDector == null){
+			mMultiModeDector = new GestureDetector(new MultiModeGestureDetectorListener());
+		}
+	}
+	
+	private void addFourScreenWindowController(){
+		LOGD("addFourScreenWindowController");
+		if(mFourScreenWCParams == null){
+			mFourScreenWCParams= new WindowManager.LayoutParams();
+			mFourScreenWCParams.type=WindowManager.LayoutParams.TYPE_MULTIWINDOW_CONTROLLER;//2002|WindowManager.LayoutParams.TYPE_SYSTEM_ALERT ;
+			mFourScreenWCParams.format=PixelFormat.TRANSLUCENT;
+			mFourScreenWCParams.flags|=8;
+			mFourScreenWCParams.flags |=WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			mFourScreenWCParams.flags|= WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
+			mFourScreenWCParams.flags|= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+			if(!FourScreenBackWindow.ONLY_ONE_BACK_WINDOW)
+				mFourScreenWCParams.flags|=WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+			
+			//wmParams.flags |=WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
+			//mHSCParams.windowAnimations = android.R.style.Animation_Translucent;
+			mFourScreenWCParams.setTitle("MultiWidow/WController");
+			mFourScreenWCParams.gravity=Gravity.LEFT|Gravity.TOP;	
+			if(FourScreenBackWindow.ONLY_ONE_BACK_WINDOW){
+				mFourScreenWCParams.width=-1;
+			}else{
+				mFourScreenWCParams.width=wm.getDefaultDisplay().getWidth();
+			}
+			mFourScreenWCParams.height=-2;
+			mFourScreenWCParams.x = 0;
+			mFourScreenWCParams.y = (mContext.getResources().getDisplayMetrics().heightPixels+mStatusBarHeight)/2-MUL_CON_POS;
+			updateFourScreenSettingsSystem(LAND_CONTROL_TYPE);
+		}
+		if(mFSWSContainer == null){
+			loadDimens();
+			mFSWSContainer = new LinearLayout(mContext);
+			LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+			//llay.setMargins(20, 0, 20, 0);
+			mFSWSContainer.setLayoutParams(llay);
+			mFSWSContainer.setPadding(0, MUL_CON_PAD, 0, MUL_CON_PAD);
+			mFSWSContainer.setOnTouchListener(new View.OnTouchListener() {				
+				public boolean onTouch(View v, MotionEvent event) {
+					// TODO Auto-generated method stub
+					switch(event.getAction()){
+						case MotionEvent.ACTION_CANCEL:
+						case MotionEvent.ACTION_UP:
+							LOGD("action Up fourscreen w controller");
+							updateFourScreenSettingsSystem(LAND_CONTROL_TYPE);
+							mFourScreenWController.setBackgroundResource(R.drawable.control_bg_normal);							
+							break;
+						/*case MotionEvent.ACTION_MOVE:
+							LOGD("action MOVE fourscreen w controller");
+							updateFourScreenSettingsSystem(LAND_CONTROL_TYPE);
+							break;*/
+						case MotionEvent.ACTION_DOWN:
+							LOGD("action down fourscreen w contrllr");
+							mFourScreenWController.setBackgroundResource(R.drawable.control_bg_pressed);							
+							break;
+						}
+					mFourScreenWCMoveDector.onTouchEvent(event);
+					return true;
+				}
+			});
+			mFourScreenWController = new ImageView(mContext);
+			mFourScreenWController.setLayoutParams(new LinearLayout.LayoutParams( -1 ,MUL_IMA_SIZE));
+			mFourScreenWController.setBackgroundResource(R.drawable.control_bg_normal);
+			mFSWSContainer.addView(mFourScreenWController);
+			
+		}
+		if(mFourScreenWCMoveDector == null){
+			mFourScreenWCMoveDector = new GestureDetector(new MyGestureOfFourScreenWDetectorListener());
+		}
+		
+		if(mFourScreenHCParams == null){
+			mFourScreenHCParams= new WindowManager.LayoutParams();
+			mFourScreenHCParams.type=WindowManager.LayoutParams.TYPE_MULTIWINDOW_CONTROLLER;//2002|WindowManager.LayoutParams.TYPE_SYSTEM_ALERT ;
+			mFourScreenHCParams.format=PixelFormat.TRANSLUCENT;
+			mFourScreenHCParams.flags|=8;
+			mFourScreenHCParams.flags |=WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED;
+			mFourScreenHCParams.flags|= WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
+			mFourScreenHCParams.flags|= WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
+			if(!FourScreenBackWindow.ONLY_ONE_BACK_WINDOW)
+				mFourScreenHCParams.flags|=WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS;
+			
+			//wmParams.flags |=WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD;
+			//mHSCParams.windowAnimations = android.R.style.Animation_Translucent;
+			mFourScreenHCParams.setTitle("MultiWidow/HController");
+			mFourScreenHCParams.gravity=Gravity.LEFT|Gravity.TOP;		 
+			mFourScreenHCParams.width=-2;
+			if(FourScreenBackWindow.ONLY_ONE_BACK_WINDOW){
+				mFourScreenHCParams.height=-1;
+			}else{
+				mFourScreenHCParams.height=wm.getDefaultDisplay().getHeight();
+			}
+			mFourScreenHCParams.x = mContext.getResources().getDisplayMetrics().widthPixels/2-MUL_CON_POS;
+			mFourScreenHCParams.y = mStatusBarHeight;
+			updateFourScreenSettingsSystem(PORT_CONTROL_TYPE);
+		}
+		if(mFSHSContainer == null){
+			loadDimens();
+			mFSHSContainer = new LinearLayout(mContext);
+			LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+			//llay.setMargins(20, 0, 20, 0);
+			mFSHSContainer.setLayoutParams(llay);
+			mFSHSContainer.setPadding(MUL_CON_PAD, getStatusBarHeight(), MUL_CON_PAD, 0);
+			mFSHSContainer.setOnTouchListener(new View.OnTouchListener() {				
+				public boolean onTouch(View v, MotionEvent event) {
+					// TODO Auto-generated method stub
+					switch(event.getAction()){
+						case MotionEvent.ACTION_CANCEL:
+						case MotionEvent.ACTION_UP:
+							LOGD("action Up fourscreen h controller");
+							updateFourScreenSettingsSystem(PORT_CONTROL_TYPE);
+							mFourScreenHController.setBackgroundResource(R.drawable.control_bg_normal);							
+							break;
+						/*case MotionEvent.ACTION_MOVE:
+							LOGD("action MOVE fourscreen h controller");
+							updateFourScreenSettingsSystem(PORT_CONTROL_TYPE);
+							break;*/
+						case MotionEvent.ACTION_DOWN:
+							LOGD("action down fourscreen h contrllr");
+							mFourScreenHController.setBackgroundResource(R.drawable.control_bg_pressed);							
+							break;
+						}
+					mFourScreenHCMoveDector.onTouchEvent(event);
+					return true;
+				}
+			});
+			mFourScreenHController = new ImageView(mContext);
+			mFourScreenHController.setLayoutParams(new LinearLayout.LayoutParams(MUL_IMA_SIZE, -1));
+			mFourScreenHController.setBackgroundResource(R.drawable.control_bg_normal);
+			mFSHSContainer.addView(mFourScreenHController);
+			
+		}
+		if(mFourScreenHCMoveDector == null){
+			mFourScreenHCMoveDector = new GestureDetector(new MyGestureOfFourScreenHDetectorListener());
+		}
+	}
+
+    //huangjc win bar
+    private ContentObserver mMultiConfigObserver = new ContentObserver(new Handler()){
+		     @Override
+		     public void onChange(boolean selfChange) {
+			            final boolean isshow = 0 != Settings.System.getInt(
+			                    mContext.getContentResolver(), Settings.System.MULTI_WINDOW_CONFIG, 0);
+			                    isMultiChange=true;
+						       try {
+					            IActivityManager am = ActivityManagerNative.getDefault();
+					            Configuration config = am.getConfiguration();
+					
+					            // Will set userSetLocale to indicate this isn't some passing default - the user
+					            // wants this remembered
+					            config.setMultiWindowFlag(isshow);
+					
+					            am.updateConfiguration(config);
+					            // Trigger the dirty bit for the Settings Provider.
+					            //BackupManager.dataChanged("com.android.providers.settings");
+					        } catch (RemoteException e) {
+					            // Intentionally left blank
+					        }
+		
+									if(isshow){
+										LOGD("=======MULTI_WINDOW_CONFIG is open ========");
+										if(appslist!=null && appslist.size() > 0)
+										 appslist.clear();
+									}else{
+										LOGD("=======MULTI_WINDOW_CONFIG is close ========");
+									}
+						
+					}
+
+	};
+	
+	private void updateFourScreenControllers(String str){
+		if(mFourScreenHCParams == null || mFourScreenWCParams == null){
+			return;
+		}
+		if (!FourScreenBackWindow.ONLY_ONE_BACK_WINDOW) {
+			String areas = str;
+			if (areas == null) {
+				areas = Settings.System.getString(
+						mContext.getContentResolver(),
+						Settings.System.FOUR_SCREEN_WINDOW_AREAS);
+			}
+			int x = mFourScreenHCParams.x + MUL_CON_POS;
+			int y = mFourScreenWCParams.y + MUL_CON_POS;
+			LOGD("------------updateFourScreenControllers----------------areas:"+areas+"x:"+x+",y:"+y);
+			int SCREEN_WIDTH = wm.getDefaultDisplay().getWidth();
+			int SCREEN_HEIGHT = wm.getDefaultDisplay().getHeight();
+			int mWControllerX = 0;
+			if (areas.indexOf("0") == -1 && areas.indexOf("2") == -1) {
+				mWControllerX = x;
+			}
+			if (areas.indexOf("1") == -1 && areas.indexOf("3") == -1) {
+				if(mWControllerX == x){
+					mWControllerX = wm.getDefaultDisplay().getWidth();
+				}else{
+					mWControllerX = x - wm.getDefaultDisplay().getWidth();
+				}
+			}
+			if (mFourScreenWCParams != null) {
+				mFourScreenWCParams.x = mWControllerX;
+			}
+
+			int mHControllerY = 0;
+			if (areas.indexOf("0") == -1 && areas.indexOf("1") == -1) {
+				mHControllerY = y - mStatusBarHeight;
+			}
+			if (areas.indexOf("2") == -1 && areas.indexOf("3") == -1) {
+				if(mHControllerY == y - mStatusBarHeight){
+					mHControllerY = wm.getDefaultDisplay().getHeight();
+				}else{
+					mHControllerY = y-wm.getDefaultDisplay().getHeight();
+				}
+				
+			}
+			if (mFourScreenHCParams != null) {
+				mFourScreenHCParams.y = mHControllerY;
+			}
+		}
+		if(IS_USE_BACK_WINDOW){
+			if(mFourScreenBackWindow != null){
+				mFourScreenBackWindow.updateBackWindowView(mFourScreenHCParams.x+MUL_CON_POS,mFourScreenWCParams.y+MUL_CON_POS);
+			}
+		}
+		//updateFourScreenSettingsSystem(LAND_CONTROL_TYPE);
+		//updateFourScreenSettingsSystem(PORT_CONTROL_TYPE);
+		if(mFSWSContainer != null && mFSWSContainer.getParent() != null){
+			wm.updateViewLayout(mFSWSContainer, mFourScreenWCParams);
+		}
+		if(mFSHSContainer != null && mFSHSContainer.getParent() != null){
+			wm.updateViewLayout(mFSHSContainer, mFourScreenHCParams);
+		}
+	}
+	
+    private void updateHSCParams(){
+		String pos = Settings.System.getString(mContext.getContentResolver(),
+											Settings.System.HALF_SCREEN_WINDOW_POSITION);
+		LOGD("updateHSCParams position="+pos);
+		int x=0;
+		int y=0;
+		if(pos !=null){
+			String[] position = pos.split(",");
+			x = Integer.parseInt(position[0]);
+			y = Integer.parseInt(position[1]);
+		}
+		if(x == 0){
+			y-=MUL_CON_POS;
+		}
+		if(y == 0){
+			x-=MUL_CON_POS;
+		}
+		mHSCParams.x = x;
+		mHSCParams.y = y;
+	}
+	
+	private void updateSettingsSystem(){
+		int x = mHSCParams.x;
+		int y = mHSCParams.y;
+		if(x ==0){
+			y+=MUL_CON_POS;
+		}
+		if(y == 0){
+			x+=MUL_CON_POS;
+		}
+		String pos = ""+x+","+y;
+		LOGD(""+pos);
+		Settings.System.putString(mContext.getContentResolver(),
+								Settings.System.HALF_SCREEN_WINDOW_POSITION, pos);
+	}
+	
+	private void updateFourScreenSCParams(int type){
+		String pos = Settings.System.getString(mContext.getContentResolver(),
+											Settings.System.FOUR_SCREEN_WINDOW_POSITION);
+		LOGD("updateFourScreenSCParams position="+pos);
+		int x=0;
+		int y=0;
+		if(type == LAND_CONTROL_TYPE){
+			if(pos !=null){
+				String[] position = pos.split(",");
+				y = Integer.parseInt(position[1]);
+			}
+			//y-=MUL_CON_POS;
+			if(mFourScreenWCParams != null){
+				mFourScreenWCParams.x = x;
+				mFourScreenWCParams.y = y;
+			}
+			if(mCenterBtnParams != null){
+				mCenterBtnParams.y = y  - CENTER_BTN_HEIGHT/2;
+			}
+		}else if(type == PORT_CONTROL_TYPE){
+			if(pos !=null){
+				String[] position = pos.split(",");
+				x = Integer.parseInt(position[0]);
+			}
+			//x-=MUL_CON_POS;
+			if(mFourScreenHCParams != null){
+				mFourScreenHCParams.x = x;
+				mFourScreenHCParams.y = y;
+			}
+			if(mCenterBtnParams != null){
+				mCenterBtnParams.x = x  - CENTER_BTN_WIDTH/2;
+			}
+		}
+	}
+	
+	private int LAND_CONTROL_TYPE = 0x01;
+	private int PORT_CONTROL_TYPE = 0x02;
+	private void updateFourScreenSettingsSystem(int type){
+		String pos = Settings.System.getString(mContext.getContentResolver(),
+				Settings.System.FOUR_SCREEN_WINDOW_POSITION);
+		int x=0;
+		int y=0;
+		if(pos !=null){
+			String[] position = pos.split(",");
+			x = Integer.parseInt(position[0]);
+			y = Integer.parseInt(position[1]);
+		}
+		if(type == LAND_CONTROL_TYPE && mFourScreenWCParams != null){
+			y = mFourScreenWCParams.y;
+			y+=MUL_CON_POS;
+		}else if(type == PORT_CONTROL_TYPE && mFourScreenHCParams != null){
+			x = mFourScreenHCParams.x;
+			x+=MUL_CON_POS;
+		}else{
+			y = mCenterBtnParams.y;
+			y+=CENTER_BTN_WIDTH/2;
+			x = mCenterBtnParams.x;
+			x+=CENTER_BTN_HEIGHT/2;
+		}
+		String savePos = ""+x+","+y;
+		LOGD("----------------"+savePos);
+		Settings.System.putString(mContext.getContentResolver(),
+								Settings.System.FOUR_SCREEN_WINDOW_POSITION, savePos);
+		if(IS_USE_BACK_WINDOW){
+			if(mFourScreenBackWindow != null){
+				mFourScreenBackWindow.updateBackWindowView();
+				mFourScreenBackWindow.updateAddButtonWindowView();
+			}
+		}
+	}
+	
+	@Override
+    protected void onConfigurationChanged(Configuration newConfig) {
+    	super.onConfigurationChanged(newConfig); // calls refreshLayout
+
+        if (DEBUG) {
+            Log.v(TAG, "configuration changed: " + mContext.getResources().getConfiguration());
+        }
+        
+        //huangjc win bar
+         if(isMultiChange){
+	        removeBar();
+					try {
+			    Thread.sleep(1500);
+					} catch (Exception ex) {
+						 //Log.e(TAG,"Exception:" +ex.getMessage());
+					}
+		      addBar();
+		      isMultiChange = false;
+		  }
+		    	
+        updateDisplaySize(); // populates mDisplayMetrics
+
+        updateResources();
+        repositionNavigationBar();
+        updateExpandedViewPos(EXPANDED_LEAVE_ALONE);
+        updateShowSearchHoldoff();
+
+        WindowManager.LayoutParams lp = (WindowManager.LayoutParams) mStatusBarWindow.getLayoutParams();
+        if (lp != null) {
+            mWindowManager.updateViewLayout(mStatusBarWindow, lp);
+        }
+		
+        loadDimens();
+		
+		
+        mShowSearchHoldoff = mContext.getResources().getInteger(
+                R.integer.config_show_search_delay);
+        updateSearchPanel();	   
+        if(newConfig.enableMultiWindow()){
+        	
+//        	if(getMultiMode() == Settings.System.MULITI_WINDOW_HALF_SCREEN_MODE){
+        		if(newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE){
+        			mHSCParams.x = wm.getDefaultDisplay().getWidth()/2;
+        			mHSCParams.y = 0;
+        			mHSCParams.width = -2;
+        			mHSCParams.height = ViewGroup.LayoutParams.MATCH_PARENT;
+        			if(mHSContainer!=null){
+        				LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+        				mHSContainer.setLayoutParams(llay);
+        				mHSContainer.setPadding(MUL_CON_PAD, getStatusBarHeight(), MUL_CON_PAD, 0);
+        			}
+        			if(mHalfScreenController!=null){
+        				mHalfScreenController.setLayoutParams(new LinearLayout.LayoutParams(MUL_IMA_SIZE, -1));
+        			}
+        		}else if(newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+        			mHSCParams.y = wm.getDefaultDisplay().getHeight()/2;
+        			mHSCParams.x = 0;
+        			mHSCParams.height = -2;
+        			mHSCParams.width = ViewGroup.LayoutParams.MATCH_PARENT;
+        			if(mHSContainer!=null){
+        				LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+        				mHSContainer.setLayoutParams(llay);
+        				mHSContainer.setPadding(0, MUL_CON_PAD, 0, MUL_CON_PAD);
+        			}
+        			if(mHalfScreenController!=null){
+        				mHalfScreenController.setLayoutParams(new LinearLayout.LayoutParams(-1, MUL_IMA_SIZE));
+        			}
+        		}
+        		if(mHSContainer.getParent()!=null){
+        			wm.updateViewLayout(mHSContainer,mHSCParams);
+        		}
+//        	}else if(getMultiMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
+        		if(mFourScreenWCParams != null){
+        			mFourScreenWCParams.x = 0;
+        			mFourScreenWCParams.y = (wm.getDefaultDisplay().getHeight()+mStatusBarHeight)/2-MUL_CON_POS;
+        			if(FourScreenBackWindow.ONLY_ONE_BACK_WINDOW){
+        				mFourScreenWCParams.width = -1;
+        			}else{
+        				mFourScreenWCParams.width = wm.getDefaultDisplay().getWidth();
+        			}
+        			mFourScreenWCParams.height = -2;
+        			if(mFSWSContainer!=null){
+        				LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+        				mFSWSContainer.setLayoutParams(llay);
+        				mFSWSContainer.setPadding(0, MUL_CON_PAD, 0, MUL_CON_PAD);
+        			}
+        			if(mFourScreenWController!=null){
+        				mFourScreenWController.setLayoutParams(new LinearLayout.LayoutParams(-1,MUL_IMA_SIZE));
+        			}
+        			if(mFSWSContainer.getParent()!=null){
+        				wm.updateViewLayout(mFSWSContainer,mFourScreenWCParams);
+        			}
+        		
+        			mFourScreenHCParams.x = wm.getDefaultDisplay().getWidth()/2-MUL_CON_POS;
+        			mFourScreenHCParams.y = 0;
+        			if(FourScreenBackWindow.ONLY_ONE_BACK_WINDOW){
+        				mFourScreenHCParams.height = -1;
+        			}else{
+        				mFourScreenHCParams.height = wm.getDefaultDisplay().getHeight();
+        			}
+        			mFourScreenHCParams.width = -2;
+        			if(mFSHSContainer!=null){
+        				LinearLayout.LayoutParams llay = new LinearLayout.LayoutParams(-1, -1);
+        				mFSHSContainer.setLayoutParams(llay);
+        				mFSHSContainer.setPadding(MUL_CON_PAD, getStatusBarHeight(), MUL_CON_PAD, 0);
+        			}
+        			if(mFourScreenHController!=null){
+        				mFourScreenHController.setLayoutParams(new LinearLayout.LayoutParams(MUL_IMA_SIZE,-1));
+        			}
+        			if(mFSHSContainer.getParent()!=null){
+        				wm.updateViewLayout(mFSHSContainer,mFourScreenHCParams);
+        			}
+        			updateCenterBtnView();
+        		}else{
+        			mCenterBtnParams.x = wm.getDefaultDisplay().getWidth()/2 - CENTER_BTN_WIDTH/2;
+        			mCenterBtnParams.y = (wm.getDefaultDisplay().getHeight()+mStatusBarHeight)/2 - CENTER_BTN_HEIGHT/2;
+        			if (wm != null && mCenterBtnContainer.getParent() != null) {
+        				wm.updateViewLayout(mCenterBtnContainer, mCenterBtnParams);
+        			}
+        		}
+//        	}
+        }
+		if(!newConfig.enableMultiWindow()){
+			Settings.System.putInt(mContext.getContentResolver(),
+						Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
+			Settings.System.putInt(mContext.getContentResolver(),
+					Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+		}
+		mMultiModeParams.x = wm.getDefaultDisplay().getWidth()-(multiModeContainer.getWidth()/2);
+		mMultiModeParams.y = wm.getDefaultDisplay().getHeight()/2-multiModeContainer.getHeight();
+		if(multiModeContainer.getParent()!=null){
+			setMultiModeView();
+			wm.updateViewLayout(multiModeContainer,mMultiModeParams);
+			if(newConfig.enableMultiWindow()){
+				boolean show_config = Settings.System.getInt(mContext.getContentResolver(),
+								Settings.System.MULTI_WINDOW_BUTTON_SHOW,0) == 1;
+				if(show_config){
+					multiModeContainer.setVisibility(View.VISIBLE);
+				}else{
+					multiModeContainer.setVisibility(View.GONE);
+				}
+			}else{
+				multiModeContainer.setVisibility(View.GONE);
+			}
+		}
+		LOGR("configuration change newConfig="+newConfig);
+		
+		if(mAppBarPanel != null){
+			if(newConfig.enableMultiWindow()){
+				LOGR("enable the panelView");
+				mAppBarPanel.setPanelViewEnabled(false);
+			}else{
+				LOGR("disable the panelView");
+				mAppBarPanel.setPanelViewEnabled(false);
+			}
+		}
+		
+		updateSettingsSystem();
+		if((getMultiMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE)){
+			LOGD("---------------onConfigurationChanged---------------------");
+			updateFourScreenSettingsSystem(LAND_CONTROL_TYPE);
+			updateFourScreenSettingsSystem(PORT_CONTROL_TYPE);	
+		}
+		updateFourScreenControllers(null);
+		updateCircleMenu();
+    }
+
+	private int clickWindowArea = -1;
+	@Override
+	public void onClick(View v) {
+		Settings.System.putString(mContext.getContentResolver(),
+				Settings.System.MULTI_WINDOW_OPERATION, "");
+		updateFourScreenControllers(null);
+		int index = (Integer)v.getTag();
+		int area = areaMap.get(index/3);
+		int operation = FourScreenCircleMenuView.btnOperationMap.get(index % FourScreenCircleMenuView.MENU_COUNT_PER_AREA);
+		clickWindowArea = area;
+		if(operation == Settings.System.MULTI_WINDOW_MAX){
+			LOGD("-----------onClick MULTI_WINDOW_MAX------------");
+			if( mFSWSContainer != null && mFSWSContainer.getParent()!=null){
+				wm.removeView(mFSWSContainer);
+			}
+			if( mFSHSContainer != null && mFSHSContainer.getParent()!=null){
+				wm.removeView(mFSHSContainer);
+			}
+			if( mCenterBtnContainer != null && mCenterBtnContainer.getParent()!=null){
+				wm.removeView(mCenterBtnContainer);
+			}
+		}
+		if(ONE_LEVEL_MENU){
+			if( mFourScreenCircleMenuView.getParent()!=null){
+				wm.removeView(mFourScreenCircleMenuView);
+			}
+		}
+		String clickAction = ""+area+","+operation;
+		LOGD(index+"   clickAction:"+clickAction);
+		Settings.System.putString(mContext.getContentResolver(),
+				Settings.System.MULTI_WINDOW_OPERATION, clickAction);
+	}
 }

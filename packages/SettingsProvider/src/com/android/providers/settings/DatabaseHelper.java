@@ -2299,7 +2299,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private void loadSystemSettings(SQLiteDatabase db) {
         SQLiteStatement stmt = null;
-        PackageManager packageManager = mContext.getPackageManager();
         try {
             stmt = db.compileStatement("INSERT OR IGNORE INTO system(name,value)"
                     + " VALUES(?,?);");
@@ -2335,15 +2334,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                   loadSetting(stmt,Settings.System.SCREENSHOT_LOCATION,"/storage/emulated");
             }
 	    //add for factory as ro.rk.def_brightness
+            System.out.println("========================================================================="+R.bool.def_multi_window_used );
 	    loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
 		    SystemProperties.getInt("ro.rk.def_brightness", mContext.getResources().getInteger(R.integer.def_screen_brightness)));
+			loadBooleanSetting(stmt, Settings.System.MULTI_WINDOW_BUTTON_SHOW,
+					R.bool.def_multi_window_button_show);
+			loadBooleanSetting(stmt, Settings.System.MULTI_WINDOW_USED,
+					R.bool.def_multi_window_used);
+			loadBooleanSetting(stmt, Settings.System.MULTI_WINDOW_CONFIG,
+					R.bool.def_multi_window_config);
+			loadBooleanSetting(stmt, Settings.System.HALF_SCREEN_WINDOW_ENABLE,
+					R.bool.def_half_screen_window_enable);
+			loadBooleanSetting(stmt, Settings.System.FOUR_SCREEN_WINDOW_ENABLE,
+					R.bool.def_four_screen_window_enable);
 
-            if (packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_LIGHT)) {
-                loadBooleanSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE,
-                        R.bool.def_screen_brightness_automatic_mode);
-            } else {
-                loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE, "0");
-            }
+			loadStringSetting(stmt,Settings.System.HALF_SCREEN_WINDOW_POSITION,
+                    R.string.def_half_screen_window_position); 
+			
+			loadStringSetting(stmt,Settings.System.FOUR_SCREEN_WINDOW_POSITION,
+                    R.string.def_four_screen_window_position);
+			
+			//loadStringSetting(stmt,Settings.System.FOUR_SCREEN_WINDOW_H_POSITION,
+            //        R.string.def_four_screen_window_h_position);
+			
+			loadIntegerSetting(stmt, Settings.System.HALF_SCREEN_APP_LOCATION,
+					R.integer.def_half_screen_app_location);
+			
+			loadIntegerSetting(stmt, Settings.System.MULITI_WINDOW_MODE,
+                    R.integer.def_multi_window_mode); 
+
+            loadBooleanSetting(stmt, Settings.System.SCREEN_BRIGHTNESS_MODE,
+                    R.bool.def_screen_brightness_automatic_mode);
 
             loadDefaultAnimationSettings(stmt);
 

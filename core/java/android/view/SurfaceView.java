@@ -689,6 +689,17 @@ public class SurfaceView extends View {
         public MyWindow(SurfaceView surfaceView) {
             mSurfaceView = new WeakReference<SurfaceView>(surfaceView);
         }
+		/**
+				* add by lly
+			   */
+			@Override
+			public void switchToPhoneMode(int width,int height){
+			 SurfaceView surfaceView = mSurfaceView.get();
+			 new Exception().printStackTrace();
+				if (surfaceView != null) {
+					surfaceView.mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					}
+			}
 
         @Override
         public void resized(Rect frame, Rect overscanInsets, Rect contentInsets,

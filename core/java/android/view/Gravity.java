@@ -16,6 +16,7 @@
 
 package android.view;
 import android.graphics.Rect;
+import android.util.Log;
 
 /**
  * Standard constants and tools for placing an object within a potentially
@@ -23,6 +24,11 @@ import android.graphics.Rect;
  */
 public class Gravity
 {
+
+	/**
+	*@hide
+	*/
+	public static final int GRAVITY_BY_PARENT = -1;
     /** Constant indicating that no gravity has been set **/
     public static final int NO_GRAVITY = 0x0000;
     
@@ -183,7 +189,7 @@ public class Gravity
      * @param outRect Receives the computed frame of the object in its
      *                container.
      */
-    public static void apply(int gravity, int w, int h, Rect container,
+    public static void apply(int gravity, int w, int h, Rect container, 
             int xAdj, int yAdj, Rect outRect) {
         switch (gravity&((AXIS_PULL_BEFORE|AXIS_PULL_AFTER)<<AXIS_X_SHIFT)) {
             case 0:

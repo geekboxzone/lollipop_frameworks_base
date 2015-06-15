@@ -24,6 +24,7 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Insets;
 import android.graphics.PixelFormat;
+import android.graphics.RectF;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
@@ -39,8 +40,12 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnScrollChangedListener;
 import android.view.WindowManager;
-
+import android.view.MultiWindowInfo;
 import java.lang.ref.WeakReference;
+import android.os.RemoteException;
+import android.util.Log;
+import android.os.RemoteException;
+import android.view.MultiWindowInfo;
 
 /**
  * <p>A popup window that can be used to display an arbitrary view. The popup
@@ -51,6 +56,20 @@ import java.lang.ref.WeakReference;
  * @see android.widget.Spinner
  */
 public class PopupWindow {
+	private static final String LOG = "PopupWindow";
+	private static final boolean DEBUG_ZJY = true;
+	private static final boolean DEBUG_TOUCH = true;
+	private void LOGDT(String msg){
+		if(DEBUG_TOUCH){
+			Log.d(LOG,msg);
+		}
+	}
+	private void LOGD(String msg){
+		if(DEBUG_ZJY){
+			Log.d(LOG,msg);
+		}
+	}
+
     /**
      * Mode for {@link #setInputMethodMode(int)}: the requirements for the
      * input method should be based on the focusability of the popup.  That is
@@ -1229,6 +1248,8 @@ public class PopupWindow {
         }
 
         anchor.getLocationInWindow(mDrawingLocation);
+		LOGD("findDropDownPosition mDrawingLocation("+mDrawingLocation[0]+","+
+				mDrawingLocation[1]+")"+" xoff="+xoff+" yOff="+yoff+" anchroHeight="+anchorHeight);
         p.x = mDrawingLocation[0] + xoff;
         p.y = mDrawingLocation[1] + anchorHeight + yoff;
 
@@ -1246,10 +1267,15 @@ public class PopupWindow {
 
         anchor.getLocationOnScreen(mScreenLocation);
         final Rect displayFrame = new Rect();
+        //anchor.getWindowVisibleSurfaceFrame(displayFrame);
         anchor.getWindowVisibleDisplayFrame(displayFrame);
+		
+		LOGD("----displayFrame="+displayFrame.toString());
 
         final int screenY = mScreenLocation[1] + anchorHeight + yoff;
         final View root = anchor.getRootView();
+			LOGD("root.getWidth="+root.getWidth()+"screenY="+screenY+" anchorHeight="+anchorHeight+
+			"mPopupWidth="+mPopupWidth);
         if (screenY + mPopupHeight > displayFrame.bottom
                 || p.x + mPopupWidth - root.getWidth() > 0) {
             // If the drop down disappears at the bottom of the screen, we try
@@ -1268,6 +1294,8 @@ public class PopupWindow {
             anchor.getLocationInWindow(mDrawingLocation);
             p.x = mDrawingLocation[0] + xoff;
             p.y = mDrawingLocation[1] + anchorHeight + yoff;
+			LOGD("new mDrawingLoation=("+mDrawingLocation[0]+","+mDrawingLocation[1]+")"+
+						"p.x="+p.x+" p.y="+p.y+" anchor.height="+anchor.getHeight());
 
             // Preserve the gravity adjustment.
             if (hgrav == Gravity.RIGHT) {
@@ -1278,6 +1306,8 @@ public class PopupWindow {
             anchor.getLocationOnScreen(mScreenLocation);
             onTop = (displayFrame.bottom - mScreenLocation[1] - anchorHeight - yoff) <
                     (mScreenLocation[1] - yoff - displayFrame.top);
+			LOGD("onTop="+onTop+" mScreenLoaction="+mScreenLocation[0]+","
+				+mScreenLocation[1]+")");
             if (onTop) {
                 p.gravity = Gravity.LEFT | Gravity.BOTTOM;
                 p.y = root.getHeight() - mDrawingLocation[1] + yoff;
@@ -1300,12 +1330,14 @@ public class PopupWindow {
 
             if (onTop) {
                 final int popupTop = mScreenLocation[1] + yoff - mPopupHeight;
+					LOGD("popupTop="+popupTop+" mPopupHeight="+mPopupHeight);
                 if (popupTop < 0) {
                     p.y += popupTop;
                 }
             } else {
-                p.y = Math.max(p.y, displayFrame.top);
+               p.y = Math.max(p.y, displayFrame.top);
             }
+			LOGD("final p.x="+p.x+" p.y="+p.y);
         }
 
         p.gravity |= Gravity.DISPLAY_CLIP_VERTICAL;
@@ -1725,6 +1757,15 @@ public class PopupWindow {
 
         @Override
         public boolean dispatchTouchEvent(MotionEvent ev) {
+        	if(mContext.getResources().getConfiguration().enableMultiWindow()){
+	        	MultiWindowInfo info = new MultiWindowInfo();
+	        	try{				
+					getRootWindowSession().getTransFormInfo(getWindow(), info);
+				}catch(RemoteException e){}
+				
+				ev.transformCoordinate(info.mPosX, info.mPosY, info.mHScale, info.mVScale);
+        	}
+			
             if (mTouchInterceptor != null && mTouchInterceptor.onTouch(this, ev)) {
                 return true;
             }

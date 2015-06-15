@@ -236,6 +236,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import android.app.KeyguardManager;
 
 public final class ActivityManagerService extends ActivityManagerNative
         implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
@@ -244,22 +245,23 @@ public final class ActivityManagerService extends ActivityManagerNative
     // File that stores last updated system version and called preboot receivers
     static final String CALLED_PRE_BOOTS_FILENAME = "called_pre_boots.dat";
 
-    static final String TAG = "ActivityManager";
+    static final String TAG = "ActivityManagerService";
     static final String TAG_MU = "ActivityManagerServiceMU";
     static final boolean DEBUG = false;
+	static final boolean DEBUG_ZJY = true;
     static final boolean localLOGV = DEBUG;
     static final boolean DEBUG_BACKUP = localLOGV || false;
     static final boolean DEBUG_BROADCAST = localLOGV || false;
     static final boolean DEBUG_BROADCAST_LIGHT = DEBUG_BROADCAST || false;
     static final boolean DEBUG_BACKGROUND_BROADCAST = DEBUG_BROADCAST || false;
     static final boolean DEBUG_CLEANUP = localLOGV || false;
-    static final boolean DEBUG_CONFIGURATION = localLOGV || false;
+    static final boolean DEBUG_CONFIGURATION = true;//localLOGV || false;
     static final boolean DEBUG_FOCUS = false;
     static final boolean DEBUG_IMMERSIVE = localLOGV || false;
     static final boolean DEBUG_MU = localLOGV || false;
     static final boolean DEBUG_OOM_ADJ = localLOGV || false;
     static final boolean DEBUG_LRU = localLOGV || false;
-    static final boolean DEBUG_PAUSE = localLOGV || false;
+    static final boolean DEBUG_PAUSE = true;//localLOGV || false;
     static final boolean DEBUG_POWER = localLOGV || false;
     static final boolean DEBUG_POWER_QUICK = DEBUG_POWER || false;
     static final boolean DEBUG_PROCESS_OBSERVERS = localLOGV || false;
@@ -923,6 +925,10 @@ public final class ActivityManagerService extends ActivityManagerNative
      * currently running in, so this object must be kept immutable.
      */
     Configuration mConfiguration = new Configuration();
+
+    Configuration mPhoneConfiguration = new Configuration();
+
+    ArrayList<Integer> mPhoneModeUID;
 
     /**
      * Current sequencing integer of the configuration, for skipping old
@@ -2113,6 +2119,12 @@ public final class ActivityManagerService extends ActivityManagerNative
 
         mConfiguration.setToDefaults();
         mConfiguration.locale = Locale.getDefault();
+
+        mPhoneConfiguration.setToDefaults();
+        mPhoneConfiguration.locale = Locale.getDefault();
+        mPhoneConfiguration.seq = 1;
+
+	mPhoneModeUID = new ArrayList<Integer>();
 
         mConfigurationSeq = mConfiguration.seq = 1;
         mProcessCpuTracker.init();
@@ -3373,6 +3385,19 @@ public final class ActivityManagerService extends ActivityManagerNative
     public final int startActivity(IApplicationThread caller, String callingPackage,
             Intent intent, String resolvedType, IBinder resultTo, String resultWho, int requestCode,
             int startFlags, ProfilerInfo profilerInfo, Bundle options) {
+            //add by huangjc: win task style
+
+       if(intent!=null/* && "android.intent.action.MAIN".equals(intent.getAction()) && intent.hasCategory(
+Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
+            Intent winintent=new Intent();
+            winintent.setAction("rk.android.wintask.SHOW");
+            if(intent.getComponent() != null){
+            winintent.putExtra("cmp", intent.getComponent().getPackageName());
+            Log.d("wintask","start from Launcher,sendBroadcast now==cmp:"+intent.getComponent().getPackageName());
+            
+            mContext.sendBroadcast(winintent);
+           }
+        }
         return startActivityAsUser(caller, callingPackage, intent, resolvedType, resultTo,
             resultWho, requestCode, startFlags, profilerInfo, options,
             UserHandle.getCallingUserId());
@@ -4339,6 +4364,14 @@ public final class ActivityManagerService extends ActivityManagerNative
                         return false;
                     }
                 }
+ 	   }	
+       if(getTaskForActivity(token, true) >= 0){
+            Intent winintent=new Intent();
+            winintent.setAction("rk.android.wintask.FINISH");
+            if(getTasks(1,0).get(0).topActivity!=null)
+            winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
+            Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
+            mContext.sendBroadcast(winintent);
             }
             final long origId = Binder.clearCallingIdentity();
             try {
@@ -6024,11 +6057,22 @@ public final class ActivityManagerService extends ActivityManagerNative
             }
             ProfilerInfo profilerInfo = profileFile == null ? null
                     : new ProfilerInfo(profileFile, profileFd, samplingInterval, profileAutoStop);
+	    Log.e("shenzhicheng", "------- processName = " + processName + ", phoneMode = " + appInfo.phoneMode + ", uid = " + appInfo.uid);
+	    Configuration realConfiguration = new Configuration(mConfiguration);
+	    //if (processName != null && processName.contains("tencent")) {
+	    if (appInfo.phoneMode) {
+	    	realConfiguration = new Configuration(mPhoneConfiguration);
+		if (!phoneUID(appInfo.uid)) {
+			Integer UID = new Integer(appInfo.uid);
+			Log.e("shenzhicheng", "------- add PHONEMODE uid = " + appInfo.uid);
+			mPhoneModeUID.add(UID);
+		}
+	    }
             thread.bindApplication(processName, appInfo, providers, app.instrumentationClass,
                     profilerInfo, app.instrumentationArguments, app.instrumentationWatcher,
                     app.instrumentationUiAutomationConnection, testMode, enableOpenGlTrace,
                     isRestrictedBackupMode || !normalMode, app.persistent,
-                    new Configuration(mConfiguration), app.compat,
+                    realConfiguration, app.compat,
                     getCommonServicesLocked(app.isolated),
                     mCoreSettingsObserver.getCoreSettingsLocked());
             updateLruProcessLocked(app, false, null);
@@ -6112,6 +6156,18 @@ public final class ActivityManagerService extends ActivityManagerNative
         }
 
         return true;
+    }
+
+    @Override
+    public boolean phoneUID(int uid) {
+    	if (mPhoneModeUID != null) {
+		for (int i = 0; i < mPhoneModeUID.size(); i++) {
+			Integer matchuid = mPhoneModeUID.get(i);
+			if (uid == matchuid.intValue()) 
+				return true;
+		}
+	}
+	return false;
     }
 
     @Override
@@ -8136,6 +8192,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         rti.lastActiveTime = tr.lastActiveTime;
         rti.affiliatedTaskId = tr.mAffiliatedTaskId;
         rti.affiliatedTaskColor = tr.mAffiliatedTaskColor;
+		rti.topOfLauncher  = tr.mTopOfLauncher?1:0;      
         return rti;
     }
 
@@ -8143,8 +8200,8 @@ public final class ActivityManagerService extends ActivityManagerNative
         boolean allowed = checkPermission(android.Manifest.permission.REAL_GET_TASKS,
                 callingPid, callingUid) == PackageManager.PERMISSION_GRANTED;
         if (!allowed) {
-            if (checkPermission(android.Manifest.permission.GET_TASKS,
-                    callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
+           // if (checkPermission(android.Manifest.permission.GET_TASKS,
+            //        callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
                 // Temporary compatibility: some existing apps on the system image may
                 // still be requesting the old permission and not switched to the new
                 // one; if so, we'll still allow them full access.  This means we need
@@ -8157,7 +8214,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                     }
                 } catch (RemoteException e) {
                 }
-            }
+           // }
         }
         if (!allowed) {
             Slog.w(TAG, caller + ": caller " + callingUid
@@ -8266,8 +8323,8 @@ public final class ActivityManagerService extends ActivityManagerNative
     @Override
     public ActivityManager.TaskThumbnail getTaskThumbnail(int id) {
         synchronized (this) {
-            enforceCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
-                    "getTaskThumbnail()");
+            //enforceCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
+            //        "getTaskThumbnails()");
             TaskRecord tr = mStackSupervisor.anyTaskForIdLocked(id);
             if (tr != null) {
                 return tr.getTaskThumbnailLocked();
@@ -8529,8 +8586,17 @@ public final class ActivityManagerService extends ActivityManagerNative
     @Override
     public boolean removeTask(int taskId) {
         synchronized (this) {
-            enforceCallingPermission(android.Manifest.permission.REMOVE_TASKS,
-                    "removeTask()");
+            //enforceCallingPermission(android.Manifest.permission.REMOVE_TASKS,
+             //       "removeTask()");
+             Slog.v(TAG, "removeTask   taskid =" + taskId,
+                new RuntimeException("here").fillInStackTrace());
+           //add by huangjc wintask
+            Intent winintent=new Intent();
+            winintent.setAction("rk.android.wintask.FINISH");
+            if(getTasks(1,0).get(0).topActivity!=null)
+            winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
+            Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
+            mContext.sendBroadcast(winintent);
             long ident = Binder.clearCallingIdentity();
             try {
                 return removeTaskByIdLocked(taskId, true);
@@ -8545,8 +8611,8 @@ public final class ActivityManagerService extends ActivityManagerNative
      */
     @Override
     public void moveTaskToFront(int taskId, int flags, Bundle options) {
-        enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
-                "moveTaskToFront()");
+        ////enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
+           //     "moveTaskToFront()");
 
         if (DEBUG_STACK) Slog.d(TAG, "moveTaskToFront: moving taskId=" + taskId);
         synchronized(this) {
@@ -8583,10 +8649,13 @@ public final class ActivityManagerService extends ActivityManagerNative
         ActivityOptions.abort(options);
     }
 
+    public void moveTaskToBack(int task){
+	moveTaskToBack(task,0);
+    }
     @Override
-    public void moveTaskToBack(int taskId) {
-        enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
-                "moveTaskToBack()");
+    public void moveTaskToBack(int taskId, int flag) {
+        //enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
+          //      "moveTaskToBack()");
 
         synchronized(this) {
             TaskRecord tr = mStackSupervisor.anyTaskForIdLocked(taskId);
@@ -8605,7 +8674,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
                 final long origId = Binder.clearCallingIdentity();
                 try {
-                    stack.moveTaskToBackLocked(taskId);
+                    stack.moveTaskToBackLocked(taskId,flag);
                 } finally {
                     Binder.restoreCallingIdentity(origId);
                 }
@@ -11041,13 +11110,19 @@ public final class ActivityManagerService extends ActivityManagerNative
             resolver, Settings.Global.WAIT_FOR_DEBUGGER, 0) != 0;
         boolean alwaysFinishActivities = Settings.Global.getInt(
             resolver, Settings.Global.ALWAYS_FINISH_ACTIVITIES, 0) != 0;
+		boolean multiWindowConfig = Settings.System.getInt(
+			resolver, Settings.System.MULTI_WINDOW_CONFIG,0) != 0;
         boolean forceRtl = Settings.Global.getInt(
                 resolver, Settings.Global.DEVELOPMENT_FORCE_RTL, 0) != 0;
         // Transfer any global setting for forcing RTL layout, into a System Property
         SystemProperties.set(Settings.Global.DEVELOPMENT_FORCE_RTL, forceRtl ? "1":"0");
 
         Configuration configuration = new Configuration();
+		configuration.multiwindowflag = multiWindowConfig ?
+									Configuration.ENABLE_MULTI_WINDOW:Configuration.DISABLE_MULTI_WINDOW;
+		//mConfiguration.multiwindowflag = multiWindowConfig;
         Settings.System.getConfiguration(resolver, configuration);
+		if(DEBUG_CONFIGURATION)Slog.v(TAG,"~~~~~~~~~~~~retriveSettings configuration="+configuration);
         if (forceRtl) {
             // This will take care of setting the correct layout direction flags
             configuration.setLayoutDirection(configuration.locale);
@@ -15635,6 +15710,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         enforceNotIsolatedCaller("registerReceiver");
         int callingUid;
         int callingPid;
+      // new Exception().printStackTrace();
         synchronized(this) {
             ProcessRecord callerApp = null;
             if (caller != null) {
@@ -16759,6 +16835,13 @@ public final class ActivityManagerService extends ActivityManagerNative
                 }
                 newConfig.seq = mConfigurationSeq;
                 mConfiguration = newConfig;
+		mPhoneConfiguration.setTo(newConfig);
+		mPhoneConfiguration.orientation = Configuration.ORIENTATION_PORTRAIT;
+		mPhoneConfiguration.smallestScreenWidthDp = 360;
+		mPhoneConfiguration.screenWidthDp = 360;
+		mPhoneConfiguration.screenHeightDp = 567;
+		mPhoneConfiguration.phoneMode = 1;
+
                 Slog.i(TAG, "Config changes=" + Integer.toHexString(changes) + " " + newConfig);
                 mUsageStatsService.reportConfigurationChange(newConfig, mCurrentUserId);
                 //mUsageStatsService.noteStartConfig(newConfig);
@@ -16839,6 +16922,23 @@ public final class ActivityManagerService extends ActivityManagerNative
             mWindowManager.setNewConfiguration(mConfiguration);
         }
 
+		if((changes & ActivityInfo.CONFIG_MULTI_WINDOW) != 0){
+			Slog.d(TAG,"---------clean the all task");
+			mStackSupervisor.moveHomeStack(true, "restoreRecentTask");
+			ArrayList<ActivityStack> stacks = mStackSupervisor.getStacks();
+            for (ActivityStack stack : stacks) {
+                ArrayList<TaskRecord> tasks = stack.getAllTasks();
+                final int numTasks = tasks.size();
+                int[] taskIds = new int[numTasks];
+                for (int i = 0; i < numTasks; ++i) {
+                    final TaskRecord task = tasks.get(i);
+					final ArrayList<ActivityRecord> activities = task.mActivities;
+                    if(activities.size() > 0 && !activities.get(0).isHomeActivity){
+						removeTask(task.taskId);
+					}
+                }
+            }
+		}
         return kept;
     }
 
