@@ -24,6 +24,7 @@ import com.android.server.lights.LightsManager;
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -307,12 +308,16 @@ final class DisplayPowerController implements AutomaticBrightnessController.Call
 
         mScreenBrightnessRangeMaximum = PowerManager.BRIGHTNESS_ON;
 
-        mUseSoftwareAutoBrightnessConfig = resources.getBoolean(
-                com.android.internal.R.bool.config_automatic_brightness_available);
-
-        mAllowAutoBrightnessWhileDozingConfig = resources.getBoolean(
-                com.android.internal.R.bool.config_allowAutoBrightnessWhileDozing);
-
+        PackageManager packageManager = context.getPackageManager();
+        if (packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_LIGHT)) {
+                mUseSoftwareAutoBrightnessConfig = resources.getBoolean(
+                        com.android.internal.R.bool.config_automatic_brightness_available);
+                mAllowAutoBrightnessWhileDozingConfig = resources.getBoolean(
+                        com.android.internal.R.bool.config_allowAutoBrightnessWhileDozing);
+        } else {
+                mUseSoftwareAutoBrightnessConfig = false;
+                mAllowAutoBrightnessWhileDozingConfig = false;
+        }
         if (mUseSoftwareAutoBrightnessConfig) {
             int[] lux = resources.getIntArray(
                     com.android.internal.R.array.config_autoBrightnessLevels);

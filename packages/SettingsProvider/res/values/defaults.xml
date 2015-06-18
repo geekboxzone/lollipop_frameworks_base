@@ -34,6 +34,9 @@
     <bool name="def_accelerometer_rotation">true</bool>
     <!-- Default screen brightness, from 0 to 255.  102 is 40%. -->
     <integer name="def_screen_brightness">102</integer>
+    <!-- Default to not enabling automatic brightness mode.
+         Note: This value is ignored if the platform does not have the system feature
+               PackageManager.FEATURE_SENSOR_LIGHT -->
     <bool name="def_screen_brightness_automatic_mode">false</bool>
     <fraction name="def_window_animation_scale">100%</fraction>
     <fraction name="def_window_transition_scale">100%</fraction>
