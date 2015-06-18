@@ -101,10 +101,7 @@ public class ExternalMediaFormatActivity extends AlertActivity implements Dialog
         if (which == POSITIVE_BUTTON) {
             Intent intent = new Intent(ExternalStorageFormatter.FORMAT_ONLY);
             intent.setComponent(ExternalStorageFormatter.COMPONENT_NAME);
-            // Transfer the storage volume to the new intent
-            final StorageVolume storageVolume = getIntent().getParcelableExtra(
-                    StorageVolume.EXTRA_STORAGE_VOLUME);
-            intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, storageVolume);
+            intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volume);
             startService(intent);
         }
 
