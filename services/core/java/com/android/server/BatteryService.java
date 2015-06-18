@@ -39,7 +39,6 @@ import android.os.IBatteryPropertiesListener;
 import android.os.IBatteryPropertiesRegistrar;
 import android.os.IBinder;
 import android.os.DropBoxManager;
-import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
@@ -517,16 +516,12 @@ public final class BatteryService extends SystemService {
                     ", icon:" + icon  + ", invalid charger:" + mInvalidCharger);
         }
 
-        if (Process.myPid() == Process.myTid()) {
-            ActivityManagerNative.broadcastStickyIntent(intent, null, UserHandle.USER_ALL);
-        } else {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    ActivityManagerNative.broadcastStickyIntent(intent, null, UserHandle.USER_ALL);
-                }
-            });
-        }
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                ActivityManagerNative.broadcastStickyIntent(intent, null, UserHandle.USER_ALL);
+            }
+        });
     }
 
     private void logBatteryStatsLocked() {
