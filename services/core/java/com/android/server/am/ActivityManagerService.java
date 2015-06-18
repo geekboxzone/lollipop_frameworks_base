@@ -237,6 +237,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import android.app.KeyguardManager;
+import android.telecom.TelecomManager;
 
 public final class ActivityManagerService extends ActivityManagerNative
         implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
@@ -16837,7 +16838,8 @@ public final class ActivityManagerService extends ActivityManagerNative
             if (starting != null) {
 				if(mKeyguardManager.isKeyguardLocked()){
 					Slog.d("ljh","-----------------------starting.info.screenOrientation="+starting.info.screenOrientation);
-					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE){
+					TelecomManager telecomManager = (TelecomManager) mContext.getSystemService(Context.TELECOM_SERVICE);
+					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE || (telecomManager!=null&&telecomManager.isRinging())){
                         //Slog.d("ljh","do not change------------");
 				    }else{
 	                     //Slog.d("ljh","force change---------------");
