@@ -108,7 +108,7 @@ public final class ShutdownThread extends Thread {
     public static void shutdown(final Context context, boolean confirm) {
         mReboot = false;
         mRebootSafeMode = false;
-        shutdownInner(context, true);
+        shutdownInner(context, confirm);
     }
 
     static void shutdownInner(final Context context, boolean confirm) {
@@ -130,6 +130,7 @@ public final class ShutdownThread extends Thread {
                         : (mReboot ? com.android.internal.R.string.reboot_confirm : com.android.internal.R.string.shutdown_confirm));
 
         Log.d(TAG, "Notifying thread to start shutdown longPressBehavior=" + longPressBehavior);
+
         if (confirm) {
             final CloseDialogReceiver closer = new CloseDialogReceiver(context);
             if (sConfirmDialog != null) {
