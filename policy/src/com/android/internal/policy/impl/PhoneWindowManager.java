@@ -4833,7 +4833,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         {
             if(down)
             {
-                if(Settings.System.getInt(mContext.getContentResolver(),Settings.System.EMERGENCY_CALL, 0) != 0&&!isScreenOn())
+                if(Settings.System.getInt(mContext.getContentResolver(),Settings.System.EMERGENCY_CALL, 1) != 0&&!isScreenOn())
                 {
                     TelecomManager telecomManager = getTelecommService();
                     if (!(telecomManager!=null&&(telecomManager.isInCall()||telecomManager.isRinging()))){
