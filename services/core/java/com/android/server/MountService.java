@@ -2778,11 +2778,7 @@ class MountService extends IMountService.Stub
                 final UserHandle owner = volume.getOwner();
                 final boolean ownerMatch = owner == null || owner.getIdentifier() == callingUserId;
                 if (accessAll || ownerMatch) {
-                    if (!accessAll && volume.isEmulated()) {
-                        filtered.add(0, volume);
-                    } else {
-                        filtered.add(volume);
-                    }
+                    filtered.add(volume);
                 }
             }
             return filtered.toArray(new StorageVolume[filtered.size()]);
