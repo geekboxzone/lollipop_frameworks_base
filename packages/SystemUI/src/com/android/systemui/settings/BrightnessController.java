@@ -29,6 +29,7 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
 import android.provider.Settings;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 
 import com.android.systemui.R;
@@ -156,6 +157,8 @@ public class BrightnessController implements ToggleSlider.Listener {
                         com.android.internal.R.bool.config_automatic_brightness_available);
         } else {
                 mAutomaticAvailable = false;
+                final CompoundButton toggle = (CompoundButton)control.findViewById(R.id.toggle);
+                toggle.setClickable(false);
         }
 
         mPower = IPowerManager.Stub.asInterface(ServiceManager.getService("power"));
