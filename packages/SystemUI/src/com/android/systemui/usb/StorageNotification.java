@@ -385,18 +385,8 @@ public class StorageNotification extends SystemUI {
              */
             Intent intent = new Intent();
             intent.setClass(mContext, com.android.internal.app.ExternalMediaFormatActivity.class);
-
-            StorageManager storageManager = (StorageManager)
-                    mContext.getSystemService(Context.STORAGE_SERVICE);
-            StorageVolume[] volumes = storageManager.getVolumeList();
-            if (volumes.length > 0) {
-                for (int i = 0; i < volumes.length; i++) {
-                    if (volumes[i].getPath().equals(path)) {
-                        intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volumes[i]);
-                    }
-
-                }
-            }
+            intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME,
+                    getVolumeByPath(mStorageManager.getVolumeList(), path));
             PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
 
             if (path.equals(Environment.getExternalStorageDirectory().toString())) {
@@ -438,18 +428,8 @@ public class StorageNotification extends SystemUI {
              */
             Intent intent = new Intent();
             intent.setClass(mContext, com.android.internal.app.ExternalMediaFormatActivity.class);
-
-            StorageManager storageManager = (StorageManager)
-                    mContext.getSystemService(Context.STORAGE_SERVICE);
-            StorageVolume[] volumes = storageManager.getVolumeList();
-            if (volumes.length > 0) {
-                for (int i = 0; i < volumes.length; i++) {
-                    if (volumes[i].getPath().equals(path)) {
-                        intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME, volumes[i]);
-                    }
-
-                }
-            }
+            intent.putExtra(StorageVolume.EXTRA_STORAGE_VOLUME,
+                    getVolumeByPath(mStorageManager.getVolumeList(), path));
             PendingIntent pi = PendingIntent.getActivity(mContext, 0, intent, 0);
 
             if (path.equals(Environment.getExternalStorageDirectory().toString())) {
@@ -563,6 +543,19 @@ public class StorageNotification extends SystemUI {
         } else {
             Log.w(TAG, String.format("Ignoring unknown state {%s}", newState));
         }
+    }
+
+    /**
+     * Get the corresponding StorageVolume object for a specific path.
+     */
+    private final StorageVolume getVolumeByPath(StorageVolume[] volumes, String path) {
+        for (StorageVolume volume : volumes) {
+            if (volume.getPath().equals(path)) {
+                return volume;
+            }
+        }
+        Log.w(TAG, "No storage found");
+        return null;
     }
 
     /**
