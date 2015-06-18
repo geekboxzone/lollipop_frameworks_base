@@ -433,8 +433,7 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
             } catch (NumberFormatException e) {
                 Slog.e(TAG, "Could not parse switch state from event " + event);
             }
-
-            try {
+	   try {
                 String devPath = event.get("DEVPATH");
                 String name = event.get("NAME");
                 int state = Integer.parseInt(event.get("STATE"));
@@ -465,7 +464,6 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
 
             public UEventInfo(String devName, int state1Bits, int state2Bits, int stateNbits) {
                 mDevName = devName;
-
                 /* Check if the kernel is using EXTCON class */
                 File f_extcon = new File(String.format(Locale.US, "/sys/class/extcon/%s/state", mDevName));
                 if (f_extcon.exists()) {
@@ -473,7 +471,6 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
                 } else {
                     mClassName = "switch";
                 }
-
                 mState1Bits = state1Bits;
                 mState2Bits = state2Bits;
                 mStateNbits = stateNbits;
@@ -482,11 +479,11 @@ final class WiredAccessoryManager implements WiredAccessoryCallbacks {
             public String getDevName() { return mDevName; }
 
             public String getDevPath() {
-                return String.format(Locale.US, "/devices/virtual/%s/%s", mClassName, mDevName);
+		return String.format(Locale.US, "/devices/virtual/%s/%s", mClassName, mDevName);
             }
 
             public String getSwitchStatePath() {
-                return String.format(Locale.US, "/sys/class/%s/%s/state", mClassName, mDevName);
+		return String.format(Locale.US, "/sys/class/%s/%s/state", mClassName, mDevName);
             }
 
             public boolean checkSwitchExists() {
