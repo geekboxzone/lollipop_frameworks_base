@@ -492,10 +492,7 @@
     <bool translatable="false" name="config_wifi_batched_scan_supported">false</bool>
 
     <!-- Flag indicating whether the we should enable the automatic brightness in Settings.
-         Software implementation will be used if config_hardware_auto_brightness_available is not set
-
-         Note: This value is ignored if the platform does not have the system feature
-               PackageManager.FEATURE_SENSOR_LIGHT -->
+         Software implementation will be used if config_hardware_auto_brightness_available is not set -->
     <bool name="config_automatic_brightness_available">false</bool>
 
     <!-- Don't name config resources like this.  It should look like config_annoyDianne -->
@@ -866,10 +863,7 @@
          that can be set by the user. -->
     <integer name="config_screenBrightnessDoze">1</integer>
 
-    <!-- Allow automatic adjusting of the screen brightness while dozing in low power state.
-
-         Note: This value is ignored if the platform does not have the system feature
-               PackageManager.FEATURE_SENSOR_LIGHT -->
+    <!-- Allow automatic adjusting of the screen brightness while dozing in low power state. -->
     <bool name="config_allowAutoBrightnessWhileDozing">false</bool>
 
     <!-- If we allow automatic adjustment of screen brightness while dozing, how many times we want
