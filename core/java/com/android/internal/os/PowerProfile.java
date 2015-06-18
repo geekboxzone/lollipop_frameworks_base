@@ -19,12 +19,17 @@ package com.android.internal.os;
 
 import android.content.Context;
 import android.content.res.XmlResourceParser;
+import android.util.Log;
 
 import com.android.internal.util.XmlUtils;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +40,7 @@ import java.util.HashMap;
  * [hidden]
  */
 public class PowerProfile {
+    private static final String TAG = "PowerProfile";
 
     /**
      * No power consumption, or accounted for elsewhere.
@@ -160,6 +166,13 @@ public class PowerProfile {
     private static final String TAG_ARRAYITEM = "value";
     private static final String ATTR_NAME = "name";
 
+    /**
+     * Path to xml file for device specific power values. This file is used if
+     * it exists. If it does not exist or generates parsing errors, the legacy
+     * xml resource is used.
+     */
+    private static final String XML_FILE_PATH = "/system/etc/power_profile.xml";
+
     public PowerProfile(Context context) {
         // Read the XML file for the given profile (normally only one per
         // device)
@@ -168,9 +181,7 @@ public class PowerProfile {
         }
     }
 
-    private void readPowerValuesFromXml(Context context) {
-        int id = com.android.internal.R.xml.power_profile;
-        XmlResourceParser parser = context.getResources().getXml(id);
+    private void readPowerValues(XmlPullParser parser) {
         boolean parsingArray = false;
         ArrayList<Double> array = new ArrayList<Double>();
         String arrayName = null;
@@ -218,6 +229,46 @@ public class PowerProfile {
             throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void readPowerValuesFromXml(Context context) {
+        XmlResourceParser parser;
+        XmlPullParser fileParser;
+        BufferedInputStream in = null;
+        File file;
+
+        file = new File(XML_FILE_PATH);
+        if (file.exists() && file.isFile()) {
+            try {
+                in = new BufferedInputStream(new FileInputStream(file));
+
+                fileParser = XmlPullParserFactory.newInstance().newPullParser();
+                fileParser.setInput(in, null);
+
+                Log.i(TAG, "Reading power values from '" + XML_FILE_PATH + "'");
+
+                readPowerValues(fileParser);
+
+                return;
+            } catch (Exception e) {
+                sPowerMap.clear();
+                Log.e(TAG, "Could not parse '" + XML_FILE_PATH + "'", e);
+            } finally {
+                try {
+                    if (in != null) {
+                        in.close();
+                    }
+                } catch (IOException e) {
+                }
+            }
+        }
+
+        Log.i(TAG, "Reading power values from XML resource");
+
+        parser = context.getResources().getXml(com.android.internal.R.xml.power_profile);
+        try {
+            readPowerValues(parser);
         } finally {
             parser.close();
         }
