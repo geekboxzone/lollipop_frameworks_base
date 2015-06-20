@@ -519,8 +519,13 @@ class GlobalScreenshot {
         if (mSaveInBgTask != null) {
             mSaveInBgTask.cancel(false);
         }
-        mSaveInBgTask = new SaveImageInBackgroundTask(mContext, data, mNotificationManager,
+		try{
+			mSaveInBgTask = new SaveImageInBackgroundTask(mContext, data, mNotificationManager,
                 SCREENSHOT_NOTIFICATION_ID).execute(data);
+		}catch(Exception e){
+			Log.d(">>>>>>>>>>>>>","data is null");
+		}
+        
     }
 
     /**
