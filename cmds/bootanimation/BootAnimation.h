@@ -85,6 +85,7 @@ private:
     status_t initTexture(Texture* texture, AssetManager& asset, const char* name);
     status_t initTexture(const Animation::Frame& frame);
     bool android();
+    void playMusic();
     bool readFile(const char* name, String8& outString);
     bool movie();
     void getTexCoordinate();
