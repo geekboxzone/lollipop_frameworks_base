@@ -60,8 +60,6 @@
 #include "BootAnimation.h"
 #include "AudioPlayer.h"
 #include <media/mediaplayer.h>
-#include <media/AudioSystem.h>
-#include <media/IMediaHTTPService.h>
 
 #define OEM_BOOTANIMATION_FILE "/oem/media/bootanimation.zip"
 #define SYSTEM_BOOTANIMATION_FILE "/system/media/bootanimation.zip"
@@ -73,7 +71,6 @@
 
 #define USER_SHUTDOWN_ANIMATION_FILE "/data/local/shutdownanimation.zip"
 #define SYSTEM_SHUTDOWN_ANIMATION_FILE "/system/media/shutdownanimation.zip"
-#define BOOTMUSIC_FILE "/system/media/audio/notifications/pizzicato.ogg"
 extern "C" int clock_nanosleep(clockid_t clock_id, int flags,
                            const struct timespec *request,
                            struct timespec *remain);
@@ -446,10 +443,6 @@ status_t BootAnimation::readyToRun() {
     }
 #endif
 
-#ifdef BOOTMUSIC_FILE
-    playMusic();
-#endif
-
     return NO_ERROR;
 }
 
@@ -499,16 +492,6 @@ void BootAnimation::getTexCoordinate() {
         //      0, 1    // 左上角
         // }
 	}
-}
-
-void BootAnimation::playMusic()
-{
-    sp<MediaPlayer> mp = new MediaPlayer();
-    if ((0 == access(BOOTMUSIC_FILE, F_OK)) && mp != NULL) {
-        mp->setDataSource(NULL,BOOTMUSIC_FILE, NULL);
-        mp->prepare();
-        mp->start();
-    }
 }
 
 bool BootAnimation::android()
