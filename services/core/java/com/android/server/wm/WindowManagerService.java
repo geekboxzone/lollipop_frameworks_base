@@ -6535,6 +6535,11 @@ public class WindowManagerService extends IWindowManager.Stub
              mRotation = Surface.ROTATION_0;
              rotation = Surface.ROTATION_90;
         }
+        
+        /* $_rbox_$_modify_$_lly , force android rotation according to 0 */
+        if("box".equals(SystemProperties.get("ro.target.product","tablet")))
+        rotation = Surface.ROTATION_0; 
+        /* $_rbox_$_modify_$ end */
 
         if (mRotation == rotation && mAltOrientation == altOrientation) {
             // No change.
