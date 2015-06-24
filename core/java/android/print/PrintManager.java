@@ -990,7 +990,11 @@ public final class PrintManager {
                     callback.onWriteFailed(error, mSequence);
                 } catch (RemoteException re) {
                     Log.e(LOG_TAG, "Error calling onWriteFailed", re);
-                } finally {
+                }
+                catch (IllegalStateException e){
+                    e.printStackTrace();
+                }
+                finally {
                     destroy();
                 }
             }
