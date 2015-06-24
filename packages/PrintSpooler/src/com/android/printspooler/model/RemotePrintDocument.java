@@ -1064,7 +1064,12 @@ public final class RemotePrintDocument {
                     case MSG_ON_WRITE_FAILED: {
                         CharSequence error = (CharSequence) message.obj;
                         final int sequence = message.arg1;
-                        handleOnWriteFailed(error, sequence);
+                        try {
+                            handleOnWriteFailed(error, sequence);
+                        }catch (IllegalStateException e){
+                            e.printStackTrace();
+                        }
+
                     } break;
 
                     case MSG_ON_WRITE_CANCELED: {
