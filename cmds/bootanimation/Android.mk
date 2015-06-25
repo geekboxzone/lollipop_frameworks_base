@@ -43,7 +43,7 @@ ifeq ($(TARGET_BOOTANIMATION_USE_RGB565),true)
 endif
 
 #TARGET_BOOTRING_ENABLED := true
-ifeq($(strip $(#TARGET_BOOTRING_ENABLED)),true)
+ifeq ($(strip $(TARGET_BOOTRING_ENABLED)),true)
     LOCAL_CFLAGS += -DBOOTRING_ENABLED
 endif
 
