@@ -1242,21 +1242,23 @@ public class NetworkControllerImpl extends BroadcastReceiver
                 }
             //}
 
-			if(mCurrentState.activityIn && mCurrentState.activityOut){
-                icons.mDataType = icons.mDataTypeList[3];
-                icons.mCurWide = true;
-            }
-            else if(mCurrentState.activityIn){
-                icons.mDataType = icons.mDataTypeList[1];
-                icons.mCurWide = true;
-            }
-            else if(mCurrentState.activityOut){
-                icons.mDataType = icons.mDataTypeList[2];
-                icons.mCurWide = true;
-            }
-            else{
-                icons.mDataType = icons.mDataTypeList[0];
-                icons.mCurWide = icons.mIsWide;
+            if(mCurrentState.iconGroup != TelephonyIcons.ROAMING){
+                if(mCurrentState.activityIn && mCurrentState.activityOut){
+                    icons.mDataType = icons.mDataTypeList[3];
+                    icons.mCurWide = true;
+                }
+                else if(mCurrentState.activityIn){
+                    icons.mDataType = icons.mDataTypeList[1];
+                    icons.mCurWide = true;
+                }
+                else if(mCurrentState.activityOut){
+                    icons.mDataType = icons.mDataTypeList[2];
+                    icons.mCurWide = true;
+                }
+                else{
+                    icons.mDataType = icons.mDataTypeList[0];
+                    icons.mCurWide = icons.mIsWide;
+                }
             }
             int typeIcon = showDataIcon ? icons.mDataType : 0;
             int signalClustersLength = mSignalClusters.size();
