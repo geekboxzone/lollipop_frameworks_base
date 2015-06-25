@@ -442,7 +442,6 @@ status_t BootAnimation::readyToRun() {
         fclose(fd);
     }
 #endif
-
     return NO_ERROR;
 }
 
@@ -564,6 +563,9 @@ bool BootAnimation::android()
             updateRect.height());
 
     const nsecs_t startTime = systemTime();
+#ifdef BOOTRING_ENABLED
+    property_set("ctl.start", "bootring");
+#endif
     do {
         nsecs_t now = systemTime();
         double time = now - startTime;
@@ -884,6 +886,9 @@ bool BootAnimation::movie()
     const GLushort indices[] = { 0, 1, 2,  0, 2, 3 };
     int nelem = sizeof(indices)/sizeof(indices[0]);
 
+#ifdef BOOTRING_ENABLED
+    property_set("ctl.start", "bootring");
+#endif
     for (size_t i=0 ; i<pcount ; i++) {
         const Animation::Part& part(animation.parts[i]);
         const size_t fcount = part.frames.size();
