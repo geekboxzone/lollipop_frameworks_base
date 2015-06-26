@@ -534,7 +534,11 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 
     private void prepareDialog() {
         refreshSilentMode();
-        mAirplaneModeOn.updateState(mAirplaneState);
+        boolean inAirplaneMode = Settings.System.getInt(mContext.getContentResolver(),
+		Settings.System.AIRPLANE_MODE_ON, 0) == 1;
+	    mAirplaneState = inAirplaneMode ? ToggleAction.State.On : ToggleAction.State.Off;
+        mAirplaneModeOn.updateState(mAirplaneState);//
+        changeAirplaneModeSystemSetting(inAirplaneMode);
         mAdapter.notifyDataSetChanged();
         mDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
         if (mShowSilentToggle) {
@@ -864,7 +868,7 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         public final void onPress() {
             if (mState.inTransition()) {
                 Log.w(TAG, "shouldn't be able to toggle when in transition");
-                return;
+				return;
             }
 
             final boolean nowOn = !(mState == State.On);
@@ -1016,8 +1020,11 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
         @Override
         public void onServiceStateChanged(ServiceState serviceState) {
             if (!mHasTelephony) return;
-            final boolean inAirplaneMode = serviceState.getState() == ServiceState.STATE_POWER_OFF;
-            mAirplaneState = inAirplaneMode ? ToggleAction.State.On : ToggleAction.State.Off;
+            boolean inAirplaneMode = serviceState.getState() == ServiceState.STATE_POWER_OFF;
+		    inAirplaneMode = Settings.System.getInt(mContext.getContentResolver(),
+			Settings.System.AIRPLANE_MODE_ON, 0) == 1;
+		    mAirplaneState = inAirplaneMode ? ToggleAction.State.On : ToggleAction.State.Off;
+
             mAirplaneModeOn.updateState(mAirplaneState);
             mAdapter.notifyDataSetChanged();
         }
