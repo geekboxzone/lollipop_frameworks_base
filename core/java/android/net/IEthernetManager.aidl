@@ -32,4 +32,6 @@ interface IEthernetManager
     void addListener(in IEthernetServiceListener listener);
     void removeListener(in IEthernetServiceListener listener);
     int getEthernetConnectState();
+    boolean setEthernetEnabled(in boolean enable);
+    int getEthernetIfaceState();
 }

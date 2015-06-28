@@ -1873,6 +1873,10 @@ public final class Settings {
          */
         @Deprecated
         public static final String MODE_RINGER = Global.MODE_RINGER;
+        /**
+         * @hide
+         */
+        public static final String ETHERNET_ON = Secure.ETHERNET_ON;
 
 //add by blb for ethernet 2015.1.13
         /**
@@ -1921,6 +1925,7 @@ public final class Settings {
 	 * Example: "192.168.1.1"
          */
         public static final String ETHERNET_STATIC_DNS2 = "ethernet_static_dns2";
+
 //end add
         /**
          * Whether to use static IP and other static network attributes.
@@ -3952,6 +3957,12 @@ public final class Settings {
          * Whether to speak passwords while in accessibility mode.
          */
         public static final String ACCESSIBILITY_SPEAK_PASSWORD = "speak_password";
+
+        /**
+         *
+         * @hide
+         */
+        public static final String ETHERNET_ON = "ethernet_on";
 
         /**
          * Whether to draw text with high contrast while in accessibility mode.
