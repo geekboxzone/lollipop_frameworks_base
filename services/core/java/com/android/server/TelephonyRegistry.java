@@ -1139,13 +1139,15 @@ class TelephonyRegistry extends ITelephonyRegistry.Stub {
 
         synchronized (mRecords) {
             int phoneId = SubscriptionManager.getPhoneId(subId);
-            mOtaspMode[phoneId] = otaspMode;
-            for (Record r : mRecords) {
-                if (r.matchPhoneStateListenerEvent(PhoneStateListener.LISTEN_OTASP_CHANGED)) {
-                    try {
-                        r.callback.onOtaspChanged(otaspMode);
-                    } catch (RemoteException ex) {
-                        mRemoveList.add(r.binder);
+            if (validatePhoneId(phoneId)) {
+                mOtaspMode[phoneId] = otaspMode;
+                for (Record r : mRecords) {
+                    if (r.matchPhoneStateListenerEvent(PhoneStateListener.LISTEN_OTASP_CHANGED)) {
+                        try {
+                            r.callback.onOtaspChanged(otaspMode);
+                        } catch (RemoteException ex) {
+                            mRemoveList.add(r.binder);
+                        }
                     }
                 }
             }
