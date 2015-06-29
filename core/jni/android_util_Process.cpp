@@ -1015,6 +1015,7 @@ void android_os_Process_removeAllProcessGroups(JNIEnv* env, jobject clazz)
 
 jboolean android_os_Process_startCpuAffinity(JNIEnv* env, jobject clazz)
 {
+#if defined(__i386__) || defined(__x86_64__)
     int tid = gettid();
 
     if (sched_start_affinity(tid) == -1) {
@@ -1022,10 +1023,14 @@ jboolean android_os_Process_startCpuAffinity(JNIEnv* env, jobject clazz)
     }
 
     return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
 }
 
 jboolean android_os_Process_endCpuAffinity(JNIEnv* env, jobject clazz)
 {
+#if defined(__i386__) || defined(__x86_64__)
     int tid = gettid();
 
     if (sched_end_affinity(tid) == -1) {
@@ -1033,6 +1038,9 @@ jboolean android_os_Process_endCpuAffinity(JNIEnv* env, jobject clazz)
     }
 
     return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
 }
 
 static const JNINativeMethod methods[] = {
