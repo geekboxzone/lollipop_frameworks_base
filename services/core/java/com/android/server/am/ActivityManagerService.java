@@ -16839,7 +16839,10 @@ public final class ActivityManagerService extends ActivityManagerNative
 				if(mKeyguardManager.isKeyguardLocked()){
 					Slog.d("ljh","-----------------------starting.info.screenOrientation="+starting.info.screenOrientation);
 					TelecomManager telecomManager = (TelecomManager) mContext.getSystemService(Context.TELECOM_SERVICE);
-					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE || (telecomManager!=null&&telecomManager.isRinging())){
+					if(starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+						||starting.info.screenOrientation==ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+						|| (telecomManager!=null&&telecomManager.isRinging())
+						|| "com.android.camera.SecureCameraActivity".equals(starting.info.name)){
                         //Slog.d("ljh","do not change------------");
 				    }else{
 	                     //Slog.d("ljh","force change---------------");
