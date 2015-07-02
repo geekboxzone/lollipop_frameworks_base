@@ -1267,14 +1267,15 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
             state = State.UNKNOWN;
         }
         SimData data = mSimDatas.get(subId);
-        final boolean changed;
+        boolean changed = false;
+        if (DEBUG_SIM_STATES) {
+            Log.d(TAG, "refreshSimState SimData: " + data + ", state: " + state
+                             + ", subId: " + subId + ", slotId: " + slotId);
+        }
         if (data == null) {
             data = new SimData(state, slotId, subId);
             mSimDatas.put(subId, data);
             changed = true; // no data yet; force update
-        } else {
-            changed = data.simState != state;
-            data.simState = state;
         }
         return changed;
     }
