@@ -23475,10 +23475,14 @@ package android.os {
     method public boolean getUtils();
     method public int saveConfig();
     method public void set3DMode(int, int, int);
+    method public int setBrightness(int, int);
+    method public int setContrast(int, float);
     method public void setDisplaySize(int, int, int);
+    method public int setHue(int, float);
     method public void setInterface(int, int, boolean);
     method public void setMode(int, int, java.lang.String);
     method public void setOverScan(int, int, int);
+    method public int setSaturation(int, float);
     method public void switchNextDisplayInterface();
     field public final int AUX_DISPLAY;
     field public final int DISPLAY_3D_FRAME_PACKING;

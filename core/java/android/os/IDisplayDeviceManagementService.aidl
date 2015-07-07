@@ -95,7 +95,24 @@ interface IDisplayDeviceManagementService
      */
     void set3DMode(int display, String iface, int mode);
     /**
-    * saveConfig
-    */
+     * saveConfig
+     */
     int saveConfig();
+    
+    /**
+     * Set brightness
+     */
+    void setBrightness(int display, int brightness);
+    /**
+     * Set contrast
+     */
+    void setContrast(int display, float contrast);
+    /**
+     *Set saturation
+     */
+    void setSaturation(int display, float saturation);
+    /**
+      *Set Hue
+    */
+    void setHue(int display, float degree);
 }

@@ -175,10 +175,10 @@ public class DisplayOutputManager {
 		try {
 			String iface = mService.getCurrentInterface(display);
 			return ifacetotype(iface);
-        } catch (Exception e) {
-            Log.e(TAG, "Error get current Interface :" + e);
-            return 0;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error get current Interface :" + e);
+			return 0;
+		}
 	}
 
 	public String[] getModeList(int display, int type) {
@@ -187,10 +187,10 @@ public class DisplayOutputManager {
 			return null;
 		try {
 			return mService.getModelist(display, iface);
-        } catch (Exception e) {
-            Log.e(TAG, "Error get list mode :" + e);
-            return null;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error get list mode :" + e);
+			return null;
+		}
 	}
 
 	public String getCurrentMode(int display, int type) {
@@ -200,10 +200,10 @@ public class DisplayOutputManager {
 
 		try {
 			return mService.getMode(display, iface);
-        } catch (Exception e) {
-            Log.e(TAG, "Error get current mode :" + e);
-            return null;
-        }
+	        } catch (Exception e) {
+			Log.e(TAG, "Error get current mode :" + e);
+			return null;
+	        }
 	}
 
 	public void setInterface(int display, int type, boolean enable ) {
@@ -212,10 +212,10 @@ public class DisplayOutputManager {
 			if(iface.equals(null))
 				return;
 			mService.enableInterface(display, iface, enable);
-        } catch (Exception e) {
-            Log.e(TAG, "Error set interface :" + e);
-            return;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error set interface :" + e);
+			return;
+		}
 	}
 
 	public void setMode(int display, int type, String mode) {
@@ -254,10 +254,10 @@ public class DisplayOutputManager {
 //					setDisplaySize(MAIN_DISPLAY, m, n);
 				}
 			}
-        } catch (Exception e) {
-            Log.e(TAG, "Error set mode :" + e);
-            return;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error set mode :" + e);
+			return;
+		}
 	}
 
 	public boolean getUtils() {
@@ -265,23 +265,23 @@ public class DisplayOutputManager {
 
 		try {
 			enable = mService.getEnableSwitchFB();
-        } catch (Exception e) {
-            Log.e(TAG, "Error getUtils :" + e);
-            return false;
-        }
-        if(enable.equals("true"))
-        	return true;
-        else
-        	return false;
+		} catch (Exception e) {
+			Log.e(TAG, "Error getUtils :" + e);
+			return false;
+		}
+		if(enable.equals("true"))
+			return true;
+		else
+			return false;
 	}
 
 	public void switchNextDisplayInterface() {
 		try {
 			mService.switchNextDisplayInterface(MAIN_DISPLAY);
-        } catch (Exception e) {
-            Log.e(TAG, "Error set interface :" + e);
-            return;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error set interface :" + e);
+			return;
+		}
 	}
 
 	public void setOverScan(int display, int direction, int value) {
@@ -306,9 +306,9 @@ public class DisplayOutputManager {
 //				mWM.setOverscan(Display.DEFAULT_DISPLAY, rect.left, rect.top, rect.right, rect.bottom);
 //			}
 		}catch (Exception e) {
-            Log.e(TAG, "Error setScreenScale :" + e);
-            return;
-        }
+			Log.e(TAG, "Error setScreenScale :" + e);
+			return;
+		}
 	}
 
 	public Rect getOverScan(int display) {
@@ -341,12 +341,12 @@ public class DisplayOutputManager {
 			if (width >= 0 && height >= 0) {
 				try {
 					Log.d(TAG, "setDisplaySize " + display + " " + width + " " + height);
-	        		mService.setDisplaySize(display, width, height);
-	        	} catch (RemoteException e) {
-	        		Log.e(TAG, "Error setFramebufferSize :" + e);
-	        	}
+	        			mService.setDisplaySize(display, width, height);
+				} catch (RemoteException e) {
+					Log.e(TAG, "Error setFramebufferSize :" + e);
+				}
+    			}
     		}
-    	}
 	}
 
 	private int setWMDisplaySize(int display, int width, int height)
@@ -357,22 +357,22 @@ public class DisplayOutputManager {
 		if(displaypolicy.equals("manual") == true)
 			return -1;
 
-    	if (mWM == null) {
-        	 Log.e(TAG, "Error setDisplaySize get widow manager");
-        	 return -1;
-    	}
-    	try {
-            if (width >= 0 && height >= 0) {
-                mWM.setForcedDisplaySize(display, width, height);
-                return 0;
-            } else {
-                mWM.clearForcedDisplaySize(display);
-                return -1;
-            }
-        } catch (RemoteException e) {
-        	Log.e(TAG, "Error setDisplaySize :" + e);
-        }
-    	return 0;
+		if (mWM == null) {
+			 Log.e(TAG, "Error setDisplaySize get widow manager");
+			 return -1;
+		}
+		try {
+		    if (width >= 0 && height >= 0) {
+		        mWM.setForcedDisplaySize(display, width, height);
+		        return 0;
+		    } else {
+		        mWM.clearForcedDisplaySize(display);
+		        return -1;
+		    }
+		} catch (RemoteException e) {
+			Log.e(TAG, "Error setDisplaySize :" + e);
+		}
+		return 0;
 	}
 
 	public int get3DModes(int display, int type)
@@ -383,10 +383,10 @@ public class DisplayOutputManager {
 
 		try {
 			return mService.get3DModes(display, iface);
-        } catch (Exception e) {
-            Log.e(TAG, "Error get 3d modes :" + e);
-            return 0;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error get 3d modes :" + e);
+			return 0;
+		}
 	}
 
 	public int getCur3DMode(int display, int type)
@@ -397,10 +397,10 @@ public class DisplayOutputManager {
 
 		try {
 			return mService.getCur3DMode(display, iface);
-        } catch (Exception e) {
-            Log.e(TAG, "Error get cur 3d mode :" + e);
-            return -1;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error get cur 3d mode :" + e);
+			return -1;
+		}
 	}
 
 	public void set3DMode(int display, int type, int mode)
@@ -411,10 +411,10 @@ public class DisplayOutputManager {
 
 		try {
 			mService.set3DMode(display, iface, mode);
-        } catch (Exception e) {
-            Log.e(TAG, "Error set 3d modes :" + e);
-            return;
-        }
+		} catch (Exception e) {
+			Log.e(TAG, "Error set 3d modes :" + e);
+			return;
+		}
 	}
 
 	public int saveConfig()
@@ -422,9 +422,81 @@ public class DisplayOutputManager {
 		try {
 			return mService.saveConfig();
 		} catch (Exception e) {
-		 Log.e(TAG, "Error save :" + e);
-			 return -1;
+			Log.e(TAG, "Error save :" + e);
+			return -1;
 		}
+	}
+
+	/*
+	 * brightness: [-128, 127], default 0
+	 */
+	public int setBrightness(int display, int brightness)
+	{
+		if (brightness < -32 || brightness > 31) {
+			Log.e(TAG, "setBrightness out of range " + brightness);
+			return -1;
+		}
+		try {
+			mService.setBrightness(display, brightness);
+		} catch (Exception e) {
+			Log.e(TAG, "Error set brightness :" + e);
+			return -1;
+		}
+		return 0;
+	}
+
+	/*
+	 * contrast: [0, 1.992], default 1;
+	 */
+	public int setContrast(int display, float contrast)
+	{
+		if (contrast < 0 || contrast > 1.992) {
+			Log.e(TAG, "setContrast out of range " + contrast);
+			return -1;
+		}
+		try {
+			mService.setContrast(display, contrast);
+		} catch (Exception e) {
+			Log.e(TAG, "Error set Contrast :" + e);
+			return -1;
+		}
+		return 0;
+	}
+
+	/*
+	 * saturation: [0, 1.992], default 1;
+	 */
+	public int setSaturation(int display, float saturation)
+	{	
+		if (saturation < 0 || saturation > 1.992) {
+			Log.e(TAG, "setContrast out of range " + saturation);
+			return -1;
+		}
+		try {
+			mService.setSaturation(display, saturation);
+		} catch (Exception e) {
+			Log.e(TAG, "Error set sat_con :" + e);
+			return -1;
+		}
+		return 0;
+	}
+
+	/*
+	 * degree: [-30, 30], default 0
+	 */
+	public int setHue(int display, float degree)
+	{
+		if (degree < -30 || degree > 30) {
+			Log.e(TAG, "Error set hue out of range " + degree);
+			return -1;
+		}
+		try {
+			mService.setHue(display, degree);
+		} catch (Exception e) {
+			Log.e(TAG, "Error set hue :" + e);
+			return -1;
+		}
+		return 0;
 	}
 
 }

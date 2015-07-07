@@ -292,52 +292,53 @@ class DisplayDeviceManagementService extends IDisplayDeviceManagementService.Stu
 
 	public void set3DMode(int display, String iface, int mode) throws IllegalStateException {
 		try{
-    		String cmd = String.format("mode set3dmode %d %s %d", display, iface, mode);
-    		if(DBG) Slog.d(TAG, "send cmd " + cmd);
-    		mConnector.execute("mode", "set3dmode", display, iface, mode);
-    	} catch (NativeDaemonConnectorException e) {
-            throw new IllegalStateException(
-            "Cannot communicate with native daemon to set mode");
-    	}
-	}
-	public void setBrightness(int display, int brightness) throws IllegalStateException {
-	   try{
-		   String cmd = String.format("utils brightness %d %d ", display, brightness);
-		   if(DBG) Slog.d(TAG, "send cmd " + cmd);
-		   mConnector.execute("utils", "brightness", display, brightness,0);
-	   } catch (NativeDaemonConnectorException e) {
-		   throw new IllegalStateException(
-		   "Cannot communicate with native daemon to set brightness");
-	   }
-   }
-
-	public void setContrast(int display, int contrast) throws IllegalStateException {
-		try{
-			String cmd = String.format("utils contrast %d %d ", display, contrast);
+			String cmd = String.format("mode set3dmode %d %s %d", display, iface, mode);
 			if(DBG) Slog.d(TAG, "send cmd " + cmd);
-			mConnector.execute("utils", "contrast", display, contrast,0);
+			mConnector.execute("mode", "set3dmode", display, iface, mode);
+		} catch (NativeDaemonConnectorException e) {
+			throw new IllegalStateException(
+			"Cannot communicate with native daemon to set mode");
+		}
+	}
+
+	public void setBrightness(int display, int brightness) throws IllegalStateException {
+		try{
+			String cmd = String.format("utils brightness %d %d ", display, brightness);
+			if(DBG) Slog.d(TAG, "send cmd " + cmd);
+			mConnector.execute("utils", "brightness", display, brightness);
+		} catch (NativeDaemonConnectorException e) {
+			throw new IllegalStateException(
+			"Cannot communicate with native daemon to set brightness");
+		}
+	}
+
+	public void setContrast(int display, float contrast) throws IllegalStateException {
+		try{
+			String cmd = String.format("utils contrast %d %f ", display, contrast);
+			if(DBG) Slog.d(TAG, "send cmd " + cmd);
+			mConnector.execute("utils", "contrast", display, contrast);
 		} catch (NativeDaemonConnectorException e) {
 			throw new IllegalStateException(
 			"Cannot communicate with native daemon to set contrast");
 		}
 	}
 
-	public void setSat_con(int display, int sat) throws IllegalStateException {
+	public void setSaturation(int display, float saturation) throws IllegalStateException {
 		try{
-			String cmd = String.format("utils sat_con %d %d ", display, sat);
+			String cmd = String.format("utils sat_con %d %f ", display, saturation);
 			if(DBG) Slog.d(TAG, "send cmd " + cmd);
-			mConnector.execute("utils", "sat_con", display, sat,0);
+			mConnector.execute("utils", "saturation", display, saturation);
 		} catch (NativeDaemonConnectorException e) {
 			throw new IllegalStateException(
 			"Cannot communicate with native daemon to set sat_con");
 		}
 	}
 
-	public void setHue(int display, int s1,int s2) throws IllegalStateException {
+	public void setHue(int display, float degree) throws IllegalStateException {
 		try{
-			String cmd = String.format("utils hue %d %d %d", display, s1,s2);
+			String cmd = String.format("utils hue %d %f", display, degree);
 			if(DBG) Slog.d(TAG, "send cmd " + cmd);
-			mConnector.execute("utils", "hue", display, s1,s2);
+			mConnector.execute("utils", "hue", display, degree);
 		} catch (NativeDaemonConnectorException e) {
 			throw new IllegalStateException(
 			"Cannot communicate with native daemon to set hue");
@@ -346,13 +347,13 @@ class DisplayDeviceManagementService extends IDisplayDeviceManagementService.Stu
 
 	public int saveConfig() throws IllegalStateException {
 		final NativeDaemonEvent event;
-	try {
-		event = mConnector.execute("utils", "save");
-	} catch (NativeDaemonConnectorException e) {
-		throw e.rethrowAsParcelableException();
-	}
-	event.checkCode(DisplaydResponseCode.CommandOkay);
-	return Integer.parseInt(event.getMessage());
+		try {
+			event = mConnector.execute("utils", "save");
+		} catch (NativeDaemonConnectorException e) {
+			throw e.rethrowAsParcelableException();
+		}
+		event.checkCode(DisplaydResponseCode.CommandOkay);
+		return Integer.parseInt(event.getMessage());
 	}
 }
 
