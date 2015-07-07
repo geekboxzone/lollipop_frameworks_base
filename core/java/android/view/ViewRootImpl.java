@@ -277,6 +277,7 @@ public final class ViewRootImpl implements ViewParent,
 
     final Configuration mLastConfiguration = new Configuration();
     final Configuration mPendingConfiguration = new Configuration();
+    boolean mConfigurationChanged = false;
 
     boolean mScrollMayChange;
     int mSoftInputMode;
@@ -1508,7 +1509,11 @@ public final class ViewRootImpl implements ViewParent,
         int relayoutResult = 0;
 
         if (mFirst || windowShouldResize || insetsChanged ||
-                viewVisibilityChanged || params != null) {
+                viewVisibilityChanged || params != null || mConfigurationChanged) {
+
+            if (mConfigurationChanged) {
+                mConfigurationChanged = false;
+            }
 
             if (viewVisibility == View.VISIBLE) {
                 // If this window is giving internal insets to the window
@@ -3098,6 +3103,7 @@ public final class ViewRootImpl implements ViewParent,
                     mView.setLayoutDirection(currentLayoutDirection);
                 }
                 mView.dispatchConfigurationChanged(config);
+                mConfigurationChanged = true;
             }
         }
     }
