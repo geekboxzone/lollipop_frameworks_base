@@ -290,7 +290,7 @@ public class CarrierText extends TextView {
         final boolean spnValid = !TextUtils.isEmpty(spn);
         if (plmnValid && spnValid) {
             if (plmn.equals(spn)) {
-                return plmn;
+                return new StringBuilder().append(plmn).append(mSeparator).append(spn).toString();
             } else {
                 return new StringBuilder().append(plmn).append(mSeparator).append(spn).toString();
             }
