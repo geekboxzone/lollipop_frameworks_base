@@ -37,6 +37,7 @@ import com.android.systemui.statusbar.policy.KeyguardUserSwitcher;
 import com.android.systemui.statusbar.policy.UserInfoController;
 
 import java.text.NumberFormat;
+import android.provider.Settings;
 
 /**
  * The header group on Keyguard.
@@ -104,7 +105,7 @@ public class KeyguardStatusBarView extends RelativeLayout
         } else if (mMultiUserSwitch.getParent() == this && mKeyguardUserSwitcherShowing) {
             removeView(mMultiUserSwitch);
         }
-        mBatteryLevel.setVisibility(mBatteryCharging ? View.VISIBLE : View.GONE);
+        mBatteryLevel.setVisibility((mBatteryCharging || (Settings.Secure.getInt(getContext().getContentResolver(), Settings.Secure.BATTERY_PERCENTAGE, 0)==1))? View.VISIBLE : View.GONE);
     }
 
     private void updateSystemIconsLayoutParams() {
@@ -153,6 +154,7 @@ public class KeyguardStatusBarView extends RelativeLayout
     @Override
     public void onBatteryLevelChanged(int level, boolean pluggedIn, boolean charging) {
         String percentage = NumberFormat.getPercentInstance().format((double) level / 100.0);
+		updateVisibilities();
         mBatteryLevel.setText(percentage);
         boolean changed = mBatteryCharging != charging;
         mBatteryCharging = charging;
