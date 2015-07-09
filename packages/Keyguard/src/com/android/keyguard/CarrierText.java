@@ -1,4 +1,4 @@
-/*
+
  * Copyright (C) 2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,6 +43,7 @@ public class CarrierText extends TextView {
     private static final String TAG = "CarrierText";
 
     private static CharSequence mSeparator;
+    private static CharSequence mCarriersSeparator;
 
     private LockPatternUtils mLockPatternUtils;
     private KeyguardUpdateMonitor mKeyguardUpdateMonitor;
@@ -107,7 +108,7 @@ public class CarrierText extends TextView {
             if (DEBUG) Log.d(TAG, "Handling " + simState + " " + carrierName);
             if (carrierTextForSimState != null) {
                 allSimsMissing = false;
-                displayText = concatenate(displayText, carrierTextForSimState);
+                displayText = concatenate(displayText, carrierTextForSimState, true);
             }
         }
         if (allSimsMissing) {
@@ -154,6 +155,8 @@ public class CarrierText extends TextView {
         super.onFinishInflate();
         mSeparator = getResources().getString(
                 com.android.internal.R.string.kg_text_message_separator);
+        mCarriersSeparator = getResources().getString(
+                com.android.internal.R.string.kg_carrier_names_separator);
         final boolean screenOn = KeyguardUpdateMonitor.getInstance(mContext).isScreenOn();
         setSelected(screenOn); // Allow marquee to work.
     }
@@ -286,18 +289,30 @@ public class CarrierText extends TextView {
     }
 
     private static CharSequence concatenate(CharSequence plmn, CharSequence spn) {
-        final boolean plmnValid = !TextUtils.isEmpty(plmn);
-        final boolean spnValid = !TextUtils.isEmpty(spn);
-        if (plmnValid && spnValid) {
-            if (plmn.equals(spn)) {
-                return new StringBuilder().append(plmn).append(mSeparator).append(spn).toString();
+        return concatenate(plmn, spn, false);
+    }
+
+    //for different SIM's carrier name, we should append them, and use '|' to separate them
+    //for the same SIM's plmn and spn, just check valid or not
+    private static CharSequence concatenate(CharSequence str1, CharSequence str2, boolean append) {
+        final boolean str1Valid = !TextUtils.isEmpty(str1);
+        final boolean str2Valid = !TextUtils.isEmpty(str2);
+        if (str1Valid && str2Valid) {
+            if (str1.equals(str2) && !append) {
+                return str1;
             } else {
-                return new StringBuilder().append(plmn).append(mSeparator).append(spn).toString();
+                final CharSequence separator;
+                if (append) {
+                    separator = mCarriersSeparator;
+                } else {
+                    separator = mSeparator;
+                }
+                return new StringBuilder().append(str1).append(separator).append(str2).toString();
             }
-        } else if (plmnValid) {
-            return plmn;
-        } else if (spnValid) {
-            return spn;
+        } else if (str1Valid) {
+            return str1;
+        } else if (str2Valid) {
+            return str2;
         } else {
             return "";
         }
