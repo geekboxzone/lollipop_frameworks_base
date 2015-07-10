@@ -1125,6 +1125,12 @@ public class MediaPlayer implements SubtitleController.Listener
 			boolean isBD = ISOManager.isBDDirectory(path);
 			if(isBD)
 			{
+                                //$_media_$_modify_$_Martin.Cheng@rock-chips.com for BOX_EXTERNEL_SUBTITLE, Disabled Default
+                                if(useFrameworkSubtitle()){
+                                    mMediaPlayerSubTitle = new MediaPlayerSubTitle(this);
+                                    mMediaPlayerSubTitle.setDataSource(null, path);
+                                }
+                                //$_media_$_modify_$_
 				nativeSetDataSource(null,path,keys,values);
 				return;
 			}
@@ -1970,6 +1976,7 @@ public class MediaPlayer implements SubtitleController.Listener
                     Log.e(TAG, "parcel --> MEDIA_TRACK_TYPE_AUDIO");
                     String mime3 = in.readString();
                     mFormat = MediaFormat.createAudioFormat(mime3,in.readInt(),in.readInt());
+                    mFormat.setString(MediaFormat.KEY_LANGUAGE, language); 
                     break;
                 default:
                     mFormat = new MediaFormat();
