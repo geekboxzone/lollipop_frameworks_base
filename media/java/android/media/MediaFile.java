@@ -185,7 +185,10 @@ public class MediaFile {
             addFileType("WMA", FILE_TYPE_WMA, "audio/x-ms-wma", MtpConstants.FORMAT_WMA);
       //  }
 	    addFileType("FLAC", FILE_TYPE_FLAC, "audio/flac");
-        //addFileType("APE", FILE_TYPE_APE, "audio/ape"); 
+	  
+	  if (!("unknown".equals(SystemProperties.get("ro.target.product", "unknown")))) {
+        	addFileType("APE", FILE_TYPE_APE, "audio/ape");
+	  }
         addFileType("OGG", FILE_TYPE_OGG, "audio/ogg", MtpConstants.FORMAT_OGG);
         addFileType("OGG", FILE_TYPE_OGG, "application/ogg", MtpConstants.FORMAT_OGG);
         addFileType("OGA", FILE_TYPE_OGG, "application/ogg", MtpConstants.FORMAT_OGG);
