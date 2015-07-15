@@ -1696,6 +1696,7 @@ class AlarmManagerService extends SystemService {
                 if (localLOGV) {
                     Slog.v(TAG, "sending alarm " + alarm);
                 }
+		mBackgroundIntent.setFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
                 alarm.operation.send(getContext(), 0,
                         mBackgroundIntent.putExtra(
                                 Intent.EXTRA_ALARM_COUNT, alarm.count),
