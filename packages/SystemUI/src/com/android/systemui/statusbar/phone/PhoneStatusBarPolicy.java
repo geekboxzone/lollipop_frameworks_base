@@ -179,7 +179,13 @@ public class PhoneStatusBarPolicy {
     }
 
 	private final void updateHeadset(Intent intent) {
-		Log.v(TAG, "updateHeadset: state=" + intent.getIntExtra("state" , 0));
+                int hasMicrophone=intent.getIntExtra("microphone",0);
+                if(hasMicrophone==1){
+                   mService.setIcon("headset", R.drawable.stat_sys_headset, 0, null);
+                }else{
+                   mService.setIcon("headset", R.drawable.stat_sys_headset_no_microphone, 0, null);
+                }
+		Log.v(TAG, "updateHeadset: state=" + intent.getIntExtra("state" , 0)+" hasMicrophone="+hasMicrophone);
 		mService.setIconVisibility("headset", (intent.getIntExtra("state" , 0 ) == 1 )?true :false ); 
 	}
 
