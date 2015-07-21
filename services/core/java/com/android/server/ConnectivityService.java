@@ -4127,7 +4127,7 @@ public class ConnectivityService extends IConnectivityManager.Stub
                 }
                 // next check if it's better than any current network we're using for
                 // this request
-                if (VDBG) {
+                if (DBG) {
                     log("currentScore = " +
                             (currentNetwork != null ? currentNetwork.getCurrentScore() : 0) +
                             ", newScore = " + newNetwork.getCurrentScore());
