@@ -162,7 +162,7 @@ public final class BluetoothAvrcpController implements BluetoothProfile {
      */
     public List<BluetoothDevice> getConnectedDevices() {
         if (VDBG) log("getConnectedDevices()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getConnectedDevices();
             } catch (RemoteException e) {
@@ -179,7 +179,7 @@ public final class BluetoothAvrcpController implements BluetoothProfile {
      */
     public List<BluetoothDevice> getDevicesMatchingConnectionStates(int[] states) {
         if (VDBG) log("getDevicesMatchingStates()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getDevicesMatchingConnectionStates(states);
             } catch (RemoteException e) {
@@ -196,8 +196,8 @@ public final class BluetoothAvrcpController implements BluetoothProfile {
      */
     public int getConnectionState(BluetoothDevice device) {
         if (VDBG) log("getState(" + device + ")");
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled()&&  isValidDevice(device)
+            && mService != null) {
             try {
                 return mService.getConnectionState(device);
             } catch (RemoteException e) {
@@ -211,7 +211,7 @@ public final class BluetoothAvrcpController implements BluetoothProfile {
 
     public void sendPassThroughCmd(BluetoothDevice device, int keyCode, int keyState) {
         if (DBG) Log.d(TAG, "sendPassThroughCmd");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 mService.sendPassThroughCmd(device, keyCode, keyState);
                 return;

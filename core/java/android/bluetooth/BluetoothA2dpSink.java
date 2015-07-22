@@ -238,8 +238,8 @@ public final class BluetoothA2dpSink implements BluetoothProfile {
      */
     public boolean connect(BluetoothDevice device) {
         if (DBG) log("connect(" + device + ")");
-        if (mService != null && isEnabled() &&
-            isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mService != null) {
             try {
                 return mService.connect(device);
             } catch (RemoteException e) {
@@ -279,8 +279,8 @@ public final class BluetoothA2dpSink implements BluetoothProfile {
      */
     public boolean disconnect(BluetoothDevice device) {
         if (DBG) log("disconnect(" + device + ")");
-        if (mService != null && isEnabled() &&
-            isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mService != null) {
             try {
                 return mService.disconnect(device);
             } catch (RemoteException e) {
@@ -297,7 +297,7 @@ public final class BluetoothA2dpSink implements BluetoothProfile {
      */
     public List<BluetoothDevice> getConnectedDevices() {
         if (VDBG) log("getConnectedDevices()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getConnectedDevices();
             } catch (RemoteException e) {
@@ -314,7 +314,7 @@ public final class BluetoothA2dpSink implements BluetoothProfile {
      */
     public List<BluetoothDevice> getDevicesMatchingConnectionStates(int[] states) {
         if (VDBG) log("getDevicesMatchingStates()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getDevicesMatchingConnectionStates(states);
             } catch (RemoteException e) {
@@ -331,8 +331,8 @@ public final class BluetoothA2dpSink implements BluetoothProfile {
      */
     public int getConnectionState(BluetoothDevice device) {
         if (VDBG) log("getState(" + device + ")");
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mService != null) {
             try {
                 return mService.getConnectionState(device);
             } catch (RemoteException e) {
@@ -357,8 +357,8 @@ public final class BluetoothA2dpSink implements BluetoothProfile {
      */
           public BluetoothAudioConfig getAudioConfig(BluetoothDevice device) {
         if (VDBG) log("getAudioConfig(" + device + ")");
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() &&  isValidDevice(device)
+            && mService != null) {
             try {
                 return mService.getAudioConfig(device);
             } catch (RemoteException e) {

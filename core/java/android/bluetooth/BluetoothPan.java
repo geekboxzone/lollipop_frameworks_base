@@ -225,8 +225,8 @@ public final class BluetoothPan implements BluetoothProfile {
      */
     public boolean connect(BluetoothDevice device) {
         if (DBG) log("connect(" + device + ")");
-        if (mPanService != null && isEnabled() &&
-            isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mPanService != null) {
             try {
                 return mPanService.connect(device);
             } catch (RemoteException e) {
@@ -266,8 +266,8 @@ public final class BluetoothPan implements BluetoothProfile {
      */
     public boolean disconnect(BluetoothDevice device) {
         if (DBG) log("disconnect(" + device + ")");
-        if (mPanService != null && isEnabled() &&
-            isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mPanService != null) {
             try {
                 return mPanService.disconnect(device);
             } catch (RemoteException e) {
@@ -284,7 +284,7 @@ public final class BluetoothPan implements BluetoothProfile {
      */
     public List<BluetoothDevice> getConnectedDevices() {
         if (VDBG) log("getConnectedDevices()");
-        if (mPanService != null && isEnabled()) {
+        if (isEnabled() && mPanService != null) {
             try {
                 return mPanService.getConnectedDevices();
             } catch (RemoteException e) {
@@ -301,7 +301,7 @@ public final class BluetoothPan implements BluetoothProfile {
      */
     public List<BluetoothDevice> getDevicesMatchingConnectionStates(int[] states) {
         if (VDBG) log("getDevicesMatchingStates()");
-        if (mPanService != null && isEnabled()) {
+        if (isEnabled() && mPanService != null) {
             try {
                 return mPanService.getDevicesMatchingConnectionStates(states);
             } catch (RemoteException e) {
@@ -318,8 +318,8 @@ public final class BluetoothPan implements BluetoothProfile {
      */
     public int getConnectionState(BluetoothDevice device) {
         if (VDBG) log("getState(" + device + ")");
-        if (mPanService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device)
+            && mPanService != null) {
             try {
                 return mPanService.getConnectionState(device);
             } catch (RemoteException e) {

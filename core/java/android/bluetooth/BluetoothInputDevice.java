@@ -313,7 +313,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean connect(BluetoothDevice device) {
         if (DBG) log("connect(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.connect(device);
             } catch (RemoteException e) {
@@ -353,7 +353,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean disconnect(BluetoothDevice device) {
         if (DBG) log("disconnect(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.disconnect(device);
             } catch (RemoteException e) {
@@ -370,7 +370,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public List<BluetoothDevice> getConnectedDevices() {
         if (VDBG) log("getConnectedDevices()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getConnectedDevices();
             } catch (RemoteException e) {
@@ -387,7 +387,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public List<BluetoothDevice> getDevicesMatchingConnectionStates(int[] states) {
         if (VDBG) log("getDevicesMatchingStates()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getDevicesMatchingConnectionStates(states);
             } catch (RemoteException e) {
@@ -404,7 +404,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public int getConnectionState(BluetoothDevice device) {
         if (VDBG) log("getState(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.getConnectionState(device);
             } catch (RemoteException e) {
@@ -433,7 +433,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean setPriority(BluetoothDevice device, int priority) {
         if (DBG) log("setPriority(" + device + ", " + priority + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             if (priority != BluetoothProfile.PRIORITY_OFF &&
                 priority != BluetoothProfile.PRIORITY_ON) {
               return false;
@@ -464,7 +464,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public int getPriority(BluetoothDevice device) {
         if (VDBG) log("getPriority(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.getPriority(device);
             } catch (RemoteException e) {
@@ -519,7 +519,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean virtualUnplug(BluetoothDevice device) {
         if (DBG) log("virtualUnplug(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.virtualUnplug(device);
             } catch (RemoteException e) {
@@ -545,7 +545,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
     */
     public boolean getProtocolMode(BluetoothDevice device) {
         if (VDBG) log("getProtocolMode(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.getProtocolMode(device);
             } catch (RemoteException e) {
@@ -569,7 +569,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean setProtocolMode(BluetoothDevice device, int protocolMode) {
         if (DBG) log("setProtocolMode(" + device + ")");
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.setProtocolMode(device, protocolMode);
             } catch (RemoteException e) {
@@ -596,7 +596,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean getReport(BluetoothDevice device, byte reportType, byte reportId, int bufferSize) {
         if (VDBG) log("getReport(" + device + "), reportType=" + reportType + " reportId=" + reportId + "bufferSize=" + bufferSize);
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.getReport(device, reportType, reportId, bufferSize);
             } catch (RemoteException e) {
@@ -622,7 +622,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean setReport(BluetoothDevice device, byte reportType, String report) {
         if (VDBG) log("setReport(" + device + "), reportType=" + reportType + " report=" + report);
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.setReport(device, reportType, report);
             } catch (RemoteException e) {
@@ -647,7 +647,7 @@ public final class BluetoothInputDevice implements BluetoothProfile {
      */
     public boolean sendData(BluetoothDevice device, String report) {
         if (DBG) log("sendData(" + device + "), report=" + report);
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.sendData(device, report);
             } catch (RemoteException e) {

@@ -225,8 +225,8 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public boolean connect(BluetoothDevice device) {
         if (DBG) log("connect(" + device + ")");
-        if (mService != null && isEnabled() &&
-            isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mService != null) {
             try {
                 return mService.connect(device);
             } catch (RemoteException e) {
@@ -266,8 +266,8 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public boolean disconnect(BluetoothDevice device) {
         if (DBG) log("disconnect(" + device + ")");
-        if (mService != null && isEnabled() &&
-            isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device) &&
+            mService != null) {
             try {
                 return mService.disconnect(device);
             } catch (RemoteException e) {
@@ -284,7 +284,7 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public List<BluetoothDevice> getConnectedDevices() {
         if (VDBG) log("getConnectedDevices()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getConnectedDevices();
             } catch (RemoteException e) {
@@ -301,7 +301,7 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public List<BluetoothDevice> getDevicesMatchingConnectionStates(int[] states) {
         if (VDBG) log("getDevicesMatchingStates()");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getDevicesMatchingConnectionStates(states);
             } catch (RemoteException e) {
@@ -318,8 +318,8 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public int getConnectionState(BluetoothDevice device) {
         if (VDBG) log("getState(" + device + ")");
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device)
+            && mService != null) {
             try {
                 return mService.getConnectionState(device);
             } catch (RemoteException e) {
@@ -348,8 +348,8 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public boolean setPriority(BluetoothDevice device, int priority) {
         if (DBG) log("setPriority(" + device + ", " + priority + ")");
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device)
+            && mService != null) {
             if (priority != BluetoothProfile.PRIORITY_OFF &&
                 priority != BluetoothProfile.PRIORITY_ON){
               return false;
@@ -380,8 +380,8 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public int getPriority(BluetoothDevice device) {
         if (VDBG) log("getPriority(" + device + ")");
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device)
+            && mService != null) {
             try {
                 return mService.getPriority(device);
             } catch (RemoteException e) {
@@ -401,7 +401,7 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public boolean isAvrcpAbsoluteVolumeSupported() {
         if (DBG) Log.d(TAG, "isAvrcpAbsoluteVolumeSupported");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.isAvrcpAbsoluteVolumeSupported();
             } catch (RemoteException e) {
@@ -421,7 +421,7 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public void adjustAvrcpAbsoluteVolume(int direction) {
         if (DBG) Log.d(TAG, "adjustAvrcpAbsoluteVolume");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 mService.adjustAvrcpAbsoluteVolume(direction);
                 return;
@@ -441,7 +441,7 @@ public final class BluetoothA2dp implements BluetoothProfile {
      */
     public void setAvrcpAbsoluteVolume(int volume) {
         if (DBG) Log.d(TAG, "setAvrcpAbsoluteVolume");
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 mService.setAvrcpAbsoluteVolume(volume);
                 return;
@@ -461,8 +461,8 @@ public final class BluetoothA2dp implements BluetoothProfile {
      * @param device BluetoothDevice device
      */
     public boolean isA2dpPlaying(BluetoothDevice device) {
-        if (mService != null && isEnabled()
-            && isValidDevice(device)) {
+        if (isEnabled() && isValidDevice(device)
+            && mService != null) {
             try {
                 return mService.isA2dpPlaying(device);
             } catch (RemoteException e) {

@@ -201,7 +201,7 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     public boolean unregisterAppConfiguration(BluetoothHealthAppConfiguration config) {
         boolean result = false;
-        if (mService != null && isEnabled() && config != null) {
+        if (isEnabled() && config != null && mService != null  ) {
             try {
                 result = mService.unregisterAppConfiguration(config);
             } catch (RemoteException e) {
@@ -229,8 +229,8 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     public boolean connectChannelToSource(BluetoothDevice device,
             BluetoothHealthAppConfiguration config) {
-        if (mService != null && isEnabled() && isValidDevice(device) &&
-                config != null) {
+        if ( isEnabled() && isValidDevice(device) &&
+                config != null && mService != null) {
             try {
                 return mService.connectChannelToSource(device, config);
             } catch (RemoteException e) {
@@ -258,8 +258,8 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     public boolean connectChannelToSink(BluetoothDevice device,
             BluetoothHealthAppConfiguration config, int channelType) {
-        if (mService != null && isEnabled() && isValidDevice(device) &&
-                config != null) {
+        if ( isEnabled() && isValidDevice(device) &&
+                config != null && mService != null) {
             try {
                 return mService.connectChannelToSink(device, config, channelType);
             } catch (RemoteException e) {
@@ -287,8 +287,8 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     public boolean disconnectChannel(BluetoothDevice device,
             BluetoothHealthAppConfiguration config, int channelId) {
-        if (mService != null && isEnabled() && isValidDevice(device) &&
-                config != null) {
+        if ( isEnabled() && isValidDevice(device) &&
+                config != null && mService != null) {
             try {
                 return mService.disconnectChannel(device, config, channelId);
             } catch (RemoteException e) {
@@ -316,8 +316,8 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     public ParcelFileDescriptor getMainChannelFd(BluetoothDevice device,
             BluetoothHealthAppConfiguration config) {
-        if (mService != null && isEnabled() && isValidDevice(device) &&
-                config != null) {
+        if ( isEnabled() && isValidDevice(device) &&
+                config != null && mService != null) {
             try {
                 return mService.getMainChannelFd(device, config);
             } catch (RemoteException e) {
@@ -347,7 +347,7 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     @Override
     public int getConnectionState(BluetoothDevice device) {
-        if (mService != null && isEnabled() && isValidDevice(device)) {
+        if ( isEnabled() && isValidDevice(device) && mService != null) {
             try {
                 return mService.getHealthDeviceConnectionState(device);
             } catch (RemoteException e) {
@@ -375,7 +375,7 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     @Override
     public List<BluetoothDevice> getConnectedDevices() {
-        if (mService != null && isEnabled()) {
+        if ( isEnabled() && mService != null) {
             try {
                 return mService.getConnectedHealthDevices();
             } catch (RemoteException e) {
@@ -407,7 +407,7 @@ public final class BluetoothHealth implements BluetoothProfile {
      */
     @Override
     public List<BluetoothDevice> getDevicesMatchingConnectionStates(int[] states) {
-        if (mService != null && isEnabled()) {
+        if (isEnabled() && mService != null) {
             try {
                 return mService.getHealthDevicesMatchingConnectionStates(states);
             } catch (RemoteException e) {
