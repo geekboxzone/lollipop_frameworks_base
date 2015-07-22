@@ -853,8 +853,16 @@ public class ConnectivityService extends IConnectivityManager.Stub
         Network network = null;
         String subscriberId = null;
 
-        NetworkAgentInfo nai = mNetworkForRequestId.get(mDefaultRequest.requestId);
+        NetworkAgentInfo nai;
 
+	try{
+		nai = mNetworkForRequestId.get(mDefaultRequest.requestId);
+	} catch (Exception e) {
+            e.printStackTrace();
+	    	
+	    return null;
+
+	}
         final Network[] networks = getVpnUnderlyingNetworks(uid);
         if (networks != null) {
             // getUnderlyingNetworks() returns:
