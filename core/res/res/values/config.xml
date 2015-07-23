@@ -2065,4 +2065,7 @@
 
     <!--Whether non-data sim can(true) send mms or not(false)-->
     <bool name="config_non_data_sim_mms_supported">true</bool>
+
+    <add-resource type="bool" name="config_sim_onoff_allowed" />
+    <bool name="config_sim_onoff_allowed">true</bool>
 </resources>

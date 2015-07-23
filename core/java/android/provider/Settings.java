@@ -6817,6 +6817,12 @@ public final class Settings {
         public static final String LTE_SERVICE_FORCED = "lte_service_forced";
 
         /**
+          * @hide
+          */
+         public static final String SIM_OFF = "sim_off";
+
+         /**
+
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
          *

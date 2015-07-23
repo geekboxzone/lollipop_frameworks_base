@@ -2282,4 +2282,5 @@
   <java-symbol type="bool" name="config_LTE_eri_for_network_name" />
   <java-symbol type="bool" name="config_defaultInTouchMode" />
   <java-symbol type="bool" name="config_non_data_sim_mms_supported" />
+  <java-symbol type="bool" name="config_sim_onoff_allowed" />
 </resources>
