@@ -1,0 +1,4 @@
+<resources>
+  <private-symbols package="com.android.internal" />
+  <java-symbol type="bool" name="config_imc_feature_skip_sim_pin" />
+</resources>

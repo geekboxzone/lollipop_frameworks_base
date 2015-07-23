@@ -4130,4 +4130,44 @@ public class TelephonyManager {
                     ServiceState.rilRadioTechnologyToString(type));
         }
     }
+
+    /**
+     * Check if SIM enabled or not
+     * @hide
+     */
+    public boolean isSimOff(int slotId) {
+        try {
+            return getITelephony().isSimOff(slotId);
+        } catch (RemoteException ex) {
+        } catch (NullPointerException ex) {
+        }
+        return true;
+    }
+
+    /**
+     * Set SIM enabled or disabled
+     * @hide
+     */
+    public void setSimOff(int slotId, boolean enable) {
+        try {
+            getITelephony().setSimOff(slotId, enable);
+        } catch (RemoteException ex) {
+        } catch (NullPointerException ex) {
+        }
+    }
+
+    /**
+     * Return the flag if user bypasses sim pin explicitly.
+     *
+     * @param slotid which sim slot to set
+     * @return true if user bypass sim pin
+     *
+     * @hide
+     */
+    public static boolean isBypassSimPinSet(int slotId) {
+        return TelephonyProperties.PROPERTY_SIM_PIN_BYPASS_YES.equals(
+                    getTelephonyProperty(slotId,
+                        TelephonyProperties.PROPERTY_SIM_PIN_BYPASS,
+                        TelephonyProperties.PROPERTY_SIM_PIN_BYPASS_NO));
+    }
 }

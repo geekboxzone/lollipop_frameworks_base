@@ -423,7 +423,13 @@ public class KeyguardSecurityContainer extends FrameLayout implements KeyguardSe
     private void showSecurityScreen(SecurityMode securityMode) {
         if (DEBUG) Log.d(TAG, "showSecurityScreen(" + securityMode + ")");
 
-        if (securityMode == mCurrentSecuritySelection) return;
+        if (securityMode == mCurrentSecuritySelection) {
+            if (securityMode == SecurityMode.SimPin || securityMode == SecurityMode.SimPuk) {
+                Log.d(TAG, "showSecurityScreen() - force refresh for SimPin SimPuk");
+            } else {
+                return;
+            }
+        }
 
         KeyguardSecurityView oldView = getSecurityView(mCurrentSecuritySelection);
         KeyguardSecurityView newView = getSecurityView(securityMode);

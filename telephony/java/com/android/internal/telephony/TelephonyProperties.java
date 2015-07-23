@@ -209,4 +209,21 @@ public interface TelephonyProperties
      * Set to the sim count.
      */
     static final String PROPERTY_SIM_COUNT = "ro.telephony.sim.count";
+
+    /**
+     * gsm.simmanager.set_off_sim%d with slot id 0+1 or 1+1
+     */
+    static final String PROPERTY_SIM_OFF = "gsm.simmanager.set_off_sim";
+
+    /**
+     * Bypass SIM PIN.
+     */
+    static final String PROPERTY_SIM_PIN_BYPASS = "gsm.sim.bypass_pin";
+    static final String PROPERTY_SIM_PIN_BYPASS_YES = "1";
+    static final String PROPERTY_SIM_PIN_BYPASS_NO = "0";
+
+    /**
+     * The maximum times the user can retry the PIN before blocked
+     */
+    static String PROPERTY_SIM_PIN_RETRY_LEFT = "gsm.sim.pin_retry_left";
 }

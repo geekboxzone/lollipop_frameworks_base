@@ -1235,7 +1235,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
     public boolean isSimPinSecure() {
         // True if any SIM is pin secure
         for (SubscriptionInfo info : getSubscriptionInfo(false /* forceReload */)) {
-            if (isSimPinSecure(getSimState(info.getSubscriptionId()))) return true;
+            if (isSimPinSecure(info.getSubscriptionId())) return true;
         }
         return false;
     }
@@ -1278,6 +1278,17 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
             changed = true; // no data yet; force update
         }
         return changed;
+    }
+
+    public boolean isSimPinSecure(int subId) {
+        // return false if user bypasses sim pin explicitly
+        if (mContext.getResources().getBoolean(com.android.internal.R.bool.config_imc_feature_skip_sim_pin)
+                && SubscriptionManager.isValidSubscriptionId(subId)
+                && TelephonyManager.isBypassSimPinSet(SubscriptionManager.getSlotId(subId))) {
+            if (DEBUG) Log.d(TAG, "isBypassSimPinSet(" + subId + ") set, isSimPinSecure return false");
+            return false;
+        }
+        return isSimPinSecure(getSimState(subId));
     }
 
     public static boolean isSimPinSecure(IccCardConstants.State state) {
@@ -1324,7 +1335,8 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener {
             final SubscriptionInfo info = list.get(i);
             final int id = info.getSubscriptionId();
             int slotId = SubscriptionManager.getSlotId(id);
-            if (state == getSimState(id) && bestSlotId > slotId ) {
+            if (state == getSimState(id) && bestSlotId > slotId
+                    && !(state.isPinLocked() && TelephonyManager.isBypassSimPinSet(slotId))) {
                 resultId = id;
                 bestSlotId = slotId;
             }

@@ -404,4 +404,10 @@ public class TelephonyIntents {
             "intel.intent.action.MODEM_FAST_OOS_IND";
 
     public static final String EXTRA_TOOS_STATE = "state";
+
+    /**
+     * Activity Action: to show PIN-PUK UI.
+     * @hide
+     **/
+    public static final String ACTION_SHOW_PIN_PUK = "com.imc.intent.action.SHOW_PIN_PUK";
 }

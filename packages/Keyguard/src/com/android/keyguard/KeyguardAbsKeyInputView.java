@@ -198,5 +198,9 @@ public abstract class KeyguardAbsKeyInputView extends LinearLayout
     public boolean startDisappearAnimation(Runnable finishRunnable) {
         return false;
     }
+
+    public void cancelUnlock() {
+        mCallback.dismiss(true);
+    }
 }
 
