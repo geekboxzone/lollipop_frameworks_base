@@ -399,7 +399,7 @@ public class NetworkControllerImpl extends BroadcastReceiver
             }
         } else if (action.equals(TelephonyIntents.ACTION_SIM_STATE_CHANGED)) {
             // Might have different subscriptions now.
-            updateMobileControllers();
+            //updateMobileControllers();
         } else if(action.equals(EthernetManager.ETHERNET_STATE_CHANGED_ACTION)) {
             updateEthernetState(intent);
             Log.e(TAG, "onReceive ETHERNET_STATE_CHANGED_ACTION ");
@@ -501,7 +501,9 @@ public class NetworkControllerImpl extends BroadcastReceiver
             int subId = subscriptions.get(i).getSubscriptionId();
             // If we have a copy of this controller already reuse it, otherwise make a new one.
             if (cachedControllers.containsKey(subId)) {
-                mMobileSignalControllers.put(subId, cachedControllers.remove(subId));
+                MobileSignalController cachedController = cachedControllers.remove(subId);
+                mMobileSignalControllers.put(subId, cachedController);
+                cachedController.notifyListeners();
             } else {
                 MobileSignalController controller = new MobileSignalController(mContext, mConfig,
                         mHasMobileDataFeature, mPhone, mSignalsChangedCallbacks, mSignalClusters,
