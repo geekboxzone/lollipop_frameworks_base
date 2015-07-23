@@ -471,17 +471,6 @@ public class NetworkControllerImpl extends BroadcastReceiver
     @VisibleForTesting
     protected void updateNoSims() {
         boolean hasNoSims = mHasMobileDataFeature && mMobileSignalControllers.size() == 0;
-        if (hasNoSims) {
-            // Boot up camp NW performance:
-            // if hasSims but subInfo not ready yet, mMobileSignalControllers.size() == 0 but hasIccCard.
-            // double check to notifyListeners sim present as earlier as possible
-            for (int i = 0; i < TelephonyManager.getDefault().getPhoneCount(); i++) {
-                if (mPhone.hasIccCard(i)) {
-                    hasNoSims = false;
-                    break;
-                }
-            }
-        }
         if (hasNoSims != mHasNoSims) {
             mHasNoSims = hasNoSims;
             notifyListeners();
