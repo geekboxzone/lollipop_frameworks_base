@@ -424,6 +424,7 @@ private:
 
     bool mUse;
     bool mInitialized;
+    bool mLoadbinary;
 
     // Uniforms caching
     bool mHasColorUniform;

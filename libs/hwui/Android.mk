@@ -92,7 +92,9 @@ ifeq ($(USE_OPENGL_RENDERER),true)
 			frameworks/rs/cpp \
 			frameworks/rs
 	endif
-
+	ifeq ($(strip $(TARGET_BOARD_PLATFORM)),sofia3gr)
+	LOCAL_CFLAGS += -DUSE_X86
+	endif
 	ifndef HWUI_COMPILE_SYMBOLS
 		LOCAL_CFLAGS += -fvisibility=hidden
 	endif
