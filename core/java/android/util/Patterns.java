@@ -115,7 +115,7 @@ public class Patterns {
      * Specifically, those two byte Unicode characters are not included.
      */
     public static final String GOOD_IRI_CHAR =
-        "a-zA-Z0-9\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF";
+        "a-zA-Z0-9\u00A0-\u4E00\u9FA5-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF";
 
     public static final Pattern IP_ADDRESS
         = Pattern.compile(
@@ -131,7 +131,7 @@ public class Patterns {
         = "[" + GOOD_IRI_CHAR + "]([" + GOOD_IRI_CHAR + "\\-]{0,61}[" + GOOD_IRI_CHAR + "]){0,1}";
 
     private static final String GOOD_GTLD_CHAR =
-        "a-zA-Z\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF";
+        "a-zA-Z\u00A0-\u4E00\u9FA5-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF";
     private static final String GTLD = "[" + GOOD_GTLD_CHAR + "]{2,63}";
     private static final String HOST_NAME = "(" + IRI + "\\.)+" + GTLD;
 
@@ -151,7 +151,7 @@ public class Patterns {
         + "(?:\\:\\d{1,5})?)" // plus option port number
         + "(\\/(?:(?:[" + GOOD_IRI_CHAR + "\\;\\/\\?\\:\\@\\&\\=\\#\\~"  // plus option query params
         + "\\-\\.\\+\\!\\*\\'\\(\\)\\,\\_])|(?:\\%[a-fA-F0-9]{2}))*)?"
-        + "(?:\\b|$)"); // and finally, a word boundary or end of
+        + "(?:\\b|$)?"); // and finally, a word boundary or end of
                         // input.  This is to stop foo.sure from
                         // matching as foo.su
 
