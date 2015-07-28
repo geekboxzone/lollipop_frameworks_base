@@ -54,6 +54,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import  java.io.File;
 
 /**
  * Startup class for the zygote process.
@@ -72,6 +73,8 @@ public class ZygoteInit {
 
     private static final String PROPERTY_DISABLE_OPENGL_PRELOADING = "ro.zygote.disable_gl_preload";
     private static final String PROPERTY_FIRST_TIME_BOOTING = "persist.sys.first_booting";
+
+	private static final String CHECK_OTA_BOOTING = "/cache/recovery/last_ota_flag";
 
     private static final String ANDROID_SOCKET_PREFIX = "ANDROID_SOCKET_";
 
@@ -251,7 +254,33 @@ public class ZygoteInit {
             Log.e(TAG, "setregid() failed. errno: " + errno);
         }
     }
+	/*
+	*	sometimes ota update system resource,and this op need preload resource at ota firt booting.
+	*/
 
+	static boolean checkIsOtaBoot(){
+		 try  
+        {  
+            File f = new File(CHECK_OTA_BOOTING);  
+            if(!f.exists())  
+            {  
+				Log.e(TAG, "checkIsOtaBoot result: this time is a normal booting" );
+				return false;  
+            }  
+			
+			f.delete();
+  
+        }  
+        catch (Exception e)  
+        {  
+            return false;  
+        }  
+
+		Log.e(TAG, "checkIsOtaBoot result: this time is a ota booting, delete the ota flag file" );
+        return true;  
+		
+	}
+	
     static void preload() {
         Log.d(TAG, "begin preload");
         preloadClasses();
@@ -693,7 +722,8 @@ public class ZygoteInit {
             // Finish profiling the zygote initialization.
             boolean isFirstBooting = false;
             //if first time booting or zygote restart or data encrypted,we need preload full class
-            if(Process.myPid() > 300 || SystemProperties.getBoolean(PROPERTY_FIRST_TIME_BOOTING, true)|| SystemProperties.get("ro.crypto.state").equals("encrypted")){
+            //add ota booting check, sometimes ota could add more resource. 
+            if(Process.myPid() > 300 || checkIsOtaBoot()||SystemProperties.getBoolean(PROPERTY_FIRST_TIME_BOOTING, true)|| SystemProperties.get("ro.crypto.state").equals("encrypted")){
             	EventLog.writeEvent(LOG_BOOT_PROGRESS_PRELOAD_START,
             		SystemClock.uptimeMillis());
                 preload();
