@@ -26,7 +26,7 @@
 #include <cutils/properties.h> 
 
 #define MaxHasList    20
-#ifdef USE_X86
+#ifdef USE_X86 
 #define BuildShaderOPT      1
 #endif
 #define DEBUG_INFO_OPT      0
@@ -37,7 +37,7 @@ unsigned int ghashlist[MaxHasList] ={1533734761,1850271742,2045591190,3195415028
                                      2036775216,4152780369,2218586390,482269496,1110924158,
                                      0,0,0,0,0,
                                      0,0,0,0,0,};
-
+  
 typedef struct _HashManager
 {
     unsigned int hash;
@@ -251,8 +251,11 @@ Program::Program(const ProgramDescription& description, const char* vertex, cons
     shctl = atoi(value);    
     gettimeofday(&tpend1, NULL);
 #endif   
-    
+
+#if BuildShaderOPT    
     hname = (char*)malloc(len + 1);
+#endif    
+
     if(hname)
     {
         FILE * pfile = NULL;
@@ -261,7 +264,6 @@ Program::Program(const ProgramDescription& description, const char* vertex, cons
         strcat(hname,fragment);
         
         hash = JenkinsHashMixBytes(0, (uint8_t*)hname, len);
-#if BuildShaderOPT
         for(int i = 0;i < MaxHasList;i++)
         {
             if(hash == ghashlist[i])
@@ -270,11 +272,10 @@ Program::Program(const ProgramDescription& description, const char* vertex, cons
                 break;
             }    
         }
-#endif        
         
 #if DEBUG_INFO_OPT            
         ALOGD("hwui_debug hash=%u,hashMatched=%d",hash,hashMatched);
-        //hashMatched = shctl;
+       // hashMatched = shctl;
 #endif        
         free(hname);
         sprintf(layername, "/data/hwuihas/%u.bin",hash); 
