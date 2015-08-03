@@ -41,7 +41,6 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView
     private View mButton7;
     private View mButton8;
     private View mButton9;
-    private View mCancelButton;
 
     public KeyguardPinBasedInputView(Context context) {
         this(context, null);
@@ -165,23 +164,6 @@ public abstract class KeyguardPinBasedInputView extends KeyguardAbsKeyInputView
                 }
             });
             mOkButton.setOnHoverListener(new LiftToActivateListener(getContext()));
-        }
-
-        mCancelButton = findViewById(R.id.key_cancel);
-        if (mCancelButton != null) {
-            if (getContext().getResources().getBoolean(com.android.internal.R.bool.config_imc_feature_skip_sim_pin)) {
-                mCancelButton.setVisibility(View.VISIBLE);
-                mCancelButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        doHapticKeyClick();
-                        cancelUnlock();
-                    }
-                });
-                mCancelButton.setOnHoverListener(new LiftToActivateListener(getContext()));
-            } else {
-                mCancelButton.setVisibility(View.INVISIBLE);
-            }
         }
 
         mDeleteButton = findViewById(R.id.delete_button);

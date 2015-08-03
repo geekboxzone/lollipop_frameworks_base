@@ -296,25 +296,5 @@ public class KeyguardSimPinView extends KeyguardPinBasedInputView {
     public boolean startDisappearAnimation(Runnable finishRunnable) {
         return false;
     }
-
-    @Override
-    public void cancelUnlock() {
-        int slotId = SubscriptionManager.getSlotId(mSubId);
-        if (!SubscriptionManager.isValidSlotId(slotId)) {
-            Log.e(TAG, "cancelUnlock() - invalid slot id found! mSubId=" + mSubId
-                       + ", slotId=" + slotId);
-            return;
-        }
-
-        try {
-            ITelephony.Stub.asInterface(ServiceManager.checkService(Context.TELEPHONY_SERVICE))
-                    .setBypassSimPin(slotId, true);
-        } catch(RemoteException e) {
-            Log.e(TAG, "failed to bypass sim pin", e);
-            return;
-        }
-
-        super.cancelUnlock();
-    }
 }
 

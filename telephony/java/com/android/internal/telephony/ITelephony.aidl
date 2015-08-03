@@ -879,24 +879,4 @@ interface ITelephony {
       *   {@link android.Manifest.permission#READ_PHONE_STATE READ_PHONE_STATE}
       */
     String getDeviceId();
-
-    /**
-     * Check if SIM enabled or not
-     */
-    boolean isSimOff(int slotId);
-
-    /**
-     * Set SIM enabled or disabled
-     */
-    void setSimOff(int slotId, boolean enable);
-
-    /**
-     * Set the flag if it requires user to unlock sim pin.
-     *
-     * Use Telephonymanager.isBypassSimPinSet() to check the settings.
-     *
-     * @param slotId which slot to set, INVALID_SIM_SLOT_INDEX - 1 for all slots
-     * @param bypass true to bypass sim pin
-     */
-    void setBypassSimPin(int slotId, boolean bypass);
 }
