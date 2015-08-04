@@ -439,7 +439,12 @@ public class AssetAtlasService extends IAssetAtlas.Stub {
             Log.d(LOG_TAG, String.format("Found best atlas configuration in %.2fs", delay));
         }
 
-        WorkerResult result = results.get(0);
+        WorkerResult result;
+        if(results !=  null && results.size() != 0)
+            result = results.get(0);
+        else
+            return null;
+
         return new Configuration(result.type, result.width, result.height, result.count);
     }
 
