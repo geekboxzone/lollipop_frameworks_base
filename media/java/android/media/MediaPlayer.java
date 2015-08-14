@@ -605,7 +605,7 @@ public class MediaPlayer implements SubtitleController.Listener
     private boolean mScreenOnWhilePlaying;
     private boolean mStayAwake;
     private final IAppOpsService mAppOps;
-    private static MediaPlayerSubTitle mMediaPlayerSubTitle=null;
+    private MediaPlayerSubTitle mMediaPlayerSubTitle=null;
     private int mStreamType = AudioManager.USE_DEFAULT_STREAM_TYPE;
     private int mUsage = -1;
 
@@ -1610,7 +1610,7 @@ public class MediaPlayer implements SubtitleController.Listener
         return false;
     }
 
-    public boolean useFrameworkSubtitle(){
+    public static boolean useFrameworkSubtitle(){
         if ("box".equals(android.os.SystemProperties.get("ro.target.product",  "unknown"))){
             //box use framework subtitle default
             Log.d(TAG, "perperty[ro.target.product]=box  ------------------->     box use framework external subtitle default");
@@ -1681,9 +1681,15 @@ public class MediaPlayer implements SubtitleController.Listener
      * @return true if the parameter is set successfully, false otherwise
      * {@hide}
      */
+    private final static int KEY_PARAMETER_SET_SUBTITLE_OFFSET=2002;
     public boolean setParameter(int key, int value) {
         Parcel p = Parcel.obtain();
         p.writeInt(value);
+
+         //$_media_$_modify_$_Martin.Cheng@rock-chips.com
+        if((KEY_PARAMETER_SET_SUBTITLE_OFFSET==key)&&(mMediaPlayerSubTitle!=null)){
+            mMediaPlayerSubTitle.setSubtitleOffset(value);
+        }
         boolean ret = setParameter(key, p);
         p.recycle();
         return ret;
@@ -1955,7 +1961,7 @@ public class MediaPlayer implements SubtitleController.Listener
             mTrackType = in.readInt();
             // TODO: parcel in the full MediaFormat
             String language = in.readString();
-            if(mMediaPlayerSubTitle != null){
+            if(useFrameworkSubtitle()){
               switch(mTrackType){
                 case MEDIA_TRACK_TYPE_TIMEDTEXT:
                     Log.e(TAG, "parcel --> MEDIA_TRACK_TYPE_TIMEDTEXT");
