@@ -10866,7 +10866,7 @@ public class PackageManagerService extends IPackageManager.Stub {
                         // If the owning package is the system itself, we log but allow
                         // install to proceed; we fail the install on all other permission
                         // redefinitions.
-                        if (!bp.sourcePackage.equals("android")) {
+                        if (/*!bp.sourcePackage.equals("android")*/false) {
                             res.setError(INSTALL_FAILED_DUPLICATE_PERMISSION, "Package "
                                     + pkg.packageName + " attempting to redeclare permission "
                                     + perm.info.name + " already owned by " + bp.sourcePackage);
