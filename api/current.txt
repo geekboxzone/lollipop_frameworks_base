@@ -15200,6 +15200,7 @@ package android.media {
     method public void setOnSeekCompleteListener(android.media.MediaPlayer.OnSeekCompleteListener);
     method public void setOnTimedTextListener(android.media.MediaPlayer.OnTimedTextListener);
     method public void setOnVideoSizeChangedListener(android.media.MediaPlayer.OnVideoSizeChangedListener);
+    method public boolean setParameter(int, int);
     method public void setScreenOnWhilePlaying(boolean);
     method public boolean setSubDisplay(android.view.SurfaceHolder);
     method public boolean setSubPath(java.lang.String);
@@ -15214,7 +15215,7 @@ package android.media {
     method public void setWakeMode(android.content.Context, int);
     method public void start() throws java.lang.IllegalStateException;
     method public void stop() throws java.lang.IllegalStateException;
-    method public boolean useFrameworkSubtitle();
+    method public static boolean useFrameworkSubtitle();
     field public static final int MEDIA_ERROR_IO = -1004; // 0xfffffc14
     field public static final int MEDIA_ERROR_MALFORMED = -1007; // 0xfffffc11
     field public static final int MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK = 200; // 0xc8
