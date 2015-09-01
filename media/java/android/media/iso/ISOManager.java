@@ -54,6 +54,14 @@ public class ISOManager
 	public static final int SKIP_CURRENT_CONTEXT = OPERATE_BASE+22;
 	public static final int PLAY_SEEK_TIME_PLAY = OPERATE_BASE+23;
 	public static final int PLAY_QUERY_NAVIGATION_MENU = OPERATE_BASE+24;
+	public static final int QUERY_ISO = OPERATE_BASE+25;
+	public static final int GET_CHAPTER_TIME_POS = OPERATE_BASE+26;
+	public static final int GET_NUMBER_OF_PLAYLIST = OPERATE_BASE+27;
+	public static final int GET_CURRENT_PLAYLIST = OPERATE_BASE+28;
+	public static final int GET_LENGTH_OF_PLAYLIST = OPERATE_BASE+29;
+	public static final int SET_PLAY_PLAYLIST = OPERATE_BASE+30;
+	
+	
 	public static final int SURFACE_SHOW = 1;
 	public static final int SURFACE_HIDE = 0;
 	public static final int BUTTON_MOVE_UP = 0;  
@@ -429,7 +437,18 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(PLAY_CHAPTER,chapter);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+		            request.writeInt(PLAY_CHAPTER);
+			        request.writeInt(chapter);
+		            mMediaPlayer.invoke(request, reply);
+			        int result = reply.readInt();
+					return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return false;
@@ -533,6 +552,109 @@ public class ISOManager
 		}
 
 		return 0;
+	}
+		
+	public int getChapterPos(int index)
+	{
+		if(mMediaPlayer != null)
+		{
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+		            request.writeInt(GET_CHAPTER_TIME_POS);
+					request.writeInt(index);
+		            mMediaPlayer.invoke(request, reply);
+					int result = reply.readInt();
+					return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
+		}
+		
+		return -1;
+	}
+	
+	public int getNumberOfPlaylist()
+	{
+		if(mMediaPlayer != null)
+		{
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+		            request.writeInt(GET_NUMBER_OF_PLAYLIST);
+		            mMediaPlayer.invoke(request, reply);
+			        int result = reply.readInt();
+			        return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
+		}
+		
+		return 0;
+	}
+	
+	public int getCurrentPlaylist()
+	{
+		if(mMediaPlayer != null)
+		{
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				    request.writeInt(GET_CURRENT_PLAYLIST);
+		            mMediaPlayer.invoke(request, reply);
+			        int result = reply.readInt();
+			        return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
+		}
+		
+		return -1;
+	}
+	
+	public int getPlaylistLength(int  index)
+	{
+		if(mMediaPlayer != null)
+		{
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+		            request.writeInt(GET_LENGTH_OF_PLAYLIST);
+			        request.writeInt(index);
+		            mMediaPlayer.invoke(request, reply);
+			        int result = reply.readInt();
+			        return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
+		}
+		
+		return 0;
+	}
+	
+	public boolean playPlaylist(int index)
+	{
+		if(mMediaPlayer != null)
+		{
+			Parcel request = mMediaPlayer.newRequest();;
+			Parcel reply = Parcel.obtain();
+			try {
+		            request.writeInt(SET_PLAY_PLAYLIST);
+		            request.writeInt(index);
+		            mMediaPlayer.invoke(request, reply);
+			        int result = reply.readInt();
+			        return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
+		}
+		
+		return false;
 	}
 }
 
