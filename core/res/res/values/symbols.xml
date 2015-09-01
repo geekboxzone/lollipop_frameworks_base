@@ -2108,6 +2108,11 @@
    <java-symbol type="string" name="storage_usb3"/>
    <java-symbol type="string" name="storage_usb4"/>
    <java-symbol type="string" name="storage_usb5"/>
+<java-symbol type="string" name="storage_usb6"/>
+<java-symbol type="string" name="storage_usb7"/>
+<java-symbol type="string" name="storage_usb8"/>
+<java-symbol type="string" name="storage_usb9"/>
+<java-symbol type="string" name="storage_usb10"/>
 <!--$_rbox_$_modify_$_end-->
 
   <java-symbol type="attr" name="nestedScrollingEnabled" />

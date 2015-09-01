@@ -5284,6 +5284,11 @@
     <string name="storage_usb3">USB storage 3</string>
     <string name="storage_usb4">USB storage 4</string>
     <string name="storage_usb5">USB storage 5</string>
+    <string name="storage_usb6">USB storage 6</string>
+	<string name="storage_usb7">USB storage 7</string>
+<string name="storage_usb8">USB storage 8</string>
+<string name="storage_usb9">USB storage 9</string>
+<string name="storage_usb10">USB storage 10</string>
 <!--$_rbox_$_modify_$_end-->
 
 	<string name="reboot">Reboot</string>
