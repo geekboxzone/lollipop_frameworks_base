@@ -283,14 +283,14 @@
         <item name="android:alertDialogTheme">@style/Theme.SystemUI.Dialog.Alert</item>
     </style>
 
-    <style name="TextAppearance.StatusBar.SimSwitchNotification"
-        parent="@*android:style/TextAppearance.StatusBar">
-        <item name="android:textSize">14dp</item>
-    </style>
     <style name="FullHeightDialog" parent="android:Theme.Dialog">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowFrame">@null</item>
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>
+ </style>
+    <style name="TextAppearance.StatusBar.SimSwitchNotification"
+        parent="@*android:style/TextAppearance.StatusBar">
+        <item name="android:textSize">14dp</item>
     </style>
 </resources>

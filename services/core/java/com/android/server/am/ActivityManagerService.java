@@ -237,7 +237,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import android.app.KeyguardManager;
-
 public final class ActivityManagerService extends ActivityManagerNative
         implements Watchdog.Monitor, BatteryStatsImpl.BatteryCallback {
 
@@ -9972,7 +9971,6 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
 
     // =========================================================
     // GLOBAL MANAGEMENT
-    // =========================================================
 
     final ProcessRecord newProcessRecordLocked(ApplicationInfo info, String customProcess,
             boolean isolated, int isolatedUid) {

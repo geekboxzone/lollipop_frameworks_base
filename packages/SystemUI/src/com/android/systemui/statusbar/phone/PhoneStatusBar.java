@@ -6809,4 +6809,7 @@ private String appclosename = null;
 		Settings.System.putString(mContext.getContentResolver(),
 				Settings.System.MULTI_WINDOW_OPERATION, clickAction);
 	}
+  
+
+
 }
