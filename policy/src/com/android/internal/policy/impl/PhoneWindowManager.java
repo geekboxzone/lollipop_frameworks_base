@@ -152,12 +152,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 	}
     static final boolean DEBUG = false;
     static final boolean localLOGV = false;
-    static final boolean DEBUG_INPUT = true;
-    static final boolean DEBUG_KEYGUARD = true;
-    static final boolean DEBUG_LAYOUT = true;
+    static final boolean DEBUG_INPUT = false;
+    static final boolean DEBUG_KEYGUARD = false;
+    static final boolean DEBUG_LAYOUT = false;
     static final boolean DEBUG_STARTING_WINDOW = false;
     static final boolean DEBUG_WAKEUP = false;
-    static final boolean SHOW_STARTING_ANIMATIONS = true;
+    static final boolean SHOW_STARTING_ANIMATIONS = false;
     static final boolean SHOW_PROCESSES_ON_ALT_MENU = false;
 
     // Whether to allow dock apps with METADATA_DOCK_HOME to temporarily take over the Home key.
@@ -1417,7 +1417,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                             requestTransientBars(mStatusBar);
                         }
                         //$_rbox_$_modify_$_huangjc begin, add bar interface
-                        //   addBar();
+                           addBar();
                           //$_rbox_$_modify_$_huangjc end
                     }
                     @Override
@@ -4184,7 +4184,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                     }
 
                     if ((fl & FLAG_FULLSCREEN) == 0) {
-			Log.e(TAG, "------------------------------------------------------------- 3" + attrs.getTitle());
+			//Log.e(TAG, "------------------------------------------------------------- 3" + attrs.getTitle());
                         if (win.isVoiceInteraction()) {
                             cf.left = mVoiceContentLeft;
                             cf.top = mVoiceContentTop;
@@ -4204,7 +4204,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                             }
                         }
                     } else {
-			Log.e(TAG, "------------------------------------------------------------- 4" + attrs.getTitle());
+			//Log.e(TAG, "------------------------------------------------------------- 4" + attrs.getTitle());
                         // Full screen windows are always given a layout that is as if the
                         // status bar and other transient decors are gone.  This is to avoid
                         // bad states when moving from a window that is not hding the
@@ -4214,9 +4214,9 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         cf.right = mRestrictedScreenLeft + mRestrictedScreenWidth;
                         //cf.bottom = mRestrictedScreenTop + mRestrictedScreenHeight;
                     }
-		    Log.e(TAG, "------------------------------------------------------------- 4.5" + attrs.getTitle() + ", cf = " + cf);
+		    //Log.e(TAG, "------------------------------------------------------------- 4.5" + attrs.getTitle() + ", cf = " + cf);
                     applyStableConstraints(sysUiFl, fl, cf);
-		    Log.e(TAG, "------------------------------------------------------------- 5" + attrs.getTitle() + ", cf = " + cf);
+		    //Log.e(TAG, "------------------------------------------------------------- 5" + attrs.getTitle() + ", cf = " + cf);
                     if (adjust != SOFT_INPUT_ADJUST_NOTHING && (sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0) {
                         vf.left = mCurLeft;
                         vf.top = mCurTop;
@@ -4224,7 +4224,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         vf.bottom = mCurBottom;
                     } else {
                         vf.set(cf);
-		    Log.e(TAG, "------------------------------------------------------------- 6" + attrs.getTitle() + ", cf = " + cf);
+		    //Log.e(TAG, "------------------------------------------------------------- 6" + attrs.getTitle() + ", cf = " + cf);
                     }
                 }
             } else if (!topIsMultiWindow && ((fl & FLAG_LAYOUT_IN_SCREEN) != 0 || (sysUiFl
@@ -4403,7 +4403,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // TYPE_SYSTEM_ERROR is above the NavigationBar so it can't be allowed to extend over it.
         if ((fl & FLAG_LAYOUT_NO_LIMITS) != 0 && attrs.type != TYPE_SYSTEM_ERROR) {
-			Log.e(TAG, "------------------------------------------------------------- no limit " + attrs.getTitle());
+			//Log.e(TAG, "------------------------------------------------------------- no limit " + attrs.getTitle());
             df.left = df.top = -10000;
             df.right = df.bottom = 10000;
             if (attrs.type != TYPE_WALLPAPER) {

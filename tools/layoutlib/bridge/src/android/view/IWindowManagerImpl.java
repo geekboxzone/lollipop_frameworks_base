@@ -517,4 +517,10 @@ public class IWindowManagerImpl implements IWindowManager {
    public void setJoyStick(int index, int[] postion, int[] size){
    }
    //$_rbox_$_modify_$_end
+   
+   //$_rockchip_$_modify_$_huangjc begin,add show/hide TitleBar interface for statusbar
+   @Override
+   public void changeTitleBar(boolean isShow){
+   }
+   //$_rockchip_$_modify_$_end
 }

@@ -1559,7 +1559,7 @@ final Object mScreenshotLock = new Object();
 		mNavigationBarView.getHomeButton().setLongClickable(true);
         mNavigationBarView.getHomeButton().setOnLongClickListener(mLongPressBackRecentsListener);
         updateSearchPanel();
-        if("true".equals(SystemProperties.get("sys.status.hidebar_enable","false")))
+        if("true".equals(SystemProperties.get("sys.status.hidebar_enable","false"))||mContext.getResources().getConfiguration().enableMultiWindow())
          {
             mNavigationBarView.getHidebarButton().setVisibility(View.VISIBLE);
          }else{
@@ -1610,6 +1610,39 @@ final Object mScreenshotLock = new Object();
 					return false;
 				}});
 		if(mAppsGridView !=null){
+			if(appslist.size()>0){
+				LOGD("wintask:reload mAppsGridView");
+				listadapter=new SimpleAdapter(mContext, appslist, R.layout.gridview_item, new String[]{"icon","packagename"}, new int []{R.id.mAppsImage,R.id.mAppsText}); 
+						listadapter.setViewBinder(new ViewBinder(){ 
+						public boolean setViewValue(View view,Object data,String textRepresentation){ 
+						if(view instanceof ImageView && data instanceof Drawable){ 
+						ImageView iv=(ImageView)view; 
+						iv.setImageDrawable((Drawable)data); 
+						return true; 
+						} 
+						else 
+						return false; 
+						} 
+						});
+						
+						mAppsGridView.setAdapter(listadapter);//
+						LinearLayout.LayoutParams params;
+								 if(mDisplayMetrics.densityDpi > 160){
+									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (120+10),
+									LayoutParams.WRAP_CONTENT);
+								 mAppsGridView.setColumnWidth(120); 
+								 }else{
+									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (60+10),
+														LayoutParams.WRAP_CONTENT);
+												 mAppsGridView.setColumnWidth(60);
+								 }
+										 mAppsGridView.setLayoutParams(params);
+								 mAppsGridView.setHorizontalSpacing(10);
+								 mAppsGridView.setStretchMode(GridView.NO_STRETCH);
+								 //mAppsGridView.setSelector(R.drawable.bg_item_taskbar);
+						 mAppsGridView.setNumColumns(listadapter.getCount());
+
+			}
 			mAppsGridView.setOnItemClickListener(mWinItemClickListener);
             mAppsGridView.setOnItemLongClickListener(mWinItemLongClickListener);
 			mAppsGridView.setOnGenericMotionListener(mWinItemOnGenericMotionListener);
@@ -2307,6 +2340,7 @@ private String appclosename = null;
         private void addBarInside(){
                 if (!mBarIsAdd){
                         Log.d(TAG,"add Bar");
+
             
           try {
             boolean showNav = mWindowManagerService.hasNavigationBar();
@@ -2314,6 +2348,13 @@ private String appclosename = null;
             if (showNav) {
             	//haungjc:win bar
             	if(mContext.getResources().getConfiguration().enableMultiWindow()){
+					//$_rockchip_$_modify_$_huangjc begin,add show/hide TitleBar interface for statusbar
+					try {
+			            mWindowManagerService.changeTitleBar(true);
+			        } catch (RemoteException e) {
+			            Log.w(TAG, "Error changeTitleBar transition: " + e);
+			        }
+					//$_rockchip_$_modify_$_end
             		mNavigationBarView =
                     (NavigationBarView) View.inflate(mContext, R.layout.navigation_bar_win, null);
               }else{
@@ -2349,6 +2390,8 @@ private String appclosename = null;
                                 mWindowManager.addView(mStatusBarWindow,
                                       (WindowManager.LayoutParams) mStatusBarWindow.getLayoutParams());
                      */
+                     if (mStatusBarWindow != null)
+					 	  mStatusBarWindow.setVisibility(View.VISIBLE);
                         mBarIsAdd = true;
                 }
         }
@@ -2356,11 +2399,21 @@ private String appclosename = null;
         private void removeBar(){
                 if (mBarIsAdd){
                         Log.d(TAG,"remove Bar");
+
+					//$_rockchip_$_modify_$_huangjc begin,add show/hide TitleBar interface for statusbar
+					if(mContext.getResources().getConfiguration().enableMultiWindow()){
+						try {
+				            mWindowManagerService.changeTitleBar(false);
+				        } catch (RemoteException e) {
+				            Log.w(TAG, "Error changeTitleBar transition: " + e);
+				        }
+						}
+					//$_rockchip_$_modify_$_end
                         if (mNavigationBarView != null)
                                 mWindowManager.removeViewImmediate(mNavigationBarView);
-                       /* if (mStatusBarWindow != null)
-                                mWindowManager.removeView(mStatusBarWindow);
-                       */
+                       
+                       if (mStatusBarWindow != null)
+					 	  mStatusBarWindow.setVisibility(View.GONE);
                         mBarIsAdd = false;
                         if(!isMultiChange)
                         Toast.makeText(mContext, mContext.getResources().getString(R.string.hidebar_msg)

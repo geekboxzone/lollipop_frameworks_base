@@ -83,7 +83,7 @@ class WindowList extends ArrayList<WindowState> {
 public final class WindowState implements WindowManagerPolicy.WindowState {
     static final String TAG = "WindowState";
 
-    static final boolean DEBUG_ZJY = true;
+    static final boolean DEBUG_ZJY = false;
 	void LOGD(String msg){
 		if(DEBUG_ZJY){
 			Log.d(TAG,"~~~~~~~~~~~~~~~~~~~~~~"+msg);
@@ -416,7 +416,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 		mSurfaceFrame.left = (int)(mPosX+mSfOffsetX);
 		mSurfaceFrame.top = (int)(mPosY+mSfOffsetY);
 		taskId = a.taskId;
-		if( (mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) &&mAttrs.x==440 ){
+		if( (mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) ){
 			mPosX = mAttrs.x;
 			mPosY = mAttrs.y;
 			LOGD("----------------------mViewVisibility:"+mViewVisibility+",mAttrs:"+mAttrs);

@@ -56,13 +56,12 @@
                 android:scaleType="centerInside"
                 android:layout_weight="0"
                 />
-             <!--$_rbox_$_modify_$_huangjc_begin-->
-               <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/hide_bar"
-               android:layout_width="20dp"
+               <View
+                android:layout_width="20dp"
                 android:layout_height="match_parent"
-                android:src="@drawable/ic_sysbar_hide"
                 android:layout_weight="0"
-                android:contentDescription="@string/accessibility_recent"
+                android:layout_marginStart="0dp"
+                android:visibility="invisible"
                 />
              
             <ImageButton
@@ -93,7 +92,7 @@
                 />
              <LinearLayout 
                android:orientation="vertical" 
-               android:layout_width="750dp"
+               android:layout_width="740dp"
                android:layout_height="match_parent">
             <HorizontalScrollView 
                        android:id="@+id/mAppsScrollView"
@@ -175,13 +174,21 @@
                 android:visibility="invisible"
                 systemui:keyCode="24"
                 />
+            <!--$_rbox_$_modify_$_huangjc_begin-->
+               <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/hide_bar"
+               android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_sysbar_hide"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                />
             <!--Space 
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 /-->
             <FrameLayout
-                android:layout_width="50dp"
+                android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:layout_marginEnd="2dp" >
@@ -206,11 +213,11 @@
                     android:contentDescription="@string/accessibility_ime_switch_button" />
             </FrameLayout>
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
-                android:layout_width="84dp"
+                android:layout_width="64dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/capture"
                 android:layout_marginRight="0dp"
-                android:layout_marginStart="2dp"
+                android:layout_marginStart="-10dp"
                    android:layout_weight="0"
                 android:visibility="invisible"
                    android:contentDescription="@string/accessibility_recent"

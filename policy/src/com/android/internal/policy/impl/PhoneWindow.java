@@ -166,8 +166,8 @@ import com.android.multiwindow.policy.MultiWindowUtil;
 public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
     private final static String TAG = "PhoneWindow";
-	private final boolean DEBUG =true;
-	private static final boolean DEBUG_ROTATE = true;
+	private final boolean DEBUG =false;
+	private static final boolean DEBUG_ROTATE = false;
 	private static void LOGR(String msg){
 		if(DEBUG_ROTATE){
 			Log.d(TAG, msg);
@@ -210,6 +210,8 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     // This is the view in which the window contents are placed. It is either
     // mDecor itself, or a child of mDecor where the contents go.
     private ViewGroup mContentParent;
+
+	private View mMaxMinGuard;
 
     private ViewGroup mContentRoot;
 
@@ -3832,7 +3834,7 @@ if(mDecorContentParent != null)
 		System.out.println(getAttributes()+"======================!"+getContainer());
 		
 		if (mMultiWindowUtil != null) {
-			mMultiWindowUtil.generateLayout(decor, isAdd, context, in, mLayoutInflater, config);
+			mMaxMinGuard = mMultiWindowUtil.generateLayout(decor, isAdd, context, in, mLayoutInflater, config);
 		}
 		
         mContentRoot = (ViewGroup) in;
@@ -3892,6 +3894,11 @@ if(mDecorContentParent != null)
         return contentParent;
     }
 
+     /** @hide */
+    public View getTitleBarView() {
+        return mMaxMinGuard;
+    }
+	 
     /** @hide */
     public void alwaysReadCloseOnTouchAttr() {
         mAlwaysReadCloseOnTouchAttr = true;

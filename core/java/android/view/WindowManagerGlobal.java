@@ -282,7 +282,7 @@ public final class WindowManagerGlobal {
 			//have not permission WRITE_SETTINGS
 				Log.d(TAG,found+"found="+wparams.getTitle()+"wparams="+wparams);
 
-			   if(parentWindow != null && wparams.align ==WindowManagerPolicy.WINDOW_ALIGN_RIGHT && wparams.taskId == -1
+			   if(parentWindow != null && wparams.align ==WindowManagerPolicy.WINDOW_ALIGN_RIGHT/* && wparams.taskId == -1*/
 				  && wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION){
 				   found = true;
 				   Log.d(TAG,found+"1111found="+wparams.getTitle()+"wparams="+wparams);
@@ -299,10 +299,11 @@ public final class WindowManagerGlobal {
 				    wparams.x = SCREEN_WEITH/2-200;
 				    wparams.y = 50;
 				  
-		            if(!found && wparams.height == -1) {
+		            if(/*!found && */wparams.height == -1) {
 					  wparams.height = SCREE_HEIGHT -50;
 				     }
 				 
+				  Log.d("shenzhicheng",wparams.width+"change the def="+wparams.height);
 				  Log.d(TAG,wparams.width+"change the def="+wparams.height);
 				// wparams.gravity = Gravity.NO_GRAVITY;
 

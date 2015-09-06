@@ -119,7 +119,7 @@ import android.util.Log;
 public final class ActivityStackSupervisor implements DisplayListener {
     static final String TAG = "ActivityStackSupervisor";
     static final boolean DEBUG = ActivityManagerService.DEBUG || false;
-	static final boolean DEBUG_ZJY = true;
+	static final boolean DEBUG_ZJY = false;
     static final boolean DEBUG_ADD_REMOVE = DEBUG || false;
     static final boolean DEBUG_APP = DEBUG || false;
     static final boolean DEBUG_CONTAINERS = DEBUG || false;
@@ -419,7 +419,7 @@ public final class ActivityStackSupervisor implements DisplayListener {
         }
         ActivityStack topStack = stacks.get(topNdx);
         final boolean homeInFront = topStack == mHomeStack;
-		new RuntimeException(topStack+"=="+topNdx).printStackTrace();
+		
         if (homeInFront != toFront) {
             mLastFocusedStack = topStack;
             stacks.remove(mHomeStack);

@@ -100,7 +100,7 @@ import android.provider.Settings;
  * State and management of a single stack of activities.
  */
 final class ActivityStack {
-	static final boolean DEBUG_ZJY = true;
+	static final boolean DEBUG_ZJY = false;
 
     // Ticks during which we check progress while waiting for an app to launch.
     static final int LAUNCH_TICK = 500;

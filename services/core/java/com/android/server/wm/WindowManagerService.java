@@ -175,8 +175,8 @@ import android.app.ActivityManager.RunningServiceInfo;
 public class WindowManagerService extends IWindowManager.Stub
         implements Watchdog.Monitor, WindowManagerPolicy.WindowManagerFuncs ,MWSInterface {
     static final String TAG = "WindowManagerService";
-	static final boolean DEBUG_ZJY = true;
-	static final boolean DEBUG_ZJY_PER = true;
+	static final boolean DEBUG_ZJY = false;
+	static final boolean DEBUG_ZJY_PER = false;
 	void LOGD(String msg){
 		if(DEBUG_ZJY){
 			Log.d(TAG,"@@@@@@@@@@@@@@@"+msg);
@@ -7988,8 +7988,11 @@ public class WindowManagerService extends IWindowManager.Stub
 	            //if(getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
 			  WindowState operationWindowState = windowForClientLocked(session, client, false);
 			  LOGD("current="+operationWindowState);	
-
-			return mMulWindowService.multiWindowMenuOperation(mActivityManager,mTopMultiApp,operationWindowState, mCurConfiguration,operation);
+            int operter = 0;
+			 mTopMultiApp = mMulWindowService.multiWindowMenuOperation(mActivityManager,mTopMultiApp,operationWindowState, mCurConfiguration,operation,operter);
+			 if(mTopMultiApp!=null)
+			 	operter = 1;
+			 return operter;
 		  }
           }
 
@@ -7998,6 +8001,26 @@ public class WindowManagerService extends IWindowManager.Stub
 
 	public void multiWindowMenuOperation(String actionString){
 	}
+	//$_rockchip_$_modify_$_huangjc begin,add show/hide TitleBar interface for statusbar
+    public void changeTitleBar(boolean isShow){	
+			if(getMultiWindowMode()!=Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE)
+				return;		
+					WindowState win = mCurrentFocus;
+
+					if(mAppAlignWatcher.get(win)!=null){
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						if(watcher != null){
+							try{
+								LOGD("hjc=============changeTitleBar==mCurrentFocus:"+mCurrentFocus+"========show:"+isShow);
+								if(isShow)
+									watcher.onAppAlignChanged(6,false);
+								else
+								    watcher.onAppAlignChanged(7,false);
+							}catch(RemoteException ex){}
+						}
+					}
+	}
+	//$_rockchip_$_modify_$_end
 
 	public void updateAppTokenWindowsFourScreen(){
 		synchronized(mWindowMap){

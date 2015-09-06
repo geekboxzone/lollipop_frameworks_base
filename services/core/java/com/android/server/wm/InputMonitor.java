@@ -103,8 +103,8 @@ import com.android.multiwindow.wmservice.DispatcherInterface;
 
 final class InputMonitor implements InputManagerService.WindowManagerCallbacks ,DispatcherInterface {
 	private static final String LOGTAG = "InputMonitor";
-	private static boolean DEBUG_ZJY = true;
-	private static boolean DEBUG_ZJY_MOTION = true;
+	private static boolean DEBUG_ZJY = false;
+	private static boolean DEBUG_ZJY_MOTION = false;
 	private void LOGD(String msg){
 		if(DEBUG_ZJY){
 			Log.d(LOGTAG,"QQQQQQQQQQQQQQQQQ:"+msg);
@@ -560,12 +560,14 @@ private boolean validWindowState(WindowState win){
 			 mService.applyPositionForMultiWindow(ws,posX+(int)event.getX()- mov_x,posY+ (int)event.getY()-mov_y);
 			 mov_x = (int)event.getX();
 			 mov_y = (int)event.getY();
+			 return 0;
 		     }else if(action ==MotionEvent.ACTION_UP){
 			  up_x = (int)event.getX();
 			  up_y = (int)event.getY();
                        	  mov_x = 0;
                        	  mov_y = 0;
                           isSideSlip = false;
+			 return 0;
 		      }
  	          }
 	    }
@@ -600,6 +602,9 @@ private boolean validWindowState(WindowState win){
 				//now find the window which will get the focus.				
 				WindowState matchFocus = null;
 				boolean isMatch = false;
+				if(df.contains(touchX, touchY)) {
+					LOGD("we don't need to match again");
+				} else if (action== MotionEvent.ACTION_DOWN){
 				WindowList windows = mService.getDefaultDisplayContentLocked().getWindowList();
 				for(int i=windows.size()-1;i>=0;i--){
 					matchFocus = windows.get(i);
@@ -623,7 +628,8 @@ private boolean validWindowState(WindowState win){
 							break;
 						}
 					}
-				}             
+				}
+				}
 		
 				if(isMatch){
 					mInputMonitorController.switchFocusWindow(mService.mContext, matchFocus);

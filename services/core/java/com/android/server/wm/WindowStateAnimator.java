@@ -74,8 +74,8 @@ class WinAnimatorList extends ArrayList<WindowStateAnimator> {
  **/
 class WindowStateAnimator {
     static final String TAG = "WindowStateAnimator";
-	static final boolean DEBUG_ZJY = true;
-	static final boolean DEBUG_ZJY_ANIM = true;
+	static final boolean DEBUG_ZJY = false;
+	static final boolean DEBUG_ZJY_ANIM = false;
 	void LOGR(String msg){
 		if(DEBUG_ZJY_ANIM){
 			Log.d(TAG,"11111111111111111111"+msg);

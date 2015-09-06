@@ -56,14 +56,21 @@
                 android:scaleType="centerInside"
                 android:layout_weight="0"
                 />
-             <!--$_rbox_$_modify_$_huangjc_begin-->
+             <View
+                android:layout_width="20dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:layout_marginStart="0dp"
+                android:visibility="invisible"
+                />
+             <!--$_rbox_$_modify_$_huangjc_begin>
                <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/hide_bar"
                android:layout_width="20dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_hide"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
-                />
+                /-->
              
             <ImageButton
               android:id="@+id/win_1"
@@ -180,8 +187,16 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 /-->
+            <!--$_rbox_$_modify_$_huangjc_begin-->
+               <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/hide_bar"
+               android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_sysbar_hide"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                />
             <FrameLayout
-                android:layout_width="84dp"
+                android:layout_width="48dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:layout_marginEnd="2dp" >

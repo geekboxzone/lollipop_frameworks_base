@@ -284,4 +284,8 @@ interface IWindowManager
 
     void setJoyStick(int index, in int[] position, in int[] size);
     //$_rbox_$_modify_$_end
+ 
+    //$_rockchip_$_modify_$_huangjc begin,add show/hide TitleBar interface for statusbar
+    void changeTitleBar(boolean isShow);
+   //$_rockchip_$_modify_$_end
 }
