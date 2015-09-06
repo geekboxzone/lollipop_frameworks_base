@@ -208,6 +208,8 @@ final class ActivityStack {
      */
     ActivityRecord mLastStartedActivity = null;
 
+    static ActivityRecord mResumingActivity = null;
+
     // The topmost Activity passed to convertToTranslucent(). When non-null it means we are
     // waiting for all Activities in mUndrawnActivitiesBelowTopTranslucent to be removed as they
     // are drawn. When the last member of mUndrawnActivitiesBelowTopTranslucent is removed the
@@ -1094,6 +1096,18 @@ final class ActivityStack {
                 if (DEBUG_PAUSE) Slog.v(TAG, "App died during pause, not stopping: " + prev);
                 prev = null;
             }
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    {
+	    	if(prev!= null && mResumingActivity!= null && mResumingActivity.toString().contains("recents.RecentsActivity"))
+	    	{
+			String prevstring = prev.toString();
+	    		if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk")))
+			{
+                		Slog.d("xzj","------pause packages because recent "+prevstring);
+		        	mService.killAppAtUsersRequest(prev.app, null);		
+			}	
+	    	}
+ 	    }
             mPausingActivity = null;
         }
 
@@ -1896,6 +1910,23 @@ final class ActivityStack {
                 mWindowManager.setAppWillBeHidden(prev.appToken);
                 mWindowManager.setAppVisibility(prev.appToken, false);
             }
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    {
+	    	if(prev.task != next.task)
+	    	{
+			String prevstring = prev.toString();
+			String nextstring = next.toString();
+			if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk"))&&(!prevstring.contains("com.antutu.ABenchMark"))&&(!prevstring.contains("com.google.android.setupwizard"))&&(!prevstring.contains("packageinstaller"))&&(!prevstring.contains("apkinstaller")))//exclude some apk
+			{
+				if((!nextstring.contains("com.qihoo"))&&(!nextstring.contains("com.dragon.android.pandaspace"))&&(!nextstring.contains(".auth.gsf.AccountIntroActivity"))&&(!nextstring.contains(".auth.login.")))//exclude 360,91,google login
+				{
+	    				Slog.d("xzj","------pause packages "+prevstring+" next = "+ nextstring);
+					mService.killAppAtUsersRequest(prev.app, null);
+				}
+			}
+	    	}
+            }
+
         } else {
             if (DEBUG_TRANSITION) Slog.v(TAG, "Prepare open transition: no previous");
             if (mNoAnimActivities.contains(next)) {
@@ -2207,7 +2238,7 @@ final class ActivityStack {
             }
             if (proc == null || proc.thread == null) {
                 showStartingIcon = true;
-            }
+            }	
             if (DEBUG_TRANSITION) Slog.v(TAG,
                     "Prepare open transition: starting " + r);
             if ((r.intent.getFlags()&Intent.FLAG_ACTIVITY_NO_ANIMATION) != 0) {
@@ -3740,7 +3771,7 @@ final class ActivityStack {
         } else {
             updateTransitLocked(AppTransition.TRANSIT_TASK_TO_FRONT, options);
         }
-
+	mResumingActivity = source;
         mStackSupervisor.resumeTopActivitiesLocked();
         EventLog.writeEvent(EventLogTags.AM_TASK_TO_FRONT, tr.userId, tr.taskId);
 
