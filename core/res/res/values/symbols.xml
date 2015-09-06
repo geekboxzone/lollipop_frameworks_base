@@ -353,7 +353,6 @@
   <java-symbol type="integer" name="config_maxCachedApps" />
   <java-symbol type="integer" name="config_lowMemoryKillerMinFreeKbytesAdjust" />
   <java-symbol type="integer" name="config_lowMemoryKillerMinFreeKbytesAbsolute" />
-  <java-symbol type="integer" name="config_maxCachedApps" />
   <java-symbol type="integer" name="config_max_pan_devices" />
   <java-symbol type="integer" name="config_ntpPollingInterval" />
   <java-symbol type="integer" name="config_ntpPollingIntervalShorter" />

@@ -183,17 +183,6 @@
          process limit. -->
     <integer name="config_maxCachedApps">32</integer>
 
-    <!-- The maximum number of cached processes we will keep around before killing them.
-         NOTE: this constant is *only* a control to not let us go too crazy with
-         keeping around processes on devices with large amounts of RAM.  For devices that
-         are tighter on RAM, the out of memory killer is responsible for killing background
-         processes as RAM is needed, and we should *never* be relying on this limit to
-         kill them.  Also note that this limit only applies to cached background processes;
-         we have no limit on the number of service, visible, foreground, or other such
-         processes and the number of those processes does not count against the cached
-         process limit. -->
-    <integer name="config_maxCachedApps">6</integer>
-
     <!-- The duration (in milliseconds) that the radio will scan for a signal
          when there's no network connection. If the scan doesn't timeout, use zero -->
     <integer name="config_radioScanningTimeout">0</integer>
