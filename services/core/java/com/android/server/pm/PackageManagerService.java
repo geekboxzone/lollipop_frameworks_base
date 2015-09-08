@@ -225,6 +225,11 @@ import dalvik.system.VMRuntime;
 import libcore.io.IoUtils;
 import libcore.util.EmptyArray;
 
+import com.android.server.pm.PreScanHelper;
+import com.android.server.pm.PreScanHelper.PreScanPackageItem;
+
+import android.os.HandlerThread;
+import android.view.inputmethod.InputMethod;
 /**
  * Keep track of all those .apks everywhere.
  * 
@@ -361,6 +366,8 @@ public class PackageManagerService extends IPackageManager.Stub
     final int mDefParseFlags;
     final String[] mSeparateProcesses;
     final boolean mIsUpgrade;
+	final PackageManagerService mPms = this;
+    final boolean mIsEnableBootBoost;
 
     // This is where all application persistent data goes.
     final File mAppDataDir;
@@ -395,6 +402,12 @@ public class PackageManagerService extends IPackageManager.Stub
     // the suffix "LI".
     final Object mInstallLock = new Object();
 
+    private final PreScanHelper mPreScanHelper = PreScanHelper.getInstance();
+    private static final HandlerThread sLazyScanThread = new HandlerThread("lazy-scan");
+    static {
+        sLazyScanThread.start();
+    }
+    private static final Handler sLazyScanHandler = new Handler(sLazyScanThread.getLooper());
     // ----------------------------------------------------------------
 
     // Keys are String (package name), values are Package.  This also serves
@@ -476,7 +489,7 @@ public class PackageManagerService extends IPackageManager.Stub
     /** Set of packages associated with each app op permission. */
     final ArrayMap<String, ArraySet<String>> mAppOpPermissionPackages = new ArrayMap<>();
 
-    final PackageInstallerService mInstallerService;
+    PackageInstallerService mInstallerService;
 
     ArraySet<PackageParser.Package> mDeferredDexOpt = null;
 
@@ -498,6 +511,8 @@ public class PackageManagerService extends IPackageManager.Stub
     ComponentName mCustomResolverComponentName;
 
     boolean mResolverReplaced = false;
+    boolean mFirstBoot = false;
+    boolean mOtaBoot = false;
 
     // Set of pending broadcasts for aggregating enable/disable of components.
     static class PendingPackageBroadcasts {
@@ -1360,6 +1375,7 @@ public class PackageManagerService extends IPackageManager.Stub
 
 	checkAppSupportPhonemode(null);
 
+        boolean matchHome = false;
         synchronized (mInstallLock) {
         // writer
         synchronized (mPackages) {
@@ -1405,6 +1421,35 @@ public class PackageManagerService extends IPackageManager.Stub
 
             mRestoredSettings = mSettings.readLPw(this, sUserManager.getUsers(false),
                     mSdkVersion, mOnlyCore);
+
+            final int callingUserId = UserHandle.getCallingUserId();
+
+            mPreScanHelper.initialize(this);
+            mIsEnableBootBoost = mPreScanHelper.isEnableBootBoost();
+
+            if (mIsEnableBootBoost) {
+                SystemProperties.set("sys.pms.finishscan", "false");
+                String defaultHomePackage = SystemProperties.get("persist.sys.default_launcher", "unknown");
+                matchHome = !defaultHomePackage.equals("unknown");
+                // User choose a home, we need to check that if it is our launcher
+                PreferredIntentResolver pir = mSettings.mPreferredActivities.get(callingUserId);
+                if (pir != null) {
+                    Intent intent = new Intent("android.intent.action.MAIN");
+                    intent.addCategory("android.intent.category.HOME");
+                    intent.addCategory("android.intent.category.DEFAULT");
+                    List<PreferredActivity> matches = pir.queryIntent(
+                            intent, null, true, callingUserId);
+                    Slog.i(TAG, matches.size() + " preferred matches for " + intent);
+                    matchHome = false;
+                    for (int i = 0; i < matches.size(); i++) {
+                        PreferredActivity pa = matches.get(i);
+                        if (pa.mPref.mComponent.getPackageName().equals(defaultHomePackage)) {
+                            matchHome = true;
+                            break;
+                        }
+                    }
+                }
+            }
 
             String customResolverActivity = Resources.getSystem().getString(
                     R.string.config_customResolverActivity);
@@ -1562,15 +1607,26 @@ public class PackageManagerService extends IPackageManager.Stub
 
             // Collected privileged system packages.
             final File privilegedAppDir = new File(Environment.getRootDirectory(), "priv-app");
-            scanDirLI(privilegedAppDir, PackageParser.PARSE_IS_SYSTEM
-                    | PackageParser.PARSE_IS_SYSTEM_DIR
-                    | PackageParser.PARSE_IS_PRIVILEGED, scanFlags, 0);
-
+            if (!mIsEnableBootBoost) {
+                scanDirLI(privilegedAppDir, PackageParser.PARSE_IS_SYSTEM
+                        | PackageParser.PARSE_IS_SYSTEM_DIR
+                        | PackageParser.PARSE_IS_PRIVILEGED, scanFlags, 0);
+            }
             // Collect ordinary system packages.
             final File systemAppDir = new File(Environment.getRootDirectory(), "app");
-            scanDirLI(systemAppDir, PackageParser.PARSE_IS_SYSTEM
-                    | PackageParser.PARSE_IS_SYSTEM_DIR, scanFlags, 0);
+            if (!mIsEnableBootBoost) {
+                scanDirLI(systemAppDir, PackageParser.PARSE_IS_SYSTEM
+                        | PackageParser.PARSE_IS_SYSTEM_DIR, scanFlags, 0);
+            }
+            if (mIsEnableBootBoost) {
+                mPreScanHelper.loadPreScanPackages();
+                Slog.d(TAG, "matchHome: "+matchHome);
 
+                mFirstBoot = mPreScanHelper.isFirstBoot();
+                mOtaBoot = mPreScanHelper.isOtaBoot();
+
+                mPreScanHelper.scanNecessary(privilegedAppDir, systemAppDir, matchHome, scanFlags, mFirstBoot, mOtaBoot);
+            }
             //$_rockchip_$_modify_by huangjc Collect all preinstall packages.
             File preinstallAppDir = new File(Environment.getRootDirectory(), "preinstall");
             File preinstallAppDelDir = new File(Environment.getRootDirectory(),
@@ -1659,10 +1715,12 @@ public class PackageManagerService extends IPackageManager.Stub
                     }
 
                     if (!mSettings.isDisabledSystemPackageLPr(ps.name)) {
-                        psit.remove();
-                        logCriticalInfo(Log.WARN, "System package " + ps.name
-                                + " no longer exists; wiping its data");
-                        removeDataDirsLI(ps.name);
+                        if (!mIsEnableBootBoost) {
+                            psit.remove();
+                            logCriticalInfo(Log.WARN, "System package " + ps.name
+                                    + " no longer exists; wiping its data");
+                            removeDataDirsLI(ps.name);
+                        }
                     } else {
                         final PackageSetting disabledPs = mSettings.getDisabledSystemPkgLPr(ps.name);
                         if (disabledPs.codePath == null || !disabledPs.codePath.exists()) {
@@ -1685,7 +1743,7 @@ public class PackageManagerService extends IPackageManager.Stub
             // Remove any shared userIDs that have no associated packages
             mSettings.pruneSharedUsersLPw();
 
-            if (!mOnlyCore) {
+            if (!mIsEnableBootBoost || (!mOnlyCore && mFirstBoot) || (!mOnlyCore && mOtaBoot)) {
                 EventLog.writeEvent(EventLogTags.BOOT_PROGRESS_PMS_DATA_SCAN_START,
                         SystemClock.uptimeMillis());
                 scanDirLI(mAppInstallDir, 0, scanFlags | SCAN_REQUIRE_KNOWN, 0);
@@ -1842,6 +1900,60 @@ public class PackageManagerService extends IPackageManager.Stub
         // are all flushed.  Not really needed, but keeps things nice and
         // tidy.
         Runtime.getRuntime().gc();
+        /*
+         * scanDir in lazy-scan thread
+         */
+        if (mIsEnableBootBoost && (!(mFirstBoot || (!mFirstBoot && !matchHome) || mOtaBoot))) {
+            sLazyScanHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    Slog.d(TAG, "enter sLazyScanHandler");
+                    final int scanFlags = SCAN_NO_PATHS | SCAN_DEFER_DEX | SCAN_BOOTING;
+                    final ArrayMap<String, File> expectingBetter = mPreScanHelper.getExpectingBetter(mSettings, mPackages);
+                    File vendorAppDir = new File("/vendor/app");
+                    final File oemAppDir = new File(Environment.getOemDirectory(), "app");
+                    mPreScanHelper.lazyScan(mAppInstallDir, mDrmAppPrivateInstallDir, mSettings, mPackages);
+
+                    // Now that we know all of the shared libraries, update all clients to have
+                    // the correct library paths.
+                    updateAllSharedLibrariesLPw();
+
+                    for (SharedUserSetting setting : mSettings.getAllSharedUsersLPw()) {
+                        // NOTE: We ignore potential failures here during a system scan (like
+                        // the rest of the commands above) because there's precious little we
+                        // can do about it. A settings error is reported, though.
+                        adjustCpuAbisForSharedUserLPw(setting.packages, null /* scanned package */,
+                                false /* force dexopt */, false /* defer dexopt */);
+                    }
+
+                    // Now that we know all the packages we are keeping,
+                    // read and update their last usage times.
+                    mPackageUsage.readLP();
+                    EventLog.writeEvent(EventLogTags.BOOT_PROGRESS_PMS_SCAN_END,
+                            SystemClock.uptimeMillis());
+
+                    // If the platform SDK has changed since the last time we booted,
+                    // we need to re-grant app permission to catch any new ones that
+                    // appear.  This is really a hack, and means that apps can in some
+                    // cases get permissions that the user didn't initially explicitly
+                    // allow...  it would be nice to have some better way to handle
+                    // this situation.
+					mPreScanHelper.reGrantPermission(mSettings, mSdkVersion);
+                    Intent intent = new Intent("com.android.prescan.FINISH")
+                        .addFlags(Intent.FLAG_RECEIVER_NO_ABORT)
+                        .addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
+                    mContext.sendBroadcast(intent);
+                }
+            }, 1);
+        } else {
+            //mInstallerService = new PackageInstallerService(mContext, this, mAppInstallDir);
+
+            // Now after opening every single application zip, make sure they
+            // are all flushed.  Not really needed, but keeps things nice and
+            // tidy.
+            //Runtime.getRuntime().gc();
+            SystemProperties.set("sys.pms.finishscan", "true");
+        }
     }
 
    //$_rockchip_$_modify_by huangjc add copyPackagesToAppInstallDir
@@ -4290,7 +4402,7 @@ public class PackageManagerService extends IPackageManager.Stub
         return true;
     }
 
-    private void scanDirLI(File dir, int parseFlags, int scanFlags, long currentTime) {
+    public void scanDirLI(File dir, int parseFlags, int scanFlags, long currentTime) {
         final File[] files = dir.listFiles();
         if (ArrayUtils.isEmpty(files)) {
             Log.d(TAG, "No files in app dir " + dir);
@@ -4411,10 +4523,9 @@ public class PackageManagerService extends IPackageManager.Stub
      *  Scan a package and return the newly parsed package.
      *  Returns null in case of errors and the error code is stored in mLastScanError
      */
-    private PackageParser.Package scanPackageLI(File scanFile, int parseFlags, int scanFlags,
+    public PackageParser.Package scanPackageLI(File scanFile, int parseFlags, int scanFlags,
             long currentTime, UserHandle user) throws PackageManagerException {
         String scanPath = scanFile.getPath();
-        if (DEBUG_INSTALL) Slog.d(TAG, "Parsing: " + scanFile);
         parseFlags |= mDefParseFlags;
         PackageParser pp = new PackageParser();
         pp.setSeparateProcesses(mSeparateProcesses);
@@ -7165,7 +7276,7 @@ public class PackageManagerService extends IPackageManager.Stub
     static final int UPDATE_PERMISSIONS_REPLACE_PKG = 1<<1;
     static final int UPDATE_PERMISSIONS_REPLACE_ALL = 1<<2;
 
-    private void updatePermissionsLPw(String changingPkg,
+    public void updatePermissionsLPw(String changingPkg,
             PackageParser.Package pkgInfo, int flags) {
         // Make sure there are no dangling permission trees.
         Iterator<BasePermission> it = mSettings.mPermissionTrees.values().iterator();

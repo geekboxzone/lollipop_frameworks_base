@@ -212,6 +212,11 @@ class ContextImpl extends Context {
     private final static String TAG = "ContextImpl";
     private final static boolean DEBUG = false;
 
+    static {
+        System.loadLibrary("boot_optimization");
+    }
+
+    private native int checkPermissionNative(String prem, int pid, int uid);
     /**
      * Map from package name, to preference name, to cached preferences.
      */
@@ -1936,7 +1941,7 @@ class ContextImpl extends Context {
     public void enforcePermission(
             String permission, int pid, int uid, String message) {
         enforce(permission,
-                checkPermission(permission, pid, uid),
+				checkPermissionNative(permission, pid, uid),
                 false,
                 uid,
                 message);

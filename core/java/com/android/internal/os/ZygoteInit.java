@@ -258,29 +258,22 @@ public class ZygoteInit {
 	*	sometimes ota update system resource,and this op need preload resource at ota firt booting.
 	*/
 
-	static boolean checkIsOtaBoot(){
-		 try  
-        {  
-            File f = new File(CHECK_OTA_BOOTING);  
-            if(!f.exists())  
-            {  
-				Log.e(TAG, "checkIsOtaBoot result: this time is a normal booting" );
-				return false;  
-            }  
-			
-			f.delete();
-  
-        }  
-        catch (Exception e)  
-        {  
-            return false;  
-        }  
-
-		Log.e(TAG, "checkIsOtaBoot result: this time is a ota booting, delete the ota flag file" );
-        return true;  
-		
+	static boolean checkIsOtaBoot() {
+        try {
+            File f = new File(CHECK_OTA_BOOTING);
+            if(!f.exists()) {
+                Log.e(TAG, "checkIsOtaBoot result: this time is a normal booting" );
+                return false;
+            }
+            f.delete();
+        } catch (Exception e) {
+            return false;
+        }
+		SystemProperties.set("persist.sys.ota_booting", "true");
+        Log.e(TAG, "checkIsOtaBoot result: this time is a ota booting, delete the ota flag file");
+        return true;
 	}
-	
+
     static void preload() {
         Log.d(TAG, "begin preload");
         preloadClasses();
@@ -297,18 +290,18 @@ public class ZygoteInit {
         //mPreloadThread.join();*/
     }
 
-    private static Thread mPreloadThread = new Thread(new Runnable(){
-        @Override        
-        public void run() {            
-               //sleep(2000);
-               Log.d(TAG, "start thread preload");
-                preloadClasses();        
-               preloadResources();     
-               preloadOpenGL(); 
-               preloadSharedLibraries();     
-               WebViewFactory.prepareWebViewInZygote();
-               Log.d(TAG, "end thread preload");
-        }    
+    private static Thread mPreloadThread = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            //sleep(2000);
+            Log.d(TAG, "start thread preload");
+            preloadClasses();
+            preloadResources();
+            preloadOpenGL();
+            preloadSharedLibraries();
+            WebViewFactory.prepareWebViewInZygote();
+            Log.d(TAG, "end thread preload");
+        }
     });
 
     private static void preloadSharedLibraries() {

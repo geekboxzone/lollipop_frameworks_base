@@ -1947,14 +1947,16 @@ public class SyncManager {
             if (Log.isLoggable(TAG, Log.VERBOSE)) {
                 Log.v(TAG, "Boot completed, clearing boot queue.");
             }
-            doDatabaseCleanup();
-            synchronized(this) {
-                // Dispatch any stashed messages.
-                for (Message message : mBootQueue) {
-                    sendMessage(message);
+            if (!mBootCompleted) {
+                doDatabaseCleanup();
+                synchronized(this) {
+                    // Dispatch any stashed messages.
+                    for (Message message : mBootQueue) {
+                        sendMessage(message);
+                    }
+                    mBootQueue = null;
+                    mBootCompleted = true;
                 }
-                mBootQueue = null;
-                mBootCompleted = true;
             }
         }
 

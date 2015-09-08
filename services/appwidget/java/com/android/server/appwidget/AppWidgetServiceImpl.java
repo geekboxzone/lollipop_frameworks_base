@@ -129,6 +129,8 @@ class AppWidgetServiceImpl extends IAppWidgetService.Stub implements WidgetBacku
     // Bump if the stored widgets need to be upgraded.
     private static final int CURRENT_VERSION = 1;
 
+    private boolean mNeedReload = false;
+
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -145,6 +147,9 @@ class AppWidgetServiceImpl extends IAppWidgetService.Stub implements WidgetBacku
             } else if (Intent.ACTION_USER_STOPPED.equals(action)) {
                 onUserStopped(intent.getIntExtra(Intent.EXTRA_USER_HANDLE,
                         UserHandle.USER_NULL));
+            } else if (action.equals("com.android.prescan.FINISH")) {
+                mNeedReload = true;
+                onUserStarted(UserHandle.USER_OWNER);
             } else {
                 onPackageBroadcastReceived(intent, intent.getIntExtra(
                         Intent.EXTRA_USER_HANDLE, UserHandle.USER_NULL));
@@ -241,6 +246,12 @@ class AppWidgetServiceImpl extends IAppWidgetService.Stub implements WidgetBacku
         sdFilter.addAction(Intent.ACTION_EXTERNAL_APPLICATIONS_UNAVAILABLE);
         mContext.registerReceiverAsUser(mBroadcastReceiver, UserHandle.ALL,
                 sdFilter, null, null);
+
+        // Register for prescan finish message
+        IntentFilter prescanFilter = new IntentFilter();
+        prescanFilter.addAction("com.android.prescan.FINISH");
+        mContext.registerReceiverAsUser(mBroadcastReceiver, UserHandle.ALL,
+                prescanFilter, null, null);
 
         IntentFilter userFilter = new IntentFilter();
         userFilter.addAction(Intent.ACTION_USER_STARTED);
@@ -419,7 +430,7 @@ class AppWidgetServiceImpl extends IAppWidgetService.Stub implements WidgetBacku
             }
         }
 
-        if (newMemberCount <= 0) {
+        if (newMemberCount <= 0 && !mNeedReload) {
             return;
         }
 
@@ -436,8 +447,18 @@ class AppWidgetServiceImpl extends IAppWidgetService.Stub implements WidgetBacku
 
         clearProvidersAndHostsTagsLocked();
 
-        loadGroupWidgetProvidersLocked(newProfileIds);
-        loadGroupStateLocked(newProfileIds);
+        int[] tmpProfileIds = new int[mLoadedUserIds.size()];
+        if (mNeedReload) {
+            for (int i = 0; i < mLoadedUserIds.size(); i++) {
+                tmpProfileIds[i] = mLoadedUserIds.get(i);
+            }
+        }
+
+        loadGroupWidgetProvidersLocked(mNeedReload ? tmpProfileIds : newProfileIds);
+        loadGroupStateLocked(mNeedReload ? tmpProfileIds : newProfileIds);
+        if (mNeedReload) {
+            mNeedReload = false;
+        }
     }
 
     @Override

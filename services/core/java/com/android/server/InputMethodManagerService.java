@@ -128,6 +128,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import com.android.server.pm.PreScanHelper;
+
 /**
  * This class provides a system service that manages input methods.
  */
@@ -178,6 +180,8 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
     private final HardKeyboardListener mHardKeyboardListener;
     private final WindowManagerService mWindowManagerService;
     private final AppOpsManager mAppOpsManager;
+
+    private final PreScanHelper mPreScanHelper = PreScanHelper.getInstance();
 
     final InputBindResult mNoBinding = new InputBindResult(null, null, null, -1, -1);
 
@@ -1736,6 +1740,8 @@ public class InputMethodManagerService extends IInputMethodManager.Stub
         if (!TextUtils.isEmpty(id)) {
             try {
                 setInputMethodLocked(id, mSettings.getSelectedInputMethodSubtypeId(id));
+                mPreScanHelper.addScanItem(PreScanHelper.SCAN_TYPE_IME, mContext, id);
+                mPreScanHelper.flushToFile();
             } catch (IllegalArgumentException e) {
                 Slog.w(TAG, "Unknown input method from prefs: " + id, e);
                 mCurMethodId = null;
