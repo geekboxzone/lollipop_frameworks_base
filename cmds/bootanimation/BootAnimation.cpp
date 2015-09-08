@@ -507,7 +507,7 @@ bool BootAnimation::android()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     float ratio = mWidth / mHeight;
-    glFrustumf(-ratio, ratio, -1, 1, 0, 1);
+    // glFrustumf(-ratio, ratio, -1, 1, 0, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrthof(0, mWidth, mHeight, 0, 0, 1);
@@ -844,7 +844,7 @@ bool BootAnimation::movie()
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     float ratio = mWidth / mHeight;
-    glFrustumf(-ratio, ratio, -1, 1, 0, 1);
+    // glFrustumf(-ratio, ratio, -1, 1, 0, 1);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glOrthof(0, mWidth, mHeight, 0, 0, 1);
