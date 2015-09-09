@@ -6056,14 +6056,14 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             }
             ProfilerInfo profilerInfo = profileFile == null ? null
                     : new ProfilerInfo(profileFile, profileFd, samplingInterval, profileAutoStop);
-	    Log.e("shenzhicheng", "------- processName = " + processName + ", phoneMode = " + appInfo.phoneMode + ", uid = " + appInfo.uid);
+	    //Log.e(TAG, "------- processName = " + processName + ", phoneMode = " + appInfo.phoneMode + ", uid = " + appInfo.uid);
 	    Configuration realConfiguration = new Configuration(mConfiguration);
 	    //if (processName != null && processName.contains("tencent")) {
 	    if (appInfo.phoneMode) {
 	    	realConfiguration = new Configuration(mPhoneConfiguration);
 		if (!phoneUID(appInfo.uid)) {
 			Integer UID = new Integer(appInfo.uid);
-			Log.e("shenzhicheng", "------- add PHONEMODE uid = " + appInfo.uid);
+			//Log.e(TAG, "------- add PHONEMODE uid = " + appInfo.uid);
 			mPhoneModeUID.add(UID);
 		}
 	    }
@@ -8587,14 +8587,13 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         synchronized (this) {
             //enforceCallingPermission(android.Manifest.permission.REMOVE_TASKS,
              //       "removeTask()");
-             Slog.v(TAG, "removeTask   taskid =" + taskId,
-                new RuntimeException("here").fillInStackTrace());
+           //  Slog.v(TAG, "removeTask   taskid =" + taskId, 
            //add by huangjc wintask
             Intent winintent=new Intent();
             winintent.setAction("rk.android.wintask.FINISH");
             if(getTasks(1,0).get(0).topActivity!=null)
             winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
-            Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
+            //Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
             mContext.sendBroadcast(winintent);
             long ident = Binder.clearCallingIdentity();
             try {

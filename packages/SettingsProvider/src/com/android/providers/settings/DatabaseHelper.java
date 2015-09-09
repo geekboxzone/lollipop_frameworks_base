@@ -2334,7 +2334,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                   loadSetting(stmt,Settings.System.SCREENSHOT_LOCATION,"/storage/emulated");
             }
 	    //add for factory as ro.rk.def_brightness
-            System.out.println("========================================================================="+R.bool.def_multi_window_used );
 	    loadSetting(stmt, Settings.System.SCREEN_BRIGHTNESS,
 		    SystemProperties.getInt("ro.rk.def_brightness", mContext.getResources().getInteger(R.integer.def_screen_brightness)));
 			loadBooleanSetting(stmt, Settings.System.MULTI_WINDOW_BUTTON_SHOW,

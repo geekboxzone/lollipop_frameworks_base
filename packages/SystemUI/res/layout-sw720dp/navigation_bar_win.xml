@@ -74,20 +74,20 @@
              
             <ImageButton
               android:id="@+id/win_1"
-                       android:layout_width="52dp"
+                       android:layout_width="0dp"
                        android:layout_height="match_parent"
                        android:gravity="center"
                        android:scaleType="centerInside"
                        android:background="@drawable/bg_item_taskbar"
                        android:src="@drawable/ic_launcher_settings" />
               <Space 
-                android:layout_width="10dp"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 />
               <ImageButton
               android:id="@+id/win_2"
-                       android:layout_width="52dp"
+                       android:layout_width="0dp"
                        android:layout_height="match_parent"
                        android:gravity="center"
                        android:scaleType="centerInside"
@@ -100,7 +100,7 @@
                 />
              <LinearLayout 
                android:orientation="vertical" 
-               android:layout_width="550dp"
+               android:layout_width="650dp"
                android:layout_height="match_parent">
             <HorizontalScrollView 
                        android:id="@+id/mAppsScrollView"
@@ -335,20 +335,20 @@
                 />
                <ImageButton
               android:id="@+id/win_1"
-                       android:layout_width="52dp"
+                       android:layout_width="0dp"
                        android:layout_height="match_parent"
                        android:gravity="center"
                        android:scaleType="centerInside"
                        android:background="@drawable/bg_item_taskbar"
                        android:src="@drawable/ic_launcher_settings" />
               <Space 
-                android:layout_width="10dp"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 />
               <ImageButton
               android:id="@+id/win_2"
-                       android:layout_width="52dp"
+                       android:layout_width="0dp"
                        android:layout_height="match_parent"
                        android:gravity="center"
                        android:scaleType="centerInside"
@@ -361,7 +361,7 @@
                 />
              <LinearLayout 
                android:orientation="vertical" 
-               android:layout_width="300dp"
+               android:layout_width="400dp"
                android:layout_height="match_parent">
             <HorizontalScrollView 
                        android:id="@+id/mAppsScrollView"

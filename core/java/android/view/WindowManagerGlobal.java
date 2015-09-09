@@ -303,7 +303,6 @@ public final class WindowManagerGlobal {
 					  wparams.height = SCREE_HEIGHT -50;
 				     }
 				 
-				  Log.d("shenzhicheng",wparams.width+"change the def="+wparams.height);
 				  Log.d(TAG,wparams.width+"change the def="+wparams.height);
 				// wparams.gravity = Gravity.NO_GRAVITY;
 
@@ -449,7 +448,7 @@ public final class WindowManagerGlobal {
 				}
 				mViews.get(i).setLayoutParams(mParams.get(i));
 				mRoots.get(i).setLayoutParams(mParams.get(i),false);
-				mRoots.get(i).setStopped(false);		// shenzhicheng
+				mRoots.get(i).setStopped(false);
 			}
 		}
 		Log.d(TAG,"set the half wmparams in updateAppLayout packagename = " + packageName);

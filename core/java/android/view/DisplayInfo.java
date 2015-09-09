@@ -374,7 +374,6 @@ public final class DisplayInfo implements Parcelable {
 		rotation = 1;
 	}
 	} catch (RemoteException re) {
-		Log.e("shenzhicheng", "remoteException when judge this uid can support phonemode");
 	}
     }
 

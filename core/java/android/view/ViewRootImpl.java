@@ -2830,8 +2830,8 @@ public final class ViewRootImpl implements ViewParent,
 			}		
 			void observer(){
 				ContentResolver resolver = mContext.getContentResolver();
-				resolver.registerContentObserver(Settings.System.getUriFor(
-						Settings.System.MULTI_WINDOW_USED), false, this);
+				/*resolver.registerContentObserver(Settings.System.getUriFor(
+						Settings.System.MULTI_WINDOW_USED), false, this);*/
 				onChange(false,Uri.parse("content://settings/system/multi_window_used"));
 				
 			}
@@ -2845,8 +2845,8 @@ public final class ViewRootImpl implements ViewParent,
 	private boolean ignoreWindow(WindowManager.LayoutParams wmparams){
 		boolean ignore = true;
 		boolean sameHomeTask = false;
-		boolean multiWindowUsed = Settings.System.getInt(mContext.getContentResolver(),
-										Settings.System.MULTI_WINDOW_USED, 0) ==1;
+		boolean multiWindowUsed = false;//Settings.System.getInt(mContext.getContentResolver(),
+										//Settings.System.MULTI_WINDOW_USED, 0) ==1;
 		if(!multiWindowUsed){
 			return true;
 		}
@@ -6823,7 +6823,6 @@ public final class ViewRootImpl implements ViewParent,
 		@Override
         public void switchToPhoneMode(int width,int height){
          final ViewRootImpl viewAncestor = mViewAncestor.get();
-		 new Exception().printStackTrace();
             if (viewAncestor != null) {
 				viewAncestor.dispatchSwitchToPhoneMode(width,height);
             	}

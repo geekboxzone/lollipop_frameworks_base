@@ -243,6 +243,11 @@ import android.widget.Button;
 import android.view.InputDevice;
 import android.app.AppGlobals;
 
+import android.view.inputmethod.InputMethodManager;
+import android.view.inputmethod.InputMethodInfo;
+
+
+
 public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener,CircleMenuView.BtnClickCallBack {
     static final String TAG = "PhoneStatusBar";
@@ -768,6 +773,9 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 			mContext.getContentResolver().registerContentObserver(
                 Settings.System.getUriFor(Settings.System.MULTI_WINDOW_CONFIG), false,
                 mMultiConfigObserver);
+			mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.EXTER_KEYBOARD_CONFIG), false,
+                mExtkeyboardObserver);
         mUnlockMethodCache = UnlockMethodCache.getInstance(mContext);
         mUnlockMethodCache.addListener(this);
         startKeyguard();
@@ -1571,17 +1579,6 @@ final Object mScreenshotLock = new Object();
     //haungjc:win bar    
     if(mContext.getResources().getConfiguration().enableMultiWindow()){
         mNavigationBarView.getWinStartButton().setOnTouchListener(mWinStartOnTouchListener);
-		
-		mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
-		mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
-
-		mNavigationBarView.getWinButton1().setOnGenericMotionListener(mgetWinButton1OnGenericMotionListener);
-		mNavigationBarView.getWinButton2().setOnGenericMotionListener(mgetWinButton2OnGenericMotionListener);
-
-		mNavigationBarView.getWinButton1().setOnClickListener(mOnClickWinButton1Listener);
-		mNavigationBarView.getWinButton1().setClickable(true);
-		mNavigationBarView.getWinButton2().setOnClickListener(mOnClickWinButton2Listener);
-		mNavigationBarView.getWinButton2().setClickable(true);
 
 			//haungjc:win bar			
 			mAppsScrollView = mNavigationBarView.getAppsScrollView();
@@ -1702,24 +1699,48 @@ final Object mScreenshotLock = new Object();
     public String getCurrentApps(){
         ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
 		PackageManager pm = mContext.getApplicationContext().getPackageManager();
-         List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(1,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
-             if(!appTask.isEmpty()){
-			 	ActivityManager.RecentTaskInfo info = appTask.get(0);
-				 LOGD("wintask ====getCurrentApps:"+info.topOfLauncher);
-				if(info.topOfLauncher == 0) return null;
+        List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(1,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+        if(!appTask.isEmpty()){
+			ActivityManager.RecentTaskInfo info = appTask.get(0);
+				 
+			if(info.topOfLauncher == 0) return null;
 			Intent intent  = new Intent(info.baseIntent);
 			if(info.origActivity != null) intent.setComponent(info.origActivity);
 			ResolveInfo resolveInfo = pm.resolveActivity( intent,0);
             //      ComponentName cn = /*am.getRunningTasks(1)*/appTask.get(0).baseIntent;//topActivity;
             //      String packageName = cn.getPackageName();
-             String packageName = null;
+            String packageName = null;
             if(resolveInfo != null)
                packageName = resolveInfo.activityInfo.packageName;
-             LOGD("wintask ====getCurrentApps:"+packageName);
+            LOGD("wintask ====getCurrentApps:"+packageName);
            return packageName;
          }
           return null;
 	}
+	public int getCurrentApps(String packageName){
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+		PackageManager pm = mContext.getApplicationContext().getPackageManager();
+        List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(30,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+        if(!appTask.isEmpty()){
+			for(int i = 0;i<appTask.size();i++){
+			 	ActivityManager.RecentTaskInfo info = appTask.get(i);				
+				
+				Intent intent  = new Intent(info.baseIntent);
+				if(info.origActivity != null) intent.setComponent(info.origActivity);
+				ResolveInfo resolveInfo = pm.resolveActivity( intent,0);
+	         
+	            String packName = null;
+	            if(resolveInfo != null)
+	               packName = resolveInfo.activityInfo.packageName;
+				if(packageName.equals(packName)){
+					LOGD(info.id+"wintask ====getCurrentApps:"+packageName +" " +info.affiliatedTaskId);
+					am.moveTaskToFront(info.id,ActivityManager.MOVE_TASK_WITH_HOME,null);
+					return info.id;
+				}
+		   }
+         }
+          return -1;
+	   }
 	public void removeAppTask(String pkNmae){
         ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
 		PackageManager pm = mContext.getApplicationContext().getPackageManager();
@@ -1788,20 +1809,6 @@ final Object mScreenshotLock = new Object();
 		if(isCurrentHomeActivity(pkName,null) || "com.android.providers.downloads.ui".equals(pkName) || "com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName)){
 			return;
 			}
-		if("com.android.settings".equals(pkName) &&!mIsButton1Lock&&(mNavigationBarView.getWinButton1()!=null)){
-			if(isWinShow)
-			mNavigationBarView.getWinButton1().getBackground().setAlpha(250);
-			else
-				mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
-			return;
-			}
-		if("com.android.calculator2".equals(pkName) && !mIsButton2Lock&&(mNavigationBarView.getWinButton1()!=null)){
-			if(isWinShow)
-			mNavigationBarView.getWinButton2().getBackground().setAlpha(250);
-			else 
-				mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
-			return;
-			}
 			
                    String getCurrentApps = getCurrentApps();	
 		if(appslist.size() >0){
@@ -1837,14 +1844,8 @@ final Object mScreenshotLock = new Object();
 		}
 	    if(!isWinShow){
 			LOGD("wintask ===back press finish pkName:"+pkName);
-			if(pkName!=null && pkName.equals("com.android.settings") && mNavigationBarView.getWinButton1()!=null)
-							mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
-			 if(pkName!=null && pkName.equals("com.android.calculator2") && mNavigationBarView.getWinButton2()!=null)
-							mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
-			
-			return;
+	    	return;
 	    	}
-	    	
 	  		//not allow add for launcher
 		if(isLauncherNow(null)||(getCurrentApps!=null && isCurrentHomeActivity(getCurrentApps,null))){
 			 try {
@@ -1857,10 +1858,6 @@ final Object mScreenshotLock = new Object();
 			}
 			
 		HashMap<String, Object> map=new HashMap<String, Object>(); 
-		if((!mIsButton1Lock &&"com.android.settings".equals(getCurrentApps()))||(!mIsButton2Lock && "com.android.calculator2".equals(getCurrentApps()))){
-	        LOGD("wintask ======no care lock button,return now!");
-	        return;
-	     }
             //make sure some apk no add
             if(getCurrentApps==null)
                  return;
@@ -1981,21 +1978,6 @@ private String appclosename = null;
 			mPopupText.setOnClickListener(new Button.OnClickListener(){//
             public void onClick(View v) {    
                  //Toast.makeText(mContext,"close the app", 1000).show();
-                 if(appclosename!=null){
-				 	LayoutParams para; 
-				 	if("com.android.settings".equals(appclosename)){
-						 
-				        para = mNavigationBarView.getWinButton1().getLayoutParams();    
-				        para.width = 0;  
-				        mNavigationBarView.getWinButton1().setLayoutParams(para);
-						mIsButton1Lock = true;
-					 } else if("com.android.calculator2".equals(appclosename)){
-						para = mNavigationBarView.getWinButton2().getLayoutParams();	
-						para.width = 0;  
-						mNavigationBarView.getWinButton2().setLayoutParams(para); 
-                        mIsButton2Lock = true;
-					 }
-				  }
 					   if (mLockpopupWindow != null) {  
 						   mLockpopupWindow.dismiss();
 						   mIsShowCloseApp = false;
@@ -2037,80 +2019,6 @@ private String appclosename = null;
                   am.forceStopPackage(packagename);
 	}
 
-	 private View.OnClickListener mOnClickWinButton1Listener =
-            new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-        
-        if(!mRightMouseClick){
-			if (popupWindow != null){  
-		          popupWindow.dismiss();
-			      mIsShowCloseApp = false;
-			}
-			if (mLockpopupWindow != null) {  
-				 mLockpopupWindow.dismiss();
-				 mIsShowCloseApp = false;
-			}
-			if(isServiceRunning("com.android.winstart.ManderService")){ 
-                        Intent mIntent = new Intent();
-                        mIntent.setAction("com.android.WINSTART");
-                        mIntent.setPackage("com.android.winstart");
-                        mContext.stopService(mIntent);
-                      }
-			
-            if("com.android.settings".equals(getCurrentApps())){
-					ForceStopRunningApp("com.android.settings");
-                } else {
-                Intent intent = new Intent();
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.setClassName("com.android.settings","com.android.settings.Settings");
-                        mContext.startActivity(intent);
-						if(mNavigationBarView.getWinButton1()!=null)
-							mNavigationBarView.getWinButton1().getBackground().setAlpha(250);
-						
-						}
-        	}
-		mRightMouseClick = false;
-
-        }
-    };
-	 private View.OnClickListener mOnClickWinButton2Listener =
-            new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            
-         if(!mRightMouseClick){
-		 	if (popupWindow != null){  
-		          popupWindow.dismiss();
-			      mIsShowCloseApp = false;
-			}
-			if (mLockpopupWindow != null) {  
-				 mLockpopupWindow.dismiss();
-				 mIsShowCloseApp = false;
-			}
-			if(isServiceRunning("com.android.winstart.ManderService")){ 
-                        Intent mIntent = new Intent();
-                        mIntent.setAction("com.android.WINSTART");
-                        mIntent.setPackage("com.android.winstart");
-                        mContext.stopService(mIntent);
-                      }
-			
-            	if("com.android.calculator2".equals(getCurrentApps())){
-					ForceStopRunningApp("com.android.calculator2");
-                } else {
-                Intent intent = new Intent();
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        intent.setClassName("com.android.calculator2","com.android.calculator2.Calculator");
-                        mContext.startActivity(intent);
-						if(mNavigationBarView.getWinButton2()!=null)
-							mNavigationBarView.getWinButton2().getBackground().setAlpha(250);
-						
-						}
-         	}
-		mRightMouseClick = false;
-        }
-    };
-
     private AdapterView.OnItemClickListener mWinItemClickListener = new AdapterView.OnItemClickListener() {
              @Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, 
@@ -2136,7 +2044,9 @@ private String appclosename = null;
 				   PackageManager pm = mContext.getApplicationContext().getPackageManager();
 				   Intent intent=new Intent(); 
 				   intent =pm.getLaunchIntentForPackage(packageName);
+				   //if(intent!=null&&getCurrentApps(packageName) != -1){
 
+				//}else
 				if(intent!=null&&!mRightMouseClick){
 					intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP );
 					mContext.startActivity(intent);
@@ -2233,70 +2143,6 @@ private String appclosename = null;
                         return false;
                 }
         };
-
-	private View.OnGenericMotionListener mgetWinButton1OnGenericMotionListener = new View.OnGenericMotionListener() {
-                        
-                        @Override
-                        public boolean onGenericMotion(View v, MotionEvent event) {
-                                // TODO Auto-generated method stub
-                if(mContext.getResources().getConfiguration().enableMultiWindow()){              
-								if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
-                                int what = event.getButtonState();
-								switch(what){
-								case MotionEvent.BUTTON_SECONDARY:
-									//Toast.makeText(mContext, "mouse for right click", 300).show();
-									mRightMouseClick = true;
-									if(mNavigationBarView.getWinButton1().getBackground().getAlpha()!=0)
-									   showPopuWindow((int)event.getRawX()-30,"com.android.settings");
-									else
-										showLockPopuWindow((int)event.getRawX()-30,"com.android.settings");
-
-								     break;
-								
-								case MotionEvent.BUTTON_PRIMARY:
-								//	Toast.makeText(mContext, "mouse for left click", 300).show();
-
-								    break;
-									}
-								return true;
-									
-									}
-								}
-                                return false;
-                        	}
-                };
-	private View.OnGenericMotionListener mgetWinButton2OnGenericMotionListener = new View.OnGenericMotionListener() {
-                        
-                        @Override
-                        public boolean onGenericMotion(View v, MotionEvent event) {
-                                // TODO Auto-generated method stub
-                if(mContext.getResources().getConfiguration().enableMultiWindow()){              
-								if ((event.getSource() & InputDevice.SOURCE_CLASS_POINTER) != 0) {
-                                int what = event.getButtonState();
-								switch(what){
-								case MotionEvent.BUTTON_SECONDARY:
-									//Toast.makeText(mContext, "mouse for right click", 300).show();
-									mRightMouseClick = true;
-									if(mNavigationBarView.getWinButton2().getBackground().getAlpha()!=0)
-									    showPopuWindow((int)event.getRawX()-30,"com.android.calculator2");
-									else
-										showLockPopuWindow((int)event.getRawX()-30,"com.android.calculator2");
-
-								     break;
-								
-								case MotionEvent.BUTTON_PRIMARY:
-									//Toast.makeText(mContext, "mouse for left click", 300).show();
-
-								    break;
-									}
-								return true;
-									
-									}
-								}
-                                return false;
-                        	}
-                };
-
 	 
 	
     private View.OnTouchListener mScreenshotPreloadOnTouchListener = new View.OnTouchListener() {
@@ -5394,8 +5240,6 @@ private String appclosename = null;
                 if (v.getId() == R.id.home&&mContext.getResources().getConfiguration().enableMultiWindow()) {
 					LOGD("wintask Longpress home button for clear tasks!");
 					ClearRunningTasks();
-					mNavigationBarView.getWinButton1().getBackground().setAlpha(0);
-					mNavigationBarView.getWinButton2().getBackground().setAlpha(0);
 					if(appslist!=null && appslist.size() > 0){
 					 appslist.clear();  
 		             listadapter.notifyDataSetChanged();
@@ -6250,8 +6094,7 @@ private String appclosename = null;
 			mMultiModeParams.gravity=Gravity.LEFT|Gravity.TOP;
 
 		}
-		boolean show_config = Settings.System.getInt(mContext.getContentResolver(),
-								Settings.System.MULTI_WINDOW_BUTTON_SHOW,0) == 1;
+		boolean show_config = false;
 		if(show_config){
 			multiModeContainer.setVisibility(View.VISIBLE);
 		}else{
@@ -6493,6 +6336,42 @@ private String appclosename = null;
 					}
 
 	};
+private String lastInputMethodId = null;
+	private ContentObserver mExtkeyboardObserver = new ContentObserver(new Handler()){
+		     @Override
+		     public void onChange(boolean selfChange) {
+		     if(!mContext.getResources().getConfiguration().enableMultiWindow())
+			 	return;
+	            final boolean isshow = 0 != Settings.System.getInt(
+	                   mContext.getContentResolver(), Settings.System.EXTER_KEYBOARD_CONFIG, 0);
+	                  InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+					  String InputMethodId = Settings.Secure.getStringForUser(
+                                                       mContext.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD,0);
+					  if(!"com.google.android.inputmethod.pinyin/.PinyinIME".equals(InputMethodId))
+					  lastInputMethodId = InputMethodId;
+					  
+					   List<InputMethodInfo> infos = imm.getInputMethodList();
+					    String id = null;
+					    for (InputMethodInfo info : infos) {
+					        if ("com.google.android.inputmethod.pinyin/.PinyinIME".equals(info.getId())){
+					            id = info.getId();
+					        }
+					    }
+					    if (id == null) {
+					        return;
+					    }
+					if(isshow){
+						LOGD("=======EXTER_KEYBOARD_CONFIG is open ========id:"+id);
+						  imm.setInputMethod(null,id);
+					}else{
+						LOGD("=======EXTER_KEYBOARD_CONFIG is close ========lastInputMethodId"+lastInputMethodId);
+						if(lastInputMethodId!=null&&!lastInputMethodId.equals("0"))
+							imm.setInputMethod(null,lastInputMethodId);
+					}
+				
+			}
+
+	};
 	
 	private void updateFourScreenControllers(String str){
 		if(mFourScreenHCParams == null || mFourScreenWCParams == null){
@@ -6501,9 +6380,7 @@ private String appclosename = null;
 		if (!FourScreenBackWindow.ONLY_ONE_BACK_WINDOW) {
 			String areas = str;
 			if (areas == null) {
-				areas = Settings.System.getString(
-						mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_AREAS);
+				return;
 			}
 			int x = mFourScreenHCParams.x + MUL_CON_POS;
 			int y = mFourScreenWCParams.y + MUL_CON_POS;
@@ -6785,20 +6662,13 @@ private String appclosename = null;
         		}
 //        	}
         }
-		if(!newConfig.enableMultiWindow()){
-			Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
-			Settings.System.putInt(mContext.getContentResolver(),
-					Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
-		}
 		mMultiModeParams.x = wm.getDefaultDisplay().getWidth()-(multiModeContainer.getWidth()/2);
 		mMultiModeParams.y = wm.getDefaultDisplay().getHeight()/2-multiModeContainer.getHeight();
 		if(multiModeContainer.getParent()!=null){
 			setMultiModeView();
 			wm.updateViewLayout(multiModeContainer,mMultiModeParams);
 			if(newConfig.enableMultiWindow()){
-				boolean show_config = Settings.System.getInt(mContext.getContentResolver(),
-								Settings.System.MULTI_WINDOW_BUTTON_SHOW,0) == 1;
+				boolean show_config = false;
 				if(show_config){
 					multiModeContainer.setVisibility(View.VISIBLE);
 				}else{

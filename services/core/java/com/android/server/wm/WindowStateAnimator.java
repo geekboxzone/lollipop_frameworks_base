@@ -1495,7 +1495,7 @@ class WindowStateAnimator {
 			}else if(w.mAttachedWindow!=null){
 				ws = w.mAttachedWindow;
 			}
-			boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+			boolean used = false;//Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
 			if(!used && ((w.mAttrs.flags & WindowManager.LayoutParams.FLAG_SCALED) != 0
 				|| (w.taskId == -1 && ws != null && ws.mActualScale != 1.0f)
 				|| ((w.mAttrs.flags & WindowManager.LayoutParams.FLAG_DIM_BEHIND)!=0 && w.mActualScale != 1.0f)
@@ -1523,7 +1523,7 @@ class WindowStateAnimator {
 					top = w.mPosY -(int)deltaY;
 					LOGD("setSurfaceBound 1 left="+left+" top="+top+" win="+w);
 				}
-				LOGD("setSurfaceBound 1 dx:"+dx+",ws.mPosX="+ws.mPosX+" ws.mHScale="+ws.mHScale+",ws.mVScale:"+ws.mVScale+"left="+left+" top="+top+" win="+w);
+				//LOGD("setSurfaceBound 1 dx:"+dx+",ws.mPosX="+ws.mPosX+" ws.mHScale="+ws.mHScale+",ws.mVScale:"+ws.mVScale+"left="+left+" top="+top+" win="+w);
 			}else if(w.mAttachedWindow!=null && w.mAttachedWindow.mAppToken!=null){
 				left = mWin.mAttachedWindow.mPosX + (int)((w.mFrame.left - w.mAttachedWindow.mFrame.left) * w.mHScale);
 				top = mWin.mAttachedWindow.mPosY + (int)((w.mFrame.top - w.mAttachedWindow.mFrame.top) * w.mVScale);
@@ -1540,12 +1540,12 @@ class WindowStateAnimator {
 					left = w.mPosX - (int)deltaX;
 					top = w.mPosY -(int)deltaY;
 				}
-				LOGD("  setSurfaceBound deltaX="+deltaX+" deltaY="+deltaY+"left="+left+" top="+top+" win="+w);
-				LOGD("  setSurfaceBound mFrame="+w.mFrame+"w="+w+" w.mApp="+w.mAppWindowState);
+				//LOGD("  setSurfaceBound deltaX="+deltaX+" deltaY="+deltaY+"left="+left+" top="+top+" win="+w);
+				//LOGD("  setSurfaceBound mFrame="+w.mFrame+"w="+w+" w.mApp="+w.mAppWindowState);
 			}else if((w.mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) ){	
 								left = w.mPosX;
 								top = w.mPosY;						
-				LOGD("setSurfaceBound  3 left="+left+" top="+top+"  w:"+w);
+				//LOGD("setSurfaceBound  3 left="+left+" top="+top+"  w:"+w);
 			}else{
 				w.mPosX = (int)left;
 				w.mPosY = (int)top;

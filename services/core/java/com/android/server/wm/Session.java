@@ -252,6 +252,9 @@ final class Session extends IWindowSession.Stub
 	public boolean isMultiWindowMode(){
 		return mService.isMultiWindowMode();
 	}
+	public boolean isHomeWindow(IWindow window){
+		return mService.isHomeWindow(this, window );
+	}
 
 	public void setHalfScreenTransFormInfo(IWindow window, int posX,int posY){
 		mService.setHalfScreenWindowTransFormInfo(this, window , posX,posY);

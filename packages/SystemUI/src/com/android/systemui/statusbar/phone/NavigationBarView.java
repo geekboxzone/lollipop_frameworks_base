@@ -299,13 +299,7 @@ public class NavigationBarView extends LinearLayout {
                return mCurrentView.findViewById(R.id.win_start);
        }
 
-	  public View getWinButton1(){
-               return mCurrentView.findViewById(R.id.win_1);
-       }
-	  public View getWinButton2(){
-               return mCurrentView.findViewById(R.id.win_2);
-       }
-           public HorizontalScrollView getAppsScrollView(){
+     public HorizontalScrollView getAppsScrollView(){
                return (HorizontalScrollView)mCurrentView.findViewById(R.id.mAppsScrollView);
        }
            public GridView getAppsGridView(){

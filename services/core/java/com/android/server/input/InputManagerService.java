@@ -733,6 +733,9 @@ public class InputManagerService extends IInputManager.Stub
             }
             if (missingLayoutForExternalKeyboard) {
                 if (missingLayoutForExternalKeyboardAdded) {
+				//	Log.d("hjc","========ExternalKeyboard====true");
+					Settings.System.putInt(mContext.getContentResolver(),
+                                                        Settings.System.EXTER_KEYBOARD_CONFIG, 1);
                     if (multipleMissingLayoutsForExternalKeyboardsAdded) {
                         // We have more than one keyboard missing a layout, so drop the
                         // user at the generic input methods page so they can pick which
@@ -743,6 +746,9 @@ public class InputManagerService extends IInputManager.Stub
                     }
                 }
             } else if (mKeyboardLayoutNotificationShown) {
+           // Log.d("hjc","========ExternalKeyboard====false");
+			Settings.System.putInt(mContext.getContentResolver(),
+                                                        Settings.System.EXTER_KEYBOARD_CONFIG, 0);
                 hideMissingKeyboardLayoutNotification();
             }
         }

@@ -517,7 +517,6 @@ final class ActivityRecord {
 				LOGD("have the flag info.align="+info.align+" packageName="+aInfo.applicationInfo.packageName);
 			}
 			if( appInfo.phoneMode/* || info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT*/){
-				Log.e("shenzhicheng", "ActivityRecord --------- phoneMode");
 			    info.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 		    }
             packageName = aInfo.applicationInfo.packageName;

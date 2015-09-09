@@ -14049,8 +14049,6 @@ public class PackageManagerService extends IPackageManager.Stub
 			    if (parser.getAttributeCount() > 0) {
                         	String pkgname = parser.getAttributeValue(0);//null, "package");
                         	String pkgmode = parser.getAttributeValue(1);
-				//Log.e("shenzhicheng", tag + ", pkgname = " + pkgname + ", pkgmode = " + pkgmode);
-				//Log.e("shenzhicheng", tag + " ,count: " + parser.getAttributeCount() + ", ----------------- PMS pkgName from xml is " + pkgName);
 			    	if(pkgname != null)
                        phoneModeList.put(pkgname,Boolean.parseBoolean(pkgmode));
 			    }
@@ -14072,7 +14070,6 @@ public class PackageManagerService extends IPackageManager.Stub
 		if(pkgName == null || phoneModeList == null) return -1;
 		Boolean mode = phoneModeList.get(pkgName);
 		int phonemode = mode==null?-1:(mode?1:0);
-		//Log.e("shenzhicheng",  ", pkgname = " + pkgName + ", pkgmode = " + phonemode);
 		return phonemode;
     }
 }

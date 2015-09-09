@@ -3119,14 +3119,12 @@ public class PackageParser {
                     ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 				    
 	    if(pkgSupportPhone  == -1) {
-			if(a.info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT&&SystemProperties.get("persist.sys.phonemode","true").equals("true")) {
-			owner.applicationInfo.phoneMode = true;
-	    	Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
-				}
+			if(!owner.applicationInfo.isHomeApp &&a.info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT&&SystemProperties.get("persist.sys.phonemode","true").equals("true")) {
+				owner.applicationInfo.phoneMode = true;
+				Slog.w(TAG, owner.applicationInfo.packageName+ "this Application will support phone mode : " + owner.applicationInfo.isHomeApp);
+			}
 	    }else{
 			owner.applicationInfo.phoneMode = pkgSupportPhone ==1;
-			Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
-
 		}
             a.info.configChanges = sa.getInt(
                     com.android.internal.R.styleable.AndroidManifestActivity_configChanges,
@@ -3220,18 +3218,19 @@ public class PackageParser {
                             + mArchiveSourcePath + " "
                             + parser.getPositionDescription());
                 } else {
-				   
-                     if(pkgSupportPhone  == -1) {
-					 	if(intent.hasAction(Intent.ACTION_MAIN) 
+				   if(intent.hasCategory(Intent.CATEGORY_HOME)&&intent.hasAction(Intent.ACTION_MAIN)){
+						  	owner.applicationInfo.isHomeApp = true;
+						  	owner.applicationInfo.phoneMode = false;
+							 Slog.w(TAG, owner.applicationInfo.packageName+ "this Application will support phone CATEGORY_HOME : " + owner.applicationInfo.isHomeApp);
+					}else if(pkgSupportPhone  == -1) {
+					 	  if(!owner.applicationInfo.isHomeApp && intent.hasAction(Intent.ACTION_MAIN) 
 						    && intent.hasCategory(Intent.CATEGORY_LAUNCHER)
 						    && a.info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT&&SystemProperties.get("persist.sys.phonemode","true").equals("true")){
-						owner.applicationInfo.phoneMode = true;
-	    			  Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
+						    owner.applicationInfo.phoneMode = true;
+	    			        Slog.w(TAG, owner.applicationInfo.packageName+ "this Application will support phone mode : " + owner.applicationInfo.isHomeApp);
 					 		}
 				    }else{
 						owner.applicationInfo.phoneMode = pkgSupportPhone ==1;
-						Slog.w(TAG, "this Application will support phone mode : " + owner.applicationInfo.uid);
-
 					}
 			             
                     a.intents.add(intent);

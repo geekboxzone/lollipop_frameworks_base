@@ -730,7 +730,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
     @Override
     public final void openPanel(int featureId, KeyEvent event) {
-              Log.d(TAG, "  =========openpanel======  =======");
         if (featureId == FEATURE_OPTIONS_PANEL && mDecorContentParent != null &&
                 mDecorContentParent.canShowOverflowMenu() &&
                 !ViewConfiguration.get(getContext()).hasPermanentMenuKey()) {
@@ -748,7 +747,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
             return;
         }
 
-              Log.d(TAG, st.menu.getNonActionItems().isEmpty()+"  =====open ---------Panel==="+st.isPrepared+"+=== 5555 =======");
         // Don't open an options panel for honeycomb apps on xlarge devices.
         // (The app should be using an action bar for menu items.)
         if (st.featureId == FEATURE_OPTIONS_PANEL) {
@@ -1034,35 +1032,26 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
             final PanelFeatureState st = getPanelState(featureId, false);
 
-              Log.d(TAG,mDecor.mActionMode  +"  00000=====onKeyUpPanel======  ======="+(st!=null?st.menu.getNonActionItems().isEmpty():null));
             if (event.isCanceled() || (mDecor != null && mDecor.mActionMode != null) ||
                     (st == null)) {
                 return;
             }
 
-
-              Log.d(TAG, "  00000=====onKeyUpPanel======  ======="+st.menu.getNonActionItems().isEmpty());
             boolean playSoundEffect = false;
 
 if(mDecorContentParent != null)
-  Log.d(TAG, "  11=====onKeyUpPanel======  canshowmenu"
-                    +  mDecorContentParent.canShowOverflowMenu() + " hasmenukey."+ViewConfiguration.get(getContext()).hasPermanentMenuKey());
-
+  
             if (featureId == FEATURE_OPTIONS_PANEL && mDecorContentParent != null &&
                     mDecorContentParent.canShowOverflowMenu() &&
                     !ViewConfiguration.get(getContext()).hasPermanentMenuKey()) {
-  Log.d(TAG, "  22=====onKeyUpPanel======  canshowmenu"
-                           + mDecorContentParent.isOverflowMenuShowing());
                 if (!mDecorContentParent.isOverflowMenuShowing()) {
-                    if (!isDestroyed() && preparePanel(st, event)) {
-              Log.d(TAG, "  3333=====onKeyUpPanel======  =======");
+                    if (!isDestroyed() && preparePanel(st, event)) {     
                         playSoundEffect = mDecorContentParent.showOverflowMenu();
                     }
                 } else {
                     playSoundEffect = mDecorContentParent.hideOverflowMenu();
                 }
             } else {
-              Log.d(TAG, st.isOpen+"  =====onKeyUpPanel==="+st.isPrepared+"+=== 5555 ======="+  st.menu.getNonActionItems().isEmpty());
                 if (st.isOpen || st.isHandled) {
 
                     // Play the sound effect if the user closed an open menu (and not if
@@ -1073,8 +1062,7 @@ if(mDecorContentParent != null)
                     closePanel(st, true);
 
                 } else if (st.isPrepared ) {
-                    boolean show = true;
-              Log.d(TAG, "  =====onKeyUpPanel==="+st.refreshMenuContent+"+===666 ======="+ViewConfiguration.get(getContext()).hasPermanentMenuKey());
+                    boolean show = true;    
                     if (st.refreshMenuContent) {
                         // Something may have invalidated the menu since we prepared it.
                         // Re-prepare it to refresh.
@@ -3555,7 +3543,6 @@ if(mDecorContentParent != null)
             }
             System.out.println(s);
         }
-		try{ throw new RuntimeException(" call!");}catch(Exception e){e.printStackTrace();}
 
         mIsFloating = a.getBoolean(R.styleable.Window_windowIsFloating, false);
         int flagsToUpdate = (FLAG_LAYOUT_IN_SCREEN|FLAG_LAYOUT_INSET_DECOR)
@@ -3757,7 +3744,6 @@ if(mDecorContentParent != null)
        //  System.out.println("Features: 0x" + Integer.toHexString(features));
         if ((features & (1 << FEATURE_SWIPE_TO_DISMISS)) != 0) {
             layoutResource = R.layout.screen_swipe_dismiss;
-             System.out.println("------1");
         } else if ((features & ((1 << FEATURE_LEFT_ICON) | (1 << FEATURE_RIGHT_ICON))) != 0) {
             if (mIsFloating) {
                 TypedValue res = new TypedValue();
@@ -3770,13 +3756,11 @@ if(mDecorContentParent != null)
             }
             // XXX Remove this once action bar supports these features.
             removeFeature(FEATURE_ACTION_BAR);
-             System.out.println("Title Icons!");
         } else if ((features & ((1 << FEATURE_PROGRESS) | (1 << FEATURE_INDETERMINATE_PROGRESS))) != 0
                 && (features & (1 << FEATURE_ACTION_BAR)) == 0) {
             // Special case for a window with only a progress bar (and title).
             // XXX Need to have a no-title version of embedded windows.
             layoutResource = R.layout.screen_progress;
-             System.out.println("Progress!");
         } else if ((features & (1 << FEATURE_CUSTOM_TITLE)) != 0) {
             // Special case for a window with a custom title.
             // If the window is floating, we need a dialog layout
@@ -3789,7 +3773,6 @@ if(mDecorContentParent != null)
             } else {
                 layoutResource = R.layout.screen_custom_title;
             }
-             System.out.println("------12");
             // XXX Remove this once action bar supports these features.
             removeFeature(FEATURE_ACTION_BAR);
         } else if ((features & (1 << FEATURE_NO_TITLE)) == 0) {
@@ -3809,16 +3792,13 @@ if(mDecorContentParent != null)
             } else {
                 layoutResource = R.layout.screen_title;
             }
-             System.out.println("Title!");
         } else if ((features & (1 << FEATURE_ACTION_MODE_OVERLAY)) != 0) {
             layoutResource = R.layout.screen_simple_overlay_action_mode;
 	    if(isHomeWindow())
             	isAdd = false;
-             System.out.println("------3");
         } else {
             // Embedded, so no decoration is needed.            input method
             layoutResource = R.layout.screen_simple;
-             System.out.println("Simple!");
         }
 
         mDecor.startChanging();
@@ -3831,7 +3811,7 @@ if(mDecorContentParent != null)
         }catch(RemoteException e){
         	LOGD("remoteException do nothing");
         }
-		System.out.println(getAttributes()+"======================!"+getContainer());
+		LOGD(getAttributes()+"======================!"+getContainer());
 		
 		if (mMultiWindowUtil != null) {
 			mMaxMinGuard = mMultiWindowUtil.generateLayout(decor, isAdd, context, in, mLayoutInflater, config);

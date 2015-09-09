@@ -3114,7 +3114,7 @@ public class WindowManagerService extends IWindowManager.Stub
 	}
 	public void setWindowTransFormInfo(WindowState win){
 		LOGD("~~~~~~~~~~~~~~~~~~~setWindowTransFormInfo");
-		boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+		boolean used = false;//Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
 		if(!used){
 			return;
 		}
@@ -3204,7 +3204,7 @@ public class WindowManagerService extends IWindowManager.Stub
 
 	public void setWindowTransFormInfo(Session session,IWindow client, MultiWindowInfo transForInfo){
 		LOGD("~~~~~~~~~~~~~~~~~~~setWindowTransFormInfo");
-		boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+		boolean used = false;//Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
 		if(!used){
 			return;
 		}
@@ -3833,7 +3833,7 @@ public class WindowManagerService extends IWindowManager.Stub
                         (attrs.width  / (float)requestedWidth) : 1.0f;
                 win.mScaleY = (attrs.height != requestedHeight) ?
                         (attrs.height / (float)requestedHeight) : 1.0f;
-		Log.e("shenzhicheng", win+"WMS win = " + win.getAttrs()+ " mScaleY = " + win.mScaleY);
+		LOGD(win+"WMS win = " + win.getAttrs()+ " mScaleY = " + win.mScaleY);
             } else {
                 //win.mHScale = win.mVScale = 1;
             }
@@ -7510,13 +7510,19 @@ public class WindowManagerService extends IWindowManager.Stub
 			Settings.System.putInt(mContext.getContentResolver(),
 						Settings.System.MULITI_WINDOW_MODE, 2);
 		
-			//if(isMultiWindowMode()){
- 				Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,1);
-			//}
 			return true;
 		}
 		return false;
+	}
+	 public boolean isHomeWindow(Session session, IWindow client){
+	 	synchronized(mWindowMap) {
+			WindowState win = windowForClientLocked(session, client, false);
+			if(win == null || win.mAppToken == null){
+				return false;
+			}
+			LOGD("------isHomeWindow   win.group="+win.mAppToken+" home="+mHomeApp);
+			return isHomeWindow(win,false);
+		}
 	}
     public boolean isHomeWindow(WindowState win){
 		return isHomeWindow(win,false);
@@ -7622,8 +7628,8 @@ public class WindowManagerService extends IWindowManager.Stub
 
 	public void resetMultiWindowFlag(){
 		LOGD("reset the settings.System.MULTI_WINDOW value:0");
-		Settings.System.putInt(mContext.getContentResolver(),
-                        Settings.System.MULTI_WINDOW_USED, 0);
+		/*Settings.System.putInt(mContext.getContentResolver(),
+                        Settings.System.MULTI_WINDOW_USED, 0);*/
 	}
 
 	public Point getFourScreenSettingPosition(){
@@ -7826,7 +7832,7 @@ public class WindowManagerService extends IWindowManager.Stub
 				}
 				Log.v("SurfaceViewBackWindow","---wms---left:"+left+",top:"+top+",width:"+width+",height:"+height);
 				w.mSurfaceViewBackWindow.positionSurface(left,top,width,height);	
-				boolean used = Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
+				boolean used = false;//Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
 				if(w.mViewVisibility == View.VISIBLE && !used){
 					//w.mSurfaceViewBackWindow.SetLayer(w.mLayer- 2);
 					Log.v("SurfaceViewBackWindow","----wms------setVisibility-------true----------");
@@ -7852,7 +7858,6 @@ public class WindowManagerService extends IWindowManager.Stub
 		}else if(win.stepOfFourScreen == 3){
 			msg = win.getAttrs().align = WindowManagerPolicy.ALIGN_RIGHT_BOTTOM_WINDOW;
 		}else if(win.mAttrs.align == WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN || win.stepOfFourScreen == -1){
-		    new Exception().printStackTrace();
 			msg = WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN;
 		}
 		if(watcher != null){
@@ -7945,23 +7950,17 @@ public class WindowManagerService extends IWindowManager.Stub
 		}		
 	}
 
-    public void updateAllWindowsFullScreenMode(){
+    public void updateAllWindowsFullScreenMode(int taskId){
 		if(mCurConfiguration.enableMultiWindow()){
 			if(getMultiWindowMode() != Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE){
 				return;
 			}
-			Settings.System.putInt(mContext.getContentResolver(),
-										Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
-			Settings.System.putInt(mContext.getContentResolver(),
-									Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
-			updateAppTokenWindowsFullScreen();
+			updateAppTokenWindowsFullScreen(taskId);
 		}
     }
 
 	public void updateAllWindowsHalfScreenMode(){
 		if(mCurConfiguration.enableMultiWindow()){
-			Settings.System.putInt(mContext.getContentResolver(),
-										Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
 			Settings.System.putInt(mContext.getContentResolver(),
 						Settings.System.MULITI_WINDOW_MODE, 1);
 			updateAppTokenWindowsHalfScreen();
@@ -7974,10 +7973,6 @@ public class WindowManagerService extends IWindowManager.Stub
 			Settings.System.putInt(mContext.getContentResolver(),
 						Settings.System.MULITI_WINDOW_MODE, 2);
 			updateAppTokenWindowsFourScreen();
-			if(isMultiWindowMode()){
- 				Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,1);
-			}
 		}
     }
 
@@ -8100,7 +8095,7 @@ public class WindowManagerService extends IWindowManager.Stub
 		}	
 	}
 
-	public void updateAppTokenWindowsFullScreen(){	
+	public void updateAppTokenWindowsFullScreen(int taskId){	
 		synchronized(mWindowMap){
 			int tempGroupId = -1;
 			int step = -1;
@@ -8125,8 +8120,9 @@ public class WindowManagerService extends IWindowManager.Stub
 					step ++;
 				}
 				tempGroupId = wtoken.groupId;
-				if(topTaskId == -1){
-					topTaskId = tempGroupId;
+				if(tempGroupId != taskId){
+					//topTaskId = tempGroupId;
+					continue;
 				}
 				for(int j=0;j<wtoken.allAppWindows.size();j++){
 					WindowState win = wtoken.allAppWindows.get(j);
@@ -8162,7 +8158,6 @@ public class WindowManagerService extends IWindowManager.Stub
 						onAppAlignChanged(watcher,win,false);
 					}
 				}
-				if(topTaskId != -1) break;
 			}
 		
 			//toFullScreenModeAppMoveBack(topTaskId);
@@ -8175,7 +8170,7 @@ public class WindowManagerService extends IWindowManager.Stub
 				resetFourScreenPosition();
 				if(mCurrentFocus != null && !ignoreWindow(mCurrentFocus) && mCurrentFocus.mHScale > 2/(float)3){	
 					LOGD("-------------multiWindowUsed---FullScreenMode--------------");
-					updateAllWindowsFullScreenMode();
+					updateAllWindowsFullScreenMode(0);
 				}else{
 					LOGD("-------------multiWindowUsed---FourScreenMode--------------");
 					if(!isWorked("com.android.Listappinfo.ManderService")){
@@ -9389,13 +9384,7 @@ public class WindowManagerService extends IWindowManager.Stub
 	}
 
 	private void storeAreasOfFourScreen(){
-		Settings.System.putString(mContext.getContentResolver(),
-									Settings.System.MULTI_WINDOW_MIN_OPERATION_MOVE_PACKAGE, "");
-		Settings.System.putString(mContext.getContentResolver(),
-									Settings.System.FOUR_SCREEN_WINDOW_AREAS, "-");
 		if(mCurConfiguration.enableMultiWindow() && getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
-			String areas = Settings.System.getString(mContext.getContentResolver(),
-				Settings.System.FOUR_SCREEN_WINDOW_AREAS);
 			StringBuffer moveMinWindowSb = new StringBuffer();
         	int result = 0;
 			boolean []hasWindow = new boolean[]{false,false,false,false};
@@ -9426,14 +9415,7 @@ public class WindowManagerService extends IWindowManager.Stub
 					sb.append(t+",");
             	}
 			}
-			Settings.System.putString(mContext.getContentResolver(),
-						Settings.System.MULTI_WINDOW_MIN_OPERATION_MOVE_PACKAGE, moveMinWindowSb.toString());
 			LOGD("++++++++++++storeAreasOfFourScreen++++++++++++sb.toString():"+sb.toString());
-			Settings.System.putString(mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_AREAS, sb.toString());
-		}else{
-			Settings.System.putString(mContext.getContentResolver(),
-									Settings.System.FOUR_SCREEN_WINDOW_AREAS, "");
 		}
 	}
 
@@ -11068,17 +11050,11 @@ public class WindowManagerService extends IWindowManager.Stub
 					halfScreenController.mWinAnimator.mAnimLayer = halfScreenController.mLayer;
 					LOGD("halfControll="+halfScreenController+" layer="+halfScreenController.mLayer);
 		 			LOGD("topHalfscreen="+topHalfScreen);
-				}else if(topHalfScreen == null){
+				}/*else if(topHalfScreen == null){
 					LOGD("assignLayer disable the half_screen_window");
-					Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
 			}else if(halfScreenController == null && topHalfScreen!=null){
 				LOGD("assignLayer enable the half_screen_widow topHalfScreen:"+topHalfScreen);
-				Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.HALF_SCREEN_WINDOW_ENABLE,1);
-				}
-				Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
+				}*/
 			}else if(getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
 				WindowState topFourScreenWin = getFirstFourScreenModeWindow();
 				LOGD("halfScreenController="+halfScreenController+",fourScreenController:"+fourScreenController+",topFourScreenWin:"+topFourScreenWin);
@@ -11102,21 +11078,8 @@ public class WindowManagerService extends IWindowManager.Stub
 						multiCenterButton.mLayer = topFourScreenWin.mLayer+4;
 						multiCenterButton.mWinAnimator.mAnimLayer = multiCenterButton.mLayer;
 					}
-				}else if(topFourScreenWin == null){
-					LOGD("assignLayer disable the four_screen_window");
-					Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
-				}else if(halfScreenController == null&& topFourScreenWin != null){
-					Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.FOUR_SCREEN_WINDOW_ENABLE,1);
 				}
-				Settings.System.putInt(mContext.getContentResolver(),
-					Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
 			}else{
-				Settings.System.putInt(mContext.getContentResolver(),
-										Settings.System.FOUR_SCREEN_WINDOW_ENABLE,0);
-				Settings.System.putInt(mContext.getContentResolver(),
-									Settings.System.HALF_SCREEN_WINDOW_ENABLE,0);
 			}
 		}
         if (mAccessibilityController != null && anyLayerChanged

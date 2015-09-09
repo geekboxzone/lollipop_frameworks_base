@@ -180,7 +180,7 @@ interface IWindowManager
     boolean isMultiWindowMode();
     void updateAllWindowsPositionStretch();
     void updateAllWindowsPositionCompose();
-    void updateAllWindowsFullScreenMode();
+    void updateAllWindowsFullScreenMode(int taskId);
     void updateAllWindowsHalfScreenMode();
     void updateAllWindowsFourScreenMode();
     void multiWindowMenuOperation(String actionString);

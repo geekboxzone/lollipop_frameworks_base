@@ -141,6 +141,7 @@ interface IWindowSession {
     void setTransFormInfo(IWindow window, in MultiWindowInfo transFormInfo); 
   
     boolean isMultiWindowMode();
+    boolean isHomeWindow(IWindow window);
      
     void setHalfScreenTransFormInfo(IWindow window, int posX, int posY);
  

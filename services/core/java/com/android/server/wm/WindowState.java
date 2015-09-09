@@ -801,11 +801,9 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			if(mFrame.top < attachVisibleFrame.top) mFrame.top = attachVisibleFrame.top;
 			if(mFrame.right > attachVisibleFrame.right) mFrame.right = attachVisibleFrame.right;
 			if(mFrame.bottom > attachVisibleFrame.bottom) mFrame.bottom = attachVisibleFrame.bottom;
-			//Log.e("shenzhicheng","----------mScaleX:"+mScaleX+",mScaleY:"+mScaleY+",mAttrs.width:"+mAttrs.width+",mFrame.width():"+mFrame.width()+",mRequestedWidth:"+mRequestedWidth+",:"+getAttrs().getTitle());
 			LOGD("----------mScaleX:"+mScaleX+",mScaleY:"+mScaleY+",mAttrs.width:"+mAttrs.width+",mFrame.width():"+mFrame.width()+",mRequestedWidth:"+mRequestedWidth+",:"+getAttrs().getTitle());
 			//if(mAttrs.width > mFrame.width() && mFrame.width() != 0) mScaleX = mFrame.width()/(float)mRequestedWidth;
 			//if(mAttrs.height > mFrame.height() && mFrame.height() != 0) mScaleY = mFrame.height()/(float)mRequestedHeight;
-			//Log.e("shenzhicheng","----------mScaleX:"+mScaleX+",mScaleY:"+mScaleY+",:"+getAttrs().getTitle());
 			LOGD("----------mScaleX:"+mScaleX+",mScaleY:"+mScaleY+",:"+getAttrs().getTitle());
 		}
         // Make sure the content and visible frames are inside of the

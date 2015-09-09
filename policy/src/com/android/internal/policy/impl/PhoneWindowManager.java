@@ -3944,21 +3944,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         if ((sysui & View.SYSTEM_UI_FLAG_LAYOUT_STABLE) != 0) {
             // If app is requesting a stable layout, don't let the
             // content insets go below the stable values.
-            if ((fl & FLAG_FULLSCREEN) != 0 && (sysui & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0) {
+            if ((fl & FLAG_FULLSCREEN) != 0 && (MultiWindowSettings.checkConfig(mContext)||(sysui & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0)) {
                 if (r.left < mStableFullscreenLeft) r.left = mStableFullscreenLeft;
                 if (r.top < mStableFullscreenTop) r.top = mStableFullscreenTop;
                 if (r.right > mStableFullscreenRight) r.right = mStableFullscreenRight;
                 if (r.bottom > mStableFullscreenBottom) r.bottom = mStableFullscreenBottom;
-		   // Log.e(TAG, "applyStableConstraints ------------------------------------------------------------- 0 r.top = " + r.top);
             } else {
                 if (r.left < mStableLeft) r.left = mStableLeft;
                 if (r.top < mStableTop) r.top = mStableTop;
                 if (r.right > mStableRight) r.right = mStableRight;
                 if (r.bottom > mStableBottom) r.bottom = mStableBottom;
-		    //Log.e(TAG, "applyStableConstraints ------------------------------------------------------------- 1 r.top = " + r.top);
             }
         }
-		if((sysui & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW) != 0){
+		if(!MultiWindowSettings.checkConfig(mContext)&&(sysui & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW) != 0){
 			if (r.left < mStableLeft) r.left = mStableLeft;
 			if (r.top < mStableTop) r.top = mStableTop;
 			if (r.right > mStableRight) r.right = mStableRight;
@@ -4092,7 +4090,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 }
               }
 	     boolean isMultiWindow = win!=null?win.getHScale()!=1.0:false;
-             if(isMultiWindow || ((mLastSystemUiFlags & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW) != 0)){
+             if(!MultiWindowSettings.checkConfig(mContext)&&(isMultiWindow || ((mLastSystemUiFlags & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW) != 0))){
 			dcf.top = mStableTop;
 			dcf.bottom = mStableBottom;
 			dcf.right = mStableRight;
@@ -4135,7 +4133,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                                         "Laying out status bar window: (%d,%d - %d,%d)",
                                         pf.left, pf.top, pf.right, pf.bottom));
                     } else if ((fl & FLAG_LAYOUT_IN_OVERSCAN) != 0
-                            && (sysUiFl &  View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW) == 0
+                            && (MultiWindowSettings.checkConfig(mContext)||(sysUiFl &  View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW) == 0)
                             && attrs.type >= WindowManager.LayoutParams.FIRST_APPLICATION_WINDOW
                             && attrs.type <= WindowManager.LayoutParams.LAST_SUB_WINDOW) {
                         // Asking to layout into the overscan region, so give it that pure
@@ -4145,8 +4143,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         pf.right = df.right = of.right = mOverscanScreenLeft + mOverscanScreenWidth;
                         pf.bottom = df.bottom = of.bottom = mOverscanScreenTop
                                 + mOverscanScreenHeight;
-			//Log.e(TAG, "------------------------------------------------------------- 0 " + attrs.getTitle());
-                    } else if (!topIsMultiWindow && canHideNavigationBar()
+                    } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow) && canHideNavigationBar()
                             && (sysUiFl & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION) != 0
                             && attrs.type >= WindowManager.LayoutParams.FIRST_APPLICATION_WINDOW
                             && attrs.type <= WindowManager.LayoutParams.LAST_SUB_WINDOW) {
@@ -4165,7 +4162,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         of.top = mUnrestrictedScreenTop;
                         of.right = mUnrestrictedScreenLeft + mUnrestrictedScreenWidth;
                         of.bottom = mUnrestrictedScreenTop + mUnrestrictedScreenHeight;
-			//Log.e(TAG, "------------------------------------------------------------- 1" + attrs.getTitle());
                     } else {
                         pf.left = df.left = mRestrictedOverscanScreenLeft;
                         pf.top = df.top = mRestrictedOverscanScreenTop;
@@ -4200,7 +4196,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                                 cf.left = mContentLeft;
                                 cf.top = mContentTop;
                                 cf.right = mContentRight;
-                                //cf.bottom = mContentBottom;
+                                cf.bottom = mContentBottom;
                             }
                         }
                     } else {
@@ -4212,12 +4208,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         cf.left = mRestrictedScreenLeft;
                         cf.top = mRestrictedScreenTop;
                         cf.right = mRestrictedScreenLeft + mRestrictedScreenWidth;
-                        //cf.bottom = mRestrictedScreenTop + mRestrictedScreenHeight;
+                        cf.bottom = mRestrictedScreenTop + mRestrictedScreenHeight;
                     }
 		    //Log.e(TAG, "------------------------------------------------------------- 4.5" + attrs.getTitle() + ", cf = " + cf);
                     applyStableConstraints(sysUiFl, fl, cf);
 		    //Log.e(TAG, "------------------------------------------------------------- 5" + attrs.getTitle() + ", cf = " + cf);
-                    if (adjust != SOFT_INPUT_ADJUST_NOTHING && (sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0) {
+		    if (adjust != SOFT_INPUT_ADJUST_NOTHING && (MultiWindowSettings.checkConfig(mContext)||(sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0)) {
                         vf.left = mCurLeft;
                         vf.top = mCurTop;
                         vf.right = mCurRight;
@@ -4301,7 +4297,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                             = mOverscanScreenLeft + mOverscanScreenWidth;
                     pf.bottom = df.bottom = of.bottom = cf.bottom
                             = mOverscanScreenTop + mOverscanScreenHeight;
-                } else if (!topIsMultiWindow&& canHideNavigationBar()
+                } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow)&& canHideNavigationBar()
                         && (sysUiFl & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION) != 0
                         && (attrs.type == TYPE_STATUS_BAR
                             || attrs.type == TYPE_TOAST
@@ -4331,7 +4327,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
                 applyStableConstraints(sysUiFl, fl, cf);
 
-                if (adjust != SOFT_INPUT_ADJUST_NOTHING && (sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0) {
+                if (adjust != SOFT_INPUT_ADJUST_NOTHING && (MultiWindowSettings.checkConfig(mContext)||(sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0)) {
                     vf.left = mCurLeft;
                     vf.top = mCurTop;
                     vf.right = mCurRight;
@@ -4389,7 +4385,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         df.right = of.right = cf.right = mContentRight;
                         df.bottom = of.bottom = cf.bottom = mContentBottom;
                     }
-                    if (adjust != SOFT_INPUT_ADJUST_NOTHING && (sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0) {
+					
+                    if (adjust != SOFT_INPUT_ADJUST_NOTHING && (MultiWindowSettings.checkConfig(mContext)||(sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)==0)) {
                         vf.left = mCurLeft;
                         vf.top = mCurTop;
                         vf.right = mCurRight;
@@ -4593,7 +4590,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 if (attrs.x == 0 && attrs.y == 0
                         &&(( attrs.width == WindowManager.LayoutParams.MATCH_PARENT
                     && attrs.height == WindowManager.LayoutParams.MATCH_PARENT)||
-                    (attrs.flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0)) {
+                    (!MultiWindowSettings.checkConfig(mContext)&&(attrs.flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0))) {
                     if (DEBUG_LAYOUT) Slog.v(TAG, "Fullscreen window: " + win);
                     mTopFullscreenOpaqueWindowState = win;
                     if (!mAppsThatDismissKeyguard.isEmpty() &&

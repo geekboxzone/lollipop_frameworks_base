@@ -6187,7 +6187,6 @@ public class Activity extends ContextThemeWrapper
 		if(/*(intent.getFlags()&Intent.FLAG_USE_HALF_SCREEN) != 0*/ appInfo.phoneMode/* || info.screenOrientation == ActivityInfo.SCREEN_ORIENTATION_PORTRAIT */&& config.enableMultiWindow()){
 			//mWindow.getAttributes().flags |= WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
 			//mWindow.getAttributes().align = info.align;
-				Log.e("shenzhicheng", "Activity --------- phoneMode");
 			mWindow.getAttributes().align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 		}
 		/*if(config.enableMultiWindow()){

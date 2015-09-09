@@ -13568,7 +13568,6 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 	* need override by PhoneWindow.DecorView 
 	*/
 	void dispatchAppAlignChanged(int align,boolean rotate){
-	LOGD("=============================dispatchAppAlignChanged==================="+align);
 		onAppAlignChanged(align,rotate);
 	}
 

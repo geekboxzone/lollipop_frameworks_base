@@ -1787,6 +1787,12 @@ public final class Settings {
           * @hide
           */
         public static final String SCREENSHOT_BUTTON_SHOW="screenshot_button_show";
+
+        /** add by huangjc for ExternalKeyboard
+                *@hide
+                */
+                public static final String EXTER_KEYBOARD_CONFIG = "exter_keyboard_config";
+
         /**
          * launcher app start  add by lly
          * @hide
@@ -1897,7 +1903,7 @@ public final class Settings {
                 /**
                 *@hide
                 */
-                public static final String TOP_MULTI_APP_ENABLE = "top_multi_window_enable";
+        public static final String TOP_MULTI_APP_ENABLE = "top_multi_window_enable";
         /**
          * @deprecated Use {@link android.provider.Settings.Global#AIRPLANE_MODE_ON} instead
          */
