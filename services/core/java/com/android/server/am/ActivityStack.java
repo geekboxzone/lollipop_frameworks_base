@@ -1916,7 +1916,7 @@ final class ActivityStack {
 	    	{
 			String prevstring = prev.toString();
 			String nextstring = next.toString();
-			if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk"))&&(!prevstring.contains("com.antutu.ABenchMark"))&&(!prevstring.contains("com.google.android.setupwizard"))&&(!prevstring.contains("packageinstaller"))&&(!prevstring.contains("apkinstaller")))//exclude some apk
+			if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk"))&&(!prevstring.contains("com.antutu.ABenchMark"))&&(!prevstring.contains("com.google.android.setupwizard"))&&(!prevstring.contains("packageinstaller"))&&(!prevstring.contains("apkinstaller"))&&(!prevstring.contains("com.android.cts"))&&(!prevstring.contains("com.google.android.xts")))//exclude some apk
 			{
 				if((!nextstring.contains("com.qihoo"))&&(!nextstring.contains("com.dragon.android.pandaspace"))&&(!nextstring.contains(".auth.gsf.AccountIntroActivity"))&&(!nextstring.contains(".auth.login.")))//exclude 360,91,google login
 				{
