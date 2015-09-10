@@ -687,8 +687,8 @@ public class WindowManagerService extends IWindowManager.Stub
     PowerManager mPowerManager;
     PowerManagerInternal mPowerManagerInternal;
 
-    float mWindowAnimationScaleSetting = 0.5f;
-    float mTransitionAnimationScaleSetting = 0.5f;
+    float mWindowAnimationScaleSetting = 1.0f;
+    float mTransitionAnimationScaleSetting = 1.0f;
     float mAnimatorDurationScaleSetting = 1.0f;
     boolean mAnimationsDisabled = false;
 
@@ -896,6 +896,14 @@ public class WindowManagerService extends IWindowManager.Stub
     private WindowManagerService(Context context, InputManagerService inputManager,
             boolean haveInputMethods, boolean showBootMsgs, boolean onlyCore) {
         mContext = context;
+        //$_rockchip_$_modify_by_huangjc :
+         float configWindowAnimationScale = Float.parseFloat(mContext.getResources()
+            .getString(com.android.internal.R.string.config_window_animation_scale));
+         float configTransitionAnimationScale = Float.parseFloat(mContext.getResources()
+            .getString(com.android.internal.R.string.config_transition_animation_scale));
+        mWindowAnimationScaleSetting = configWindowAnimationScale;
+        mTransitionAnimationScaleSetting = configTransitionAnimationScale;
+        //$_rockchip_$_end
         mHaveInputMethods = haveInputMethods;
         mAllowBootMessages = showBootMsgs;
         mOnlyCore = onlyCore;

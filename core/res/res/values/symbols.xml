@@ -1812,6 +1812,10 @@
   <java-symbol type="string" name="config_defaultNetworkScorerPackageName" />
   <java-symbol type="string" name="config_persistentDataPackageName" />
 
+  <!--Make system animation scale configurable -->
+  <java-symbol type="string" name="config_window_animation_scale" />
+  <java-symbol type="string" name="config_transition_animation_scale" />
+
   <java-symbol type="layout" name="resolver_list" />
   <java-symbol type="id" name="resolver_list" />
   <java-symbol type="id" name="button_once" />
