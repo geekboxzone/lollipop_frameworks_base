@@ -280,6 +280,7 @@ public final class ActivityManagerService extends ActivityManagerNative
     static final boolean DEBUG_PSS = localLOGV || false;
     static final boolean DEBUG_LOCKSCREEN = localLOGV || false;
     static final boolean DEBUG_RECENTS = localLOGV || false;
+    static final boolean DEBUG_LOWMEM = localLOGV || false;
     static final boolean VALIDATE_TOKENS = false;
     static final boolean SHOW_ACTIVITY_START_TIME = true;
 
@@ -1214,6 +1215,9 @@ public final class ActivityManagerService extends ActivityManagerNative
     SparseIntArray mUserProfileGroupIdsSelfLocked = new SparseIntArray();
 
     private UserManagerService mUserManager;
+
+    final Map<String,String> mProcessMap  =new HashMap<String,String>(); //process which do not start auto by broadcast and contentprovider from lowmem_package_filter.xml       
+    final Map<String,String> mServiceMap  =new HashMap<String,String>(); //service which do not start auto by call startService or bindService from lowmem_package_filter.xml 
 
     private final class AppDeathRecipient implements IBinder.DeathRecipient {
         final ProcessRecord mApp;
@@ -2165,6 +2169,53 @@ public final class ActivityManagerService extends ActivityManagerNative
 
         Watchdog.getInstance().addMonitor(this);
         Watchdog.getInstance().addThread(mHandler);
+
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
+  		File configureDir = Environment.getRootDirectory();
+  		File packageForLowmemFilter = new File(configureDir, "etc/lowmem_package_filter.xml");
+  		if (packageForLowmemFilter.exists()) {
+      		try {
+        		FileInputStream stream = new FileInputStream(packageForLowmemFilter);
+        		XmlPullParser parser = Xml.newPullParser();
+        		parser.setInput(stream, null);
+
+          		int type;
+          		do {
+              			type = parser.next();
+              			if (type == XmlPullParser.START_TAG) {
+                  		String tag = parser.getName();
+                  		if ("app".equals(tag)) {
+                      			String pkgName = parser.getAttributeValue(null, "package");
+		      			if(pkgName!=null)
+		      			{
+		      				mProcessMap.put(pkgName,pkgName);
+						if(DEBUG_LOWMEM)Slog.d("xzj","--add filter package "+pkgName);
+		      			}
+                  		}
+		  		else if("service".equals(tag))
+		  		{
+		      			String serviceName = parser.getAttributeValue(null, "package");
+		      			if(serviceName!=null)
+		      			{
+		      				mServiceMap.put(serviceName,serviceName);
+						if(DEBUG_LOWMEM)Slog.d("xzj","---add filter service "+serviceName);
+		      			}
+		  		}
+              			}
+          		} while (type != XmlPullParser.END_DOCUMENT);
+      		} catch (NullPointerException e) {
+         		Slog.w(TAG, "failed parsing " + packageForLowmemFilter, e);
+      		} catch (NumberFormatException e) {
+          		Slog.w(TAG, "failed parsing " + packageForLowmemFilter, e);
+      		} catch (XmlPullParserException e) {
+          		Slog.w(TAG, "failed parsing " + packageForLowmemFilter, e);
+      		} catch (IOException e) {
+          		Slog.w(TAG, "failed parsing " + packageForLowmemFilter, e);
+      		} catch (IndexOutOfBoundsException e) {
+          		Slog.w(TAG, "failed parsing " + packageForLowmemFilter, e);
+      		}
+      	    }
+      }
     }
 
     public void setSystemServiceManager(SystemServiceManager mgr) {
@@ -2800,6 +2851,32 @@ public final class ActivityManagerService extends ActivityManagerNative
             // If this is an isolated process, it can't re-use an existing process.
             app = null;
         }
+
+	if(DEBUG_LOWMEM)Slog.v("xzj", "startProcess: name=" + processName
+		                + " app=" + app + " knownToBeDead=" + knownToBeDead+" hostingType="+hostingType+" intentFlags="+intentFlags
+				                + " thread=" + (app != null ? app.thread : null)
+						                + " pid=" + (app != null ? app.pid : -1));
+
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
+		//if((mProcessMap.get(processName) != null) && ("broadcast".equals(hostingType))){
+		if((mProcessMap.get(processName) != null) && (("broadcast".equals(hostingType))||("content provider".equals(hostingType)))){
+			if(DEBUG_LOWMEM)Slog.v("xzj", "process dont start because for filter: " + info.uid + "/" + info.processName);
+			return null;
+		}
+
+		if((mServiceMap.get(processName) != null)&&("service".equals(hostingType))&&((info.flags & ApplicationInfo.FLAG_MULTIARCH) !=0))//for service start by system
+		{
+			if(DEBUG_LOWMEM)Slog.v("xzj", "service dont start auto because for filter: " + info.uid + "/" + info.processName);
+			return null;	
+		}
+
+		if(((info.flags & ApplicationInfo.FLAG_SYSTEM) ==0)&&("broadcast".equals(hostingType)))
+		{
+			if(DEBUG_LOWMEM)Slog.v("xzj", "third part process dont start for broadcast: " + info.uid + "/" + info.processName);
+			return null;
+		}
+	}
+
         // We don't have to do anything more if:
         // (1) There is an existing application record; and
         // (2) The caller doesn't think it is dead, OR there is no thread
@@ -4781,7 +4858,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             if (DEBUG_CLEANUP) Slog.v(
                 TAG, "Dying app: " + app + ", pid: " + pid
                 + ", thread: " + thread.asBinder());
-            handleAppDiedLocked(app, false, true);
+	    boolean isrestart = true; 
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    	isrestart = false;
+            handleAppDiedLocked(app, false, isrestart);
 
             if (doOomAdj) {
                 updateOomAdjLocked();
@@ -5319,7 +5399,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                         }
                         if (app.removed) {
                             procs.add(app);
-                        } else if (app.setAdj >= ProcessList.CACHED_APP_MIN_ADJ) {
+                        } else if (app.setAdj >= ProcessList.PERCEPTIBLE_APP_ADJ) {
                             app.removed = true;
                             procs.add(app);
                         }
@@ -10037,8 +10117,17 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
 
         if ((info.flags&(ApplicationInfo.FLAG_SYSTEM|ApplicationInfo.FLAG_PERSISTENT))
                 == (ApplicationInfo.FLAG_SYSTEM|ApplicationInfo.FLAG_PERSISTENT)) {
-            app.persistent = true;
-            app.maxAdj = ProcessList.PERSISTENT_PROC_ADJ;
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
+	    	if(info.processName.contains("com.android.systemui"))
+	    	{
+            		app.persistent = true;
+            		app.maxAdj = ProcessList.PERSISTENT_PROC_ADJ;
+			if(DEBUG_LOWMEM)Slog.d("xzj","---only set systemui to persist in lowmem devices---");
+	    	}
+	    }else{
+	    	app.persistent = true;
+		app.maxAdj = ProcessList.PERSISTENT_PROC_ADJ;
+	    }
         }
         if (app.thread == null && mPersistentStartingProcesses.indexOf(app) < 0) {
             mPersistentStartingProcesses.add(app);
@@ -15044,7 +15133,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             if (removeDyingProviderLocked(app, cpr, always) || always) {
                 // We left the provider in the launching list, need to
                 // restart it.
-                restart = true;
+		if(!"true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+                	restart = true;
             }
 
             cpr.provider = null;
@@ -16317,8 +16407,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                     TAG, "Enqueueing parallel broadcast " + r);
             final boolean replaced = replacePending && queue.replaceParallelBroadcastLocked(r);
             if (!replaced) {
-                queue.enqueueParallelBroadcastLocked(r);
-                queue.scheduleBroadcastsLocked();
+            	queue.enqueueParallelBroadcastLocked(r);
+            	queue.scheduleBroadcastsLocked();
             }
             registeredReceivers = null;
             NR = 0;
@@ -16412,8 +16502,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             }
             boolean replaced = replacePending && queue.replaceOrderedBroadcastLocked(r); 
             if (!replaced) {
-                queue.enqueueOrderedBroadcastLocked(r);
-                queue.scheduleBroadcastsLocked();
+                               queue.enqueueOrderedBroadcastLocked(r);
+                               queue.scheduleBroadcastsLocked();
             }
         }
 
@@ -18352,8 +18442,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         mNewNumServiceProcs = 0;
         mNewNumAServiceProcs = 0;
 
-        final int emptyProcessLimit;
-        final int cachedProcessLimit;
+        int emptyProcessLimit;
+        int cachedProcessLimit;
         if (mProcessLimit <= 0) {
             emptyProcessLimit = cachedProcessLimit = 0;
         } else if (mProcessLimit == 1) {
@@ -18363,6 +18453,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             emptyProcessLimit = ProcessList.computeEmptyProcessLimit(mProcessLimit);
             cachedProcessLimit = mProcessLimit - emptyProcessLimit;
         }
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	{
+		emptyProcessLimit = cachedProcessLimit = 0;
+	}
 
         // Let's determine how many processes we have running vs.
         // how many slots we have for background processes; we may want

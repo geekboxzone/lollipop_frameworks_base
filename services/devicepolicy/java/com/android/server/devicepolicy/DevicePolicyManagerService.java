@@ -302,6 +302,21 @@ public class DevicePolicyManagerService extends IDevicePolicyManager.Stub {
                     || KeyChain.ACTION_STORAGE_CHANGED.equals(action)) {
                 new MonitoringCertNotificationTask().execute(intent);
             }
+	    if ((Intent.ACTION_BOOT_COMPLETED.equals(action))&&("true".equals(SystemProperties.get("ro.config.low_ram", "false")))){
+	    	mHandler.postDelayed(new Runnable() {
+			public void run() {
+				try
+				{
+					IActivityManager am = ActivityManagerNative.getDefault();
+					am.killAllBackgroundProcesses();
+				}catch(Exception e)
+				{
+					e.printStackTrace();
+				}	
+			}
+		},5000);	    
+	    }
+
             if (Intent.ACTION_USER_REMOVED.equals(action)) {
                 removeUserData(userHandle);
             } else if (Intent.ACTION_USER_STARTED.equals(action)

@@ -1912,7 +1912,7 @@ final class ActivityStack {
             }
 	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
 	    {
-	    	if(prev.task != next.task)
+		if((prev.task != next.task)&&(!prev.packageName.equals(next.packageName)))
 	    	{
 			String prevstring = prev.toString();
 			String nextstring = next.toString();
