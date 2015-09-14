@@ -248,6 +248,7 @@ public class PackageManagerService extends IPackageManager.Stub
     static final boolean DEBUG_SETTINGS = false;
     static final boolean DEBUG_PREFERRED = false;
     static final boolean DEBUG_UPGRADE = false;
+    static final boolean DEBUG_BOOT_BOOST = false;
     private static final boolean DEBUG_INSTALL = false;
     private static final boolean DEBUG_REMOVE = false;
     private static final boolean DEBUG_BROADCASTS = false;
@@ -1431,6 +1432,7 @@ public class PackageManagerService extends IPackageManager.Stub
                 SystemProperties.set("sys.pms.finishscan", "false");
                 String defaultHomePackage = SystemProperties.get("persist.sys.default_launcher", "unknown");
                 matchHome = !defaultHomePackage.equals("unknown");
+                if (DEBUG_BOOT_BOOST) Slog.v(TAG, "defaultHomePackage=" + defaultHomePackage + " matchHome=" + matchHome);
                 // User choose a home, we need to check that if it is our launcher
                 PreferredIntentResolver pir = mSettings.mPreferredActivities.get(callingUserId);
                 if (pir != null) {
@@ -1439,11 +1441,12 @@ public class PackageManagerService extends IPackageManager.Stub
                     intent.addCategory("android.intent.category.DEFAULT");
                     List<PreferredActivity> matches = pir.queryIntent(
                             intent, null, true, callingUserId);
-                    Slog.i(TAG, matches.size() + " preferred matches for " + intent);
-                    matchHome = false;
+                    if (DEBUG_BOOT_BOOST) Slog.v(TAG, matches.size() + " preferred matches for " + intent);
+                    if (matches != null && (matches.size() > 0)) matchHome = false;
                     for (int i = 0; i < matches.size(); i++) {
                         PreferredActivity pa = matches.get(i);
                         if (pa.mPref.mComponent.getPackageName().equals(defaultHomePackage)) {
+                            if (DEBUG_BOOT_BOOST) Slog.v(TAG, "match defaultHomePackage=" + defaultHomePackage + " matchHome set true");
                             matchHome = true;
                             break;
                         }
@@ -1620,9 +1623,9 @@ public class PackageManagerService extends IPackageManager.Stub
             }
             if (mIsEnableBootBoost) {
                 mPreScanHelper.loadPreScanPackages();
-                Slog.d(TAG, "matchHome: "+matchHome);
+                if (DEBUG_BOOT_BOOST) Slog.v(TAG, "matchHome: "+matchHome);
 
-                mFirstBoot = mPreScanHelper.isFirstBoot();
+                mFirstBoot = isFirstBoot();
                 mOtaBoot = mPreScanHelper.isOtaBoot();
 
                 mPreScanHelper.scanNecessary(privilegedAppDir, systemAppDir, matchHome, scanFlags, mFirstBoot, mOtaBoot);
@@ -1907,7 +1910,7 @@ public class PackageManagerService extends IPackageManager.Stub
             sLazyScanHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Slog.d(TAG, "enter sLazyScanHandler");
+                    if (DEBUG_BOOT_BOOST) Slog.v(TAG, "enter sLazyScanHandler");
                     final int scanFlags = SCAN_NO_PATHS | SCAN_DEFER_DEX | SCAN_BOOTING;
                     final ArrayMap<String, File> expectingBetter = mPreScanHelper.getExpectingBetter(mSettings, mPackages);
                     File vendorAppDir = new File("/vendor/app");
@@ -1944,7 +1947,7 @@ public class PackageManagerService extends IPackageManager.Stub
                         .addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT);
                     mContext.sendBroadcast(intent);
                 }
-            }, 1);
+            }, 8000);
         } else {
             //mInstallerService = new PackageInstallerService(mContext, this, mAppInstallDir);
 
