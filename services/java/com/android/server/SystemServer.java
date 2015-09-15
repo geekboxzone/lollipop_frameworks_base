@@ -581,7 +581,8 @@ public final class SystemServer {
         }
 
         try {
-            mPackageManagerService.performBootDexOpt();
+	    if(!"user".equals(Build.TYPE))// if user build,firmware has already dex,not need to do this
+            	mPackageManagerService.performBootDexOpt();
         } catch (Throwable e) {
             reportWtf("performing boot dexopt", e);
         }
