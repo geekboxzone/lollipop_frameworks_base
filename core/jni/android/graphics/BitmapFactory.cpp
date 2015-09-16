@@ -462,7 +462,7 @@ static jobject doDecode(JNIEnv* env, SkStreamRewindable* stream, jobject padding
 // trying to determine the stream's format. Currently the most is 8192, read by
 // SkImageDecoder_libwebp.
 // FIXME: Get this number from SkImageDecoder
-#define BYTES_TO_BUFFER 8192
+#define BYTES_TO_BUFFER 819200
 
 static jobject nativeDecodeStream(JNIEnv* env, jobject clazz, jobject is, jbyteArray storage,
         jobject padding, jobject options) {

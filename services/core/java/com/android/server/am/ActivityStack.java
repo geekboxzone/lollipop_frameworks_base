@@ -1096,7 +1096,7 @@ final class ActivityStack {
                 if (DEBUG_PAUSE) Slog.v(TAG, "App died during pause, not stopping: " + prev);
                 prev = null;
             }
-	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    if(("true".equals(SystemProperties.get("ro.config.low_ram", "false"))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    {
 	    	if(prev!= null && mResumingActivity!= null && mResumingActivity.toString().contains("recents.RecentsActivity"))
 	    	{
@@ -1910,13 +1910,13 @@ final class ActivityStack {
                 mWindowManager.setAppWillBeHidden(prev.appToken);
                 mWindowManager.setAppVisibility(prev.appToken, false);
             }
-	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    if(("true".equals(SystemProperties.get("ro.config.low_ram", "false"))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    {
 		if((prev.task != next.task)&&(!prev.packageName.equals(next.packageName)))
 	    	{
 			String prevstring = prev.toString();
 			String nextstring = next.toString();
-			if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk"))&&(!prevstring.contains("com.antutu.ABenchMark"))&&(!prevstring.contains("com.google.android.setupwizard"))&&(!prevstring.contains("packageinstaller"))&&(!prevstring.contains("apkinstaller"))&&(!prevstring.contains("com.android.cts"))&&(!prevstring.contains("com.google.android.xts")))//exclude some apk
+			if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk"))&&(!prevstring.contains("com.antutu.ABenchMark"))&&(!prevstring.contains("com.google.android.setupwizard"))&&(!prevstring.contains("packageinstaller"))&&(!prevstring.contains("apkinstaller")))//exclude some apk
 			{
 				if((!nextstring.contains("com.qihoo"))&&(!nextstring.contains("com.dragon.android.pandaspace"))&&(!nextstring.contains(".auth.gsf.AccountIntroActivity"))&&(!nextstring.contains(".auth.login."))&&(!nextstring.contains("com.android.systemui")))//exclude 360,91,google login
 				{

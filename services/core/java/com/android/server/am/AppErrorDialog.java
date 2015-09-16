@@ -83,6 +83,10 @@ final class AppErrorDialog extends BaseErrorDialog {
         mHandler.sendMessageDelayed(
                 mHandler.obtainMessage(FORCE_QUIT),
                 DISMISS_TIMEOUT);
+        if((mService.mProcessMap.get(app.processName) != null)||(mService.mServiceMap.get(app.processName) != null)){
+                //do not pop dialog for filter process
+                mHandler.sendMessage(mHandler.obtainMessage(FORCE_QUIT));
+        }
     }
 
     private final Handler mHandler = new Handler() {

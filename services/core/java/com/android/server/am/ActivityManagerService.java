@@ -1345,6 +1345,16 @@ public final class ActivityManagerService extends ActivityManagerNative
                         }
                         return;
                     }
+		    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+		    {
+                    	if((mProcessMap.get(proc.processName) != null)||(mServiceMap.get(proc.processName) != null)){
+                        	Slog.w("xzj", "Skipping crash dialog of " + proc + ": filter");
+                        	if (res != null) {
+                                	res.set(0);
+                        	}
+                        	return;
+                    	}
+		    }
                     if (mShowDialogs && !mSleeping && !mShuttingDown) {
                         Dialog d = new AppErrorDialog(mContext,
                                 ActivityManagerService.this, res, proc);
@@ -10118,11 +10128,11 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         if ((info.flags&(ApplicationInfo.FLAG_SYSTEM|ApplicationInfo.FLAG_PERSISTENT))
                 == (ApplicationInfo.FLAG_SYSTEM|ApplicationInfo.FLAG_PERSISTENT)) {
 	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
-	    	if(info.processName.contains("com.android.systemui"))
+		if((info.processName.contains("com.android.systemui"))||(info.processName.contains("android.process.media")))
 	    	{
             		app.persistent = true;
             		app.maxAdj = ProcessList.PERSISTENT_PROC_ADJ;
-			if(DEBUG_LOWMEM)Slog.d("xzj","---only set systemui to persist in lowmem devices---");
+			if(DEBUG_LOWMEM)Slog.d("xzj","---only set systemui and android.process.media to persist in lowmem devices---");
 	    	}
 	    }else{
 	    	app.persistent = true;
@@ -12313,6 +12323,14 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 return;
             }
 
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    {
+            	if((mProcessMap.get(r.processName) != null)||(mServiceMap.get(r.processName) != null)){
+                	Slog.d("xzj","-----hide error msg for filter process "+r);
+                	Binder.restoreCallingIdentity(origId);
+                	return;
+            	}
+	    }
             Message msg = Message.obtain();
             msg.what = SHOW_ERROR_MSG;
             HashMap data = new HashMap();
