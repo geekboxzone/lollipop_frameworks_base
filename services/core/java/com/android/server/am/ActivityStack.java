@@ -1924,6 +1924,11 @@ final class ActivityStack {
 					mService.killAppAtUsersRequest(prev.app, null);
 				}
 			}
+			if(mService.mGameMap.get(prev.processName) != null)
+			{
+				mService.killAllBackgroundProcesses();
+				Slog.v("xzj", "----clean memory for stop " + prev.processName);                                      
+			}
 	    	}
             }
 

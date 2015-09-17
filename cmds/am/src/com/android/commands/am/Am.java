@@ -663,6 +663,10 @@ public class Am extends BaseCommand {
             return;
         }
         System.out.println("Starting service: " + intent);
+        if(intent.toString().contains("com.qihoo"))
+        {
+               return;
+        }
         ComponentName cn = mAm.startService(null, intent, intent.getType(), mUserId);
         if (cn == null) {
             System.err.println("Error: Not found; no service started.");
@@ -758,6 +762,10 @@ public class Am extends BaseCommand {
             IActivityManager.WaitResult result = null;
             int res;
             final long startTime = SystemClock.uptimeMillis();
+            if(intent.toString().contains("com.qihoo"))
+            {
+                return;
+            }
             if (mWaitOption) {
                 result = mAm.startActivityAndWait(null, null, intent, mimeType,
                             null, null, 0, mStartFlags, profilerInfo, null, mUserId);

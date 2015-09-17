@@ -1218,7 +1218,8 @@ public final class ActivityManagerService extends ActivityManagerNative
 
     final Map<String,String> mProcessMap  =new HashMap<String,String>(); //process which do not start auto by broadcast and contentprovider from lowmem_package_filter.xml       
     final Map<String,String> mServiceMap  =new HashMap<String,String>(); //service which do not start auto by call startService or bindService from lowmem_package_filter.xml 
-
+		final Map<String,String> mGameMap     =new HashMap<String,String>(); //games,need to do memory cleanup
+		
     private final class AppDeathRecipient implements IBinder.DeathRecipient {
         final ProcessRecord mApp;
         final int mPid;
@@ -2211,6 +2212,15 @@ public final class ActivityManagerService extends ActivityManagerNative
 						if(DEBUG_LOWMEM)Slog.d("xzj","---add filter service "+serviceName);
 		      			}
 		  		}
+		  		else if("game".equals(tag))
+					{
+						String gameName = parser.getAttributeValue(null, "package");
+						if(gameName!=null)
+						{
+							mGameMap.put(gameName,gameName);
+							if(DEBUG_LOWMEM)Slog.d("xzj","---add filter game "+gameName);
+						}	
+					}
               			}
           		} while (type != XmlPullParser.END_DOCUMENT);
       		} catch (NullPointerException e) {
@@ -2867,7 +2877,7 @@ public final class ActivityManagerService extends ActivityManagerNative
 				                + " thread=" + (app != null ? app.thread : null)
 						                + " pid=" + (app != null ? app.pid : -1));
 
-	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false")))){
+		if(("true".equals(SystemProperties.get("ro.config.low_ram", "false"))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false")))){
 		//if((mProcessMap.get(processName) != null) && ("broadcast".equals(hostingType))){
 		if((mProcessMap.get(processName) != null) && (("broadcast".equals(hostingType))||("content provider".equals(hostingType)))){
 			if(DEBUG_LOWMEM)Slog.v("xzj", "process dont start because for filter: " + info.uid + "/" + info.processName);
@@ -2884,6 +2894,11 @@ public final class ActivityManagerService extends ActivityManagerNative
 		{
 			if(DEBUG_LOWMEM)Slog.v("xzj", "third part process dont start for broadcast: " + info.uid + "/" + info.processName);
 			return null;
+		}
+		if(mGameMap.get(processName) != null)
+		{
+			killAllBackgroundProcesses();
+			if(DEBUG_LOWMEM)Slog.v("xzj", "----clean memory for start " + info.processName);	
 		}
 	}
 
