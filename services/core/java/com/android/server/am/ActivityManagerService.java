@@ -1345,7 +1345,7 @@ public final class ActivityManagerService extends ActivityManagerNative
                         }
                         return;
                     }
-		    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+		    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 		    {
                     	if((mProcessMap.get(proc.processName) != null)||(mServiceMap.get(proc.processName) != null)){
                         	Slog.w("xzj", "Skipping crash dialog of " + proc + ": filter");
@@ -2180,7 +2180,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         Watchdog.getInstance().addMonitor(this);
         Watchdog.getInstance().addThread(mHandler);
 
-	if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false")))){
   		File configureDir = Environment.getRootDirectory();
   		File packageForLowmemFilter = new File(configureDir, "etc/lowmem_package_filter.xml");
   		if (packageForLowmemFilter.exists()) {
@@ -2867,7 +2867,7 @@ public final class ActivityManagerService extends ActivityManagerNative
 				                + " thread=" + (app != null ? app.thread : null)
 						                + " pid=" + (app != null ? app.pid : -1));
 
-	if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false")))){
 		//if((mProcessMap.get(processName) != null) && ("broadcast".equals(hostingType))){
 		if((mProcessMap.get(processName) != null) && (("broadcast".equals(hostingType))||("content provider".equals(hostingType)))){
 			if(DEBUG_LOWMEM)Slog.v("xzj", "process dont start because for filter: " + info.uid + "/" + info.processName);
@@ -4869,7 +4869,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 TAG, "Dying app: " + app + ", pid: " + pid
                 + ", thread: " + thread.asBinder());
 	    boolean isrestart = true; 
-	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    	isrestart = false;
             handleAppDiedLocked(app, false, isrestart);
 
@@ -10127,7 +10127,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
 
         if ((info.flags&(ApplicationInfo.FLAG_SYSTEM|ApplicationInfo.FLAG_PERSISTENT))
                 == (ApplicationInfo.FLAG_SYSTEM|ApplicationInfo.FLAG_PERSISTENT)) {
-	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false"))){
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false")))){
 		if((info.processName.contains("com.android.systemui"))||(info.processName.contains("android.process.media")))
 	    	{
             		app.persistent = true;
@@ -12323,7 +12323,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 return;
             }
 
-	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    {
             	if((mProcessMap.get(r.processName) != null)||(mServiceMap.get(r.processName) != null)){
                 	Slog.d("xzj","-----hide error msg for filter process "+r);
@@ -15151,7 +15151,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             if (removeDyingProviderLocked(app, cpr, always) || always) {
                 // We left the provider in the launching list, need to
                 // restart it.
-		if(!"true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+		        if(!"true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
                 	restart = true;
             }
 
@@ -18471,7 +18471,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             emptyProcessLimit = ProcessList.computeEmptyProcessLimit(mProcessLimit);
             cachedProcessLimit = mProcessLimit - emptyProcessLimit;
         }
-	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	{
 		emptyProcessLimit = cachedProcessLimit = 0;
 	}

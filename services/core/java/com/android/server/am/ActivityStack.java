@@ -1096,7 +1096,7 @@ final class ActivityStack {
                 if (DEBUG_PAUSE) Slog.v(TAG, "App died during pause, not stopping: " + prev);
                 prev = null;
             }
-	    if(("true".equals(SystemProperties.get("ro.config.low_ram", "false"))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    {
 	    	if(prev!= null && mResumingActivity!= null && mResumingActivity.toString().contains("recents.RecentsActivity"))
 	    	{
@@ -1910,7 +1910,7 @@ final class ActivityStack {
                 mWindowManager.setAppWillBeHidden(prev.appToken);
                 mWindowManager.setAppVisibility(prev.appToken, false);
             }
-	    if(("true".equals(SystemProperties.get("ro.config.low_ram", "false"))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
+	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    {
 		if((prev.task != next.task)&&(!prev.packageName.equals(next.packageName)))
 	    	{
