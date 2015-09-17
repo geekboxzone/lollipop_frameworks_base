@@ -663,10 +663,13 @@ public class Am extends BaseCommand {
             return;
         }
         System.out.println("Starting service: " + intent);
-        if(intent.toString().contains("com.qihoo"))
-        {
-               return;
-        }
+	if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
+	{
+        	if((intent.toString().contains("com.qihoo"))||(intent.toString().contains("com.dragon.android.pandaspace"))||(intent.toString().contains("com.wandoujia.")))
+        	{
+               		return;
+        	}
+	}
         ComponentName cn = mAm.startService(null, intent, intent.getType(), mUserId);
         if (cn == null) {
             System.err.println("Error: Not found; no service started.");
@@ -762,9 +765,12 @@ public class Am extends BaseCommand {
             IActivityManager.WaitResult result = null;
             int res;
             final long startTime = SystemClock.uptimeMillis();
-            if(intent.toString().contains("com.qihoo"))
+            if("true".equals(SystemProperties.get("ro.config.low_ram", "false")))
             {
-                return;
+                if((intent.toString().contains("com.qihoo"))||(intent.toString().contains("com.dragon.android.pandaspace"))||(intent.toString().contains("com.wandoujia.")))
+                {
+                        return;
+                }
             }
             if (mWaitOption) {
                 result = mAm.startActivityAndWait(null, null, intent, mimeType,
