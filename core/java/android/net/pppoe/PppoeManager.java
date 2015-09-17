@@ -55,6 +55,11 @@ public class PppoeManager {
     /**
      * @hide
      */
+    public static final String EXTRA_PPPOE_ERRMSG = "pppoe_errmsg";
+
+    /**
+     * @hide
+     */
 
     public static final String PPPOE_STATE_CHANGED_ACTION  = "android.net.pppoe.PPPOE_STATE_CHANGED";
 
