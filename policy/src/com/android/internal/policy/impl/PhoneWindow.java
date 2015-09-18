@@ -2346,20 +2346,25 @@ if(mDecorContentParent != null)
 				mMultiWindowUtil.initDecorView();
 			}
         }
+
+		// ==MODIFY BY YHC==
 		public void addView(View child) {
-			if(mMultiWindowUtil != null){
-				if(mMultiWindowUtil.checkView()) return;
-			}
+//			if(mMultiWindowUtil != null){
+//				if(mMultiWindowUtil.checkView()) return;
+//			}
 			super.addView(child);
-		 }
+		}
 		
-		  
-		   public void addView(View child, int index) {
-			if(mMultiWindowUtil != null){
-                                if(mMultiWindowUtil.checkView()) return;
-                        }
+		public void addView(View child, int index) {
+			if(mMultiWindowUtil != null) {
+				index = mMultiWindowUtil.addViewPolicy(mDecor, child);
+				if(index == -2) {
+					return;
+				}
+			}
 			super.addView(child,index);
-		   }
+		}
+		// END ==MODIFY BY YHC==
 
         public void setBackgroundFallback(int resId) {
             mBackgroundFallback.setDrawable(resId != 0 ? getContext().getDrawable(resId) : null);

@@ -557,6 +557,11 @@ private boolean validWindowState(WindowState win){
  			    return 0;
 			}
                         if(!isSideSlip) return 0;
+			float barheight = mService.getStatusBarHeight();
+			float move_rel = posY + (int)event.getY()-mov_y;
+			if (!((move_rel + ws.mSfOffsetY) > barheight)) {
+			   move_rel = barheight - ws.mSfOffsetY;
+			}
 			 mService.applyPositionForMultiWindow(ws,posX+(int)event.getX()- mov_x,posY+ (int)event.getY()-mov_y);
 			 mov_x = (int)event.getX();
 			 mov_y = (int)event.getY();
@@ -619,7 +624,16 @@ private boolean validWindowState(WindowState win){
 							matchFocus.getTouchableRegion(r);
 							r.getBounds(frame);
 						}
-						if(frame.contains(touchX, touchY)){
+						float posX = matchFocus.mWinAnimator.mSurfaceX;
+						float posY = matchFocus.mWinAnimator.mSurfaceY;
+						float posW = matchFocus.mWinAnimator.mSurfaceW;
+						float posH = matchFocus.mWinAnimator.mSurfaceH;
+						boolean input = false;
+						if (matchFocus.mAppWindowState != null)
+							input = matchFocus.mAppWindowState.mIsImWindow;//mAttrs.type == TYPE_INPUT_METHOD;
+						if(frame.contains(touchX, touchY) || 
+						(input && !(touchX < posX) && !(touchX > (posX + posW)) &&
+							!(touchY < posY) && !(touchY > (posY + posH)))){
 							if(mService.isHomeWindow(matchFocus)){
 								policy = WindowManagerPolicy.MOTION_PASS_TO_HOME;
 							}else if(matchFocus != windowState){

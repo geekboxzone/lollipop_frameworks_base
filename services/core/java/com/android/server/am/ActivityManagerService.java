@@ -247,7 +247,7 @@ public final class ActivityManagerService extends ActivityManagerNative
     static final String TAG = "ActivityManagerService";
     static final String TAG_MU = "ActivityManagerServiceMU";
     static final boolean DEBUG = false;
-	static final boolean DEBUG_ZJY = true;
+	static final boolean DEBUG_ZJY = false;
     static final boolean localLOGV = DEBUG;
     static final boolean DEBUG_BACKUP = localLOGV || false;
     static final boolean DEBUG_BROADCAST = localLOGV || false;
@@ -3494,7 +3494,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             winintent.setAction("rk.android.wintask.SHOW");
             if(intent.getComponent() != null){
             winintent.putExtra("cmp", intent.getComponent().getPackageName());
-            Log.d("wintask","start from Launcher,sendBroadcast now==cmp:"+intent.getComponent().getPackageName());
+            //Log.d("wintask","start from Launcher,sendBroadcast now==cmp:"+intent.getComponent().getPackageName());
             
             mContext.sendBroadcast(winintent);
            }
@@ -4467,12 +4467,13 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 }
  	   }	
        if(getTaskForActivity(token, true) >= 0){
+	   	 new RuntimeException("here").printStackTrace();
             Intent winintent=new Intent();
             winintent.setAction("rk.android.wintask.FINISH");
             if(getTasks(1,0).get(0).topActivity!=null)
             winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
-            Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
-            mContext.sendBroadcast(winintent);
+            //Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
+           // mContext.sendBroadcast(winintent);
             }
             final long origId = Binder.clearCallingIdentity();
             try {
@@ -8698,7 +8699,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             winintent.setAction("rk.android.wintask.FINISH");
             if(getTasks(1,0).get(0).topActivity!=null)
             winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
-            //Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
+            Log.d("wintask","removeTask,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
             mContext.sendBroadcast(winintent);
             long ident = Binder.clearCallingIdentity();
             try {

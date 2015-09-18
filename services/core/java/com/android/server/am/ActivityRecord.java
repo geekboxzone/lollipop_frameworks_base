@@ -182,6 +182,7 @@ final class ActivityRecord {
     boolean mLaunchTaskBehind; // this activity is actively being launched with
         // ActivityOptions.setLaunchTaskBehind, will be cleared once launch is completed.
 
+     boolean difPkgTask = false;
     void dump(PrintWriter pw, String prefix) {
         final long now = SystemClock.uptimeMillis();
         pw.print(prefix); pw.print("packageName="); pw.print(packageName);
@@ -366,6 +367,14 @@ final class ActivityRecord {
             }
             return 0;
         }
+		@Override public long getLastLaunchTimeout() {
+				  ActivityRecord activity = weakActivity.get();
+				  if (activity != null) {
+				  	 final long now = SystemClock.uptimeMillis();
+					  return now-activity.lastLaunchTime;
+				  }
+				  return 0;
+			  }
 
         @Override
         public String toString() {

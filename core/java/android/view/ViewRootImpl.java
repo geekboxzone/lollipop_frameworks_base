@@ -4371,7 +4371,19 @@ public final class ViewRootImpl implements ViewParent,
             final MotionEvent event = (MotionEvent)q.mEvent;
 
             mAttachInfo.mUnbufferedDispatchRequested = false;
-            boolean handled = mView.dispatchPointerEvent(event,mScaleDrageMode);
+	    if(mWindowAttributes!= null && mWindowAttributes.type == WindowManager.LayoutParams.FIRST_SUB_WINDOW 
+		&& mView.getResources().getConfiguration().enableMultiWindow() && !mView.isDecorView){
+	       MultiWindowInfo info = new MultiWindowInfo();
+	       try{				
+		   mWindowSession.getTransFormInfo(mWindow, info);
+		}catch(RemoteException e){}
+		int statusBarHeight =
+                mView.getContext().getResources().getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);	
+		if(info.mHScale != 1.0f && info.mVScale != 1.0f)
+		   event.transformCoordinate(info.mPosX, info.mPosY-25 >0 ?info.mPosY-25:0, info.mHScale, info.mVScale);
+              }
+			
+	    boolean handled = mView.dispatchPointerEvent(event,mScaleDrageMode);
             if (mAttachInfo.mUnbufferedDispatchRequested && !mUnbufferedInputDispatch) {
                 mUnbufferedInputDispatch = true;
                 if (mConsumeBatchedInputScheduled) {
@@ -5870,7 +5882,7 @@ public final class ViewRootImpl implements ViewParent,
 
     public void dispatchResized(Rect frame, Rect overscanInsets, Rect contentInsets,
             Rect visibleInsets, Rect stableInsets, boolean reportDraw, Configuration newConfig) {
-        if (true) Log.v(TAG, mView.getContext().getPackageName()+"Resizing " + this + ": frame=" + frame.toShortString()
+        if (false) Log.v(TAG, mView.getContext().getPackageName()+"Resizing " + this + ": frame=" + frame.toShortString()
                 + " contentInsets=" + contentInsets.toShortString()
                 + " visibleInsets=" + visibleInsets.toShortString()
                 + " reportDraw=" + reportDraw);

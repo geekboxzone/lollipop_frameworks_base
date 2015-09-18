@@ -23,17 +23,19 @@ enabled.
     android:orientation="vertical"
     android:layout_width="match_parent"
         android:layout_height="39dp"
-     android:background="@android:drawable/win_title_bg">
+android:fitsSystemWindows="true"
+     android:background="@android:color/black">
     <!-- Popout bar for action modes -->
     <RelativeLayout android:id="@+id/maxmin_container"
         android:layout_width="match_parent"
         android:layout_height="39dp">
         
          <ImageView android:id="@+id/attach_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
                 android:layout_gravity="center_vertical"
                 android:scaleType="fitCenter"
+                android:layout_marginTop="5dip"
                  android:layout_marginLeft="20dip"
                  android:src="@android:drawable/circlemenu_settop"
                 />
@@ -44,27 +46,27 @@ enabled.
             android:layout_alignParentRight="true"
             > 
             <ImageView android:id="@+id/min_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                  android:src="@android:drawable/circlemenu_narrow"
                 />
             <!-- 2dip between the icon and the title text, if icon is present. -->
             <ImageView android:id="@+id/max_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                 android:scaleType="fitCenter"
                 android:src="@android:drawable/circlemenu_larger_phone"
-                android:layout_marginRight="35dip"
-                 android:layout_marginLeft="35dip"
+                android:layout_marginRight="20dip"
+                 android:layout_marginLeft="20dip"
                 />
              <ImageView android:id="@+id/close_icon"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_gravity="center_vertical"
                 android:scaleType="fitCenter"
-                android:layout_marginRight="15dip"
+                android:layout_marginRight="20dip"
                  android:src="@android:drawable/circlemenu_close"
                 />
 

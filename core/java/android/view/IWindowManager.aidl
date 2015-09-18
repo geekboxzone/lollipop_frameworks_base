@@ -182,7 +182,7 @@ interface IWindowManager
     void updateAllWindowsPositionCompose();
     void updateAllWindowsFullScreenMode(int taskId);
     void updateAllWindowsHalfScreenMode();
-    void updateAllWindowsFourScreenMode();
+    void updateAllWindowsFourScreenMode(int taskId);
     void multiWindowMenuOperation(String actionString);
     void dispatchUnhandledKey(IApplicationToken token, in KeyEvent event);
 

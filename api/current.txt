@@ -34257,6 +34257,7 @@ package android.view {
     field public static final android.util.Property<android.view.View, java.lang.Float> X;
     field public static final android.util.Property<android.view.View, java.lang.Float> Y;
     field public static final android.util.Property<android.view.View, java.lang.Float> Z;
+    field public boolean isDecorView;
   }
 
   public static class View.AccessibilityDelegate {

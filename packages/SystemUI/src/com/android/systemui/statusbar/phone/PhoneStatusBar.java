@@ -252,8 +252,8 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener,CircleMenuView.BtnClickCallBack {
     static final String TAG = "PhoneStatusBar";
     public static final boolean DEBUG = BaseStatusBar.DEBUG;
-	private static final boolean DEBUG_ZJY = true;
-	private static final boolean DEBUG_ZJY_CONFIG = true;
+	private static final boolean DEBUG_ZJY = false;
+	private static final boolean DEBUG_ZJY_CONFIG = false;
 	private static void LOGD(String msg){
 		if(DEBUG_ZJY){
 			Log.d(TAG, msg);
@@ -1625,20 +1625,23 @@ final Object mScreenshotLock = new Object();
 						mAppsGridView.setAdapter(listadapter);//
 						LinearLayout.LayoutParams params;
 								 if(mDisplayMetrics.densityDpi > 160){
-									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (120+10),
+									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (130+0),
 									LayoutParams.WRAP_CONTENT);
-								 mAppsGridView.setColumnWidth(120); 
+								 mAppsGridView.setColumnWidth(130); 
 								 }else{
-									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (60+10),
+									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (70+0),
 														LayoutParams.WRAP_CONTENT);
-												 mAppsGridView.setColumnWidth(60);
+												 mAppsGridView.setColumnWidth(70);
 								 }
 										 mAppsGridView.setLayoutParams(params);
-								 mAppsGridView.setHorizontalSpacing(10);
+								 mAppsGridView.setHorizontalSpacing(0);
 								 mAppsGridView.setStretchMode(GridView.NO_STRETCH);
 								 //mAppsGridView.setSelector(R.drawable.bg_item_taskbar);
 						 mAppsGridView.setNumColumns(listadapter.getCount());
 
+			}
+			else {
+               ClearRunningTasks();
 			}
 			mAppsGridView.setOnItemClickListener(mWinItemClickListener);
             mAppsGridView.setOnItemLongClickListener(mWinItemLongClickListener);
@@ -1888,16 +1891,16 @@ final Object mScreenshotLock = new Object();
 		mAppsGridView.setAdapter(listadapter);//
 		LinearLayout.LayoutParams params;
                  if(mDisplayMetrics.densityDpi > 160){
-                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (120+10),
+                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (130+0),
 				 	LayoutParams.WRAP_CONTENT);
-				 mAppsGridView.setColumnWidth(120); 
+				 mAppsGridView.setColumnWidth(130); 
                  }else{
-                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (60+10),
+                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (70+0),
                                         LayoutParams.WRAP_CONTENT);
-                                 mAppsGridView.setColumnWidth(60);
+                                 mAppsGridView.setColumnWidth(70);
                  }
 		                 mAppsGridView.setLayoutParams(params);
-				 mAppsGridView.setHorizontalSpacing(10);
+				 mAppsGridView.setHorizontalSpacing(0);
 				 mAppsGridView.setStretchMode(GridView.NO_STRETCH);
 				 //mAppsGridView.setSelector(R.drawable.bg_item_taskbar);
 		 mAppsGridView.setNumColumns(listadapter.getCount());
@@ -2044,9 +2047,9 @@ private String appclosename = null;
 				   PackageManager pm = mContext.getApplicationContext().getPackageManager();
 				   Intent intent=new Intent(); 
 				   intent =pm.getLaunchIntentForPackage(packageName);
-				   //if(intent!=null&&getCurrentApps(packageName) != -1){
+				   if(intent!=null&&!mRightMouseClick&&getCurrentApps(packageName) != -1){
 
-				//}else
+				}else
 				if(intent!=null&&!mRightMouseClick){
 					intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP );
 					mContext.startActivity(intent);

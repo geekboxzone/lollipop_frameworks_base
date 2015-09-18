@@ -4143,7 +4143,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         pf.right = df.right = of.right = mOverscanScreenLeft + mOverscanScreenWidth;
                         pf.bottom = df.bottom = of.bottom = mOverscanScreenTop
                                 + mOverscanScreenHeight;
-                    } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow) && canHideNavigationBar()
+                    } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow || !win.winOnMul()) && canHideNavigationBar()
                             && (sysUiFl & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION) != 0
                             && attrs.type >= WindowManager.LayoutParams.FIRST_APPLICATION_WINDOW
                             && attrs.type <= WindowManager.LayoutParams.LAST_SUB_WINDOW) {
@@ -4223,7 +4223,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 		    //Log.e(TAG, "------------------------------------------------------------- 6" + attrs.getTitle() + ", cf = " + cf);
                     }
                 }
-            } else if (!topIsMultiWindow && ((fl & FLAG_LAYOUT_IN_SCREEN) != 0 || (sysUiFl
+            } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow || !win.winOnMul()) && ((fl & FLAG_LAYOUT_IN_SCREEN) != 0 || (sysUiFl
                     & (View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)) != 0)) {
                 if (DEBUG_LAYOUT) Slog.v(TAG, "layoutWindowLw(" + attrs.getTitle() +
@@ -4297,7 +4297,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                             = mOverscanScreenLeft + mOverscanScreenWidth;
                     pf.bottom = df.bottom = of.bottom = cf.bottom
                             = mOverscanScreenTop + mOverscanScreenHeight;
-                } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow)&& canHideNavigationBar()
+                } else if ((MultiWindowSettings.checkConfig(mContext)||!topIsMultiWindow|| !win.winOnMul())&& canHideNavigationBar()
                         && (sysUiFl & View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION) != 0
                         && (attrs.type == TYPE_STATUS_BAR
                             || attrs.type == TYPE_TOAST

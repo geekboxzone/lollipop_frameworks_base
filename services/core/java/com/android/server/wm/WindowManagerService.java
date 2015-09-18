@@ -917,7 +917,7 @@ public class WindowManagerService extends IWindowManager.Stub
         mDisplayManagerInternal = LocalServices.getService(DisplayManagerInternal.class);
         mDisplaySettings = new DisplaySettings();
         mDisplaySettings.readSettingsLocked();
-		mMulWindowService = new MulWindowService(this,mContext);
+		mMulWindowService = new MulWindowService(this,mContext, mPolicy);
 
         LocalServices.addService(WindowManagerPolicy.class, mPolicy);
 
@@ -7729,6 +7729,12 @@ public class WindowManagerService extends IWindowManager.Stub
 			}
 		}
 	
+ 		public float getStatusBarHeight() {
+	                if (mPolicy != null) {
+		            return mPolicy.getStatusBarHeightIfAvailable();
+		        }
+	                return 0;
+	        }
 		public void updateAppTokenWindowsPositionStretch(){
 	
 			synchronized(mWindowMap){
@@ -7975,12 +7981,12 @@ public class WindowManagerService extends IWindowManager.Stub
 		}
     }
 
-	public void updateAllWindowsFourScreenMode(){
+	public void updateAllWindowsFourScreenMode(int taskId){
 		LOGD(mCurConfiguration.enableMultiWindow()+"-----------updateAllWindowsFourScreenMode----------------:");
 		if(mCurConfiguration.enableMultiWindow()){
 			Settings.System.putInt(mContext.getContentResolver(),
 						Settings.System.MULITI_WINDOW_MODE, 2);
-			updateAppTokenWindowsFourScreen();
+			updateAppTokenWindowsFourScreen(taskId);
 		}
     }
 
@@ -7989,9 +7995,18 @@ public class WindowManagerService extends IWindowManager.Stub
 		LOGD(mCurConfiguration.enableMultiWindow()+"-----------multiWindowMenuOperation----------------actionString:"+operation);
 		if(mCurConfiguration.enableMultiWindow()){
 	            //if(getMultiWindowMode() == Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE){
-			  WindowState operationWindowState = windowForClientLocked(session, client, false);
-			  LOGD("current="+operationWindowState);	
+			 WindowState operationWindowState = windowForClientLocked(session, client, false);
+			  
+			 if(operationWindowState ==  null){ return -1;}
             int operter = 0;
+			try{
+				if(operationWindowState.mAppToken != null && operationWindowState.mAppToken.appToken != null){
+					long timeout = operationWindowState.mAppToken.appToken.getLastLaunchTimeout();
+					LOGD(timeout +"==============current="+operationWindowState);	
+					if(operation != 3 && timeout < 1100) return -1;
+	                   
+				}
+			}catch(RemoteException ex){}
 			 mTopMultiApp = mMulWindowService.multiWindowMenuOperation(mActivityManager,mTopMultiApp,operationWindowState, mCurConfiguration,operation,operter);
 			 if(mTopMultiApp!=null)
 			 	operter = 1;
@@ -8025,8 +8040,9 @@ public class WindowManagerService extends IWindowManager.Stub
 	}
 	//$_rockchip_$_modify_$_end
 
-	public void updateAppTokenWindowsFourScreen(){
+	public void updateAppTokenWindowsFourScreen(int taskId){
 		synchronized(mWindowMap){
+			int tempGroupId = -1;
 			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
 			for(int i = mWindows.size()-1;i>=0;i--){
 				int step = -1;
@@ -8051,7 +8067,11 @@ public class WindowManagerService extends IWindowManager.Stub
 						ws.stepOfFourScreen = step;
 						LOGD("===========updateAppTokenWindowsFourScreen===========stepOfFourScreen:=====step:"+step+"=====ws:"+ws);
 					}
+					tempGroupId = wtoken.groupId;
+				if(tempGroupId == taskId){
 					applyPositionForFourScreenWindow(ws);
+				}
+					
 			}
 			//assignLayersLocked(getDefaultWindowListLocked());
 			//performLayoutAndPlaceSurfacesLocked();
@@ -8186,7 +8206,7 @@ public class WindowManagerService extends IWindowManager.Stub
                                               intent.setPackage("com.android.Listappinfo");
 					      mContext.startServiceAsUser(intent,android.os.UserHandle.CURRENT );
 					}	
-					updateAllWindowsFourScreenMode();
+					updateAllWindowsFourScreenMode(0);
 				}
 		//	}
 		}

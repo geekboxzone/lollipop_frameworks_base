@@ -786,12 +786,12 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 		LOGD(this+"===============111======= mPosXY=================="+mPosX+","+mPosY +" win="+mAttrs);
 	
 	
-		LOGD("IN: " + mFrame+ ",x:" +x+",y:"+y);
+		//LOGD("IN: " + mFrame+ ",x:" +x+",y:"+y);
         Gravity.apply(mAttrs.gravity, w, h, mContainingFrame,
                 (int) (x + mAttrs.horizontalMargin * pw),
                 (int) (y + mAttrs.verticalMargin * ph), mFrame);
 
-      LOGD("Out: " + mFrame);
+      //LOGD("Out: " + mFrame);
 
         // Now make sure the window fits in the overall display.
         Gravity.applyDisplay(mAttrs.gravity, df, mFrame);
@@ -922,11 +922,9 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 				win.mPosY = mPosY - (int)((mFrame.top - win.mFrame.top)*win.mVScale);
 			}
 		}
-
 	
 		mSurfaceFrame.right = mSurfaceFrame.left + (int)(mVisibleFrame.width()*mHScale+0.5f);
 		mSurfaceFrame.bottom = mSurfaceFrame.top + (int)((mVisibleFrame.height()+mVisibleInsets.bottom)*mVScale+0.5f);
-
 		if((mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) &&!mContentChanged){
 			int value = 0;
 			switch(mAttrs.align){
@@ -1636,6 +1634,11 @@ private void shouldForceAnim(int align,int value){
         return displayContent.isDefaultDisplay;
     }
 
+    @Override
+    public boolean winOnMul() {
+       return mActualScale != 1.0 || mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+    }
+
     public void setShowToOwnerOnlyLocked(boolean showToOwnerOnly) {
         mShowToOwnerOnly = showToOwnerOnly;
     }
@@ -1843,6 +1846,14 @@ private void shouldForceAnim(int align,int value){
         synchronized(mService.mWindowMap) {
             return mService.mCurrentFocus == this;
         }
+    }
+
+    public float getSurfaceW() {
+       return mWinAnimator.mSurfaceW;
+    }
+
+    public float getSurfaceH() {
+       return mWinAnimator.mSurfaceH;
     }
 
     void dump(PrintWriter pw, String prefix, boolean dumpAll) {

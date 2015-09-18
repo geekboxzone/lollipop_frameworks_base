@@ -164,6 +164,9 @@ public abstract class BaseKeyListener extends MetaKeyKeyListener
 
         if (handled) {
             adjustMetaAfterKeypress(content);
+	     // MODIFY BY YHC
+	     return handled;
+	     // END MODIFY
         }
 
         return super.onKeyDown(view, content, keyCode, event);

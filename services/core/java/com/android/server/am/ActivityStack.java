@@ -797,7 +797,7 @@ final class ActivityStack {
         mService.updateCpuStats();
 
         if (prev.app != null && prev.app.thread != null) {
-            if (true) Slog.v(TAG, prev.finishing+"Enqueueing pending pause: " + prev);
+            if (DEBUG_STATES) Slog.v(TAG, prev.finishing+"Enqueueing pending pause: " + prev);
             try {
                 EventLog.writeEvent(EventLogTags.AM_PAUSE_ACTIVITY,
                         System.identityHashCode(prev),
@@ -1035,7 +1035,7 @@ final class ActivityStack {
                     mStackSupervisor.updatePreviousProcessLocked(r);
                 }
             }
-        }
+	}
     }
 
     /*private final void completePauseLocked(ActivityRecord r) {
@@ -1062,6 +1062,8 @@ final class ActivityStack {
                 prev = finishCurrentActivityLocked(prev, FINISH_AFTER_VISIBLE, false);
             } else if (prev.app != null) {
                 if (DEBUG_PAUSE) Slog.v(TAG, "Enqueueing pending stop: " + prev);
+			   if(r.difPkgTask)
+			   mService.moveTaskToBack(r.task.taskId);
                 if (prev.waitingVisible) {
                     prev.waitingVisible = false;
                     mStackSupervisor.mWaitingVisibleActivities.remove(prev);
@@ -1305,7 +1307,7 @@ final class ActivityStack {
     final void ensureActivitiesVisibleLocked(ActivityRecord starting, int configChanges) {
         ActivityRecord top = topRunningActivityLocked(null);
         if(DEBUG_ZJY){
-			Slog.d(TAG," <~~~~~~~~~~~~~~~~~~~~~~~~~~~top="+top+",forceHomeShown:");
+			Slog.d(TAG,this.mStackId+" <~~~~~~~~~~~~~~~~~~~~~~~~~~~top="+top+",forceHomeShown:");
         }
         if (DEBUG_VISBILITY) Slog.v(
                 TAG, "ensureActivitiesVisible behind " + top
@@ -1616,7 +1618,7 @@ final class ActivityStack {
             // Not ready yet!
             return false;
         }
-
+       
         ActivityRecord parent = mActivityContainer.mParentActivity;
         if ((parent != null && parent.state != ActivityState.RESUMED) ||
                 !mActivityContainer.isAttachedLocked()) {
@@ -1630,7 +1632,7 @@ final class ActivityStack {
         // Find the first activity that is not finishing.
         final ActivityRecord next = topRunningActivityLocked(null);
         if(next !=  null){
-			if(DEBUG_ZJY)Slog.d(TAG,"resumeTopActivityLocked next="+next+",mTopOfLauncher:"+next.task.mTopOfLauncher+" state="+next.state+
+			if(DEBUG_ZJY)Slog.d(TAG,this.mStackId+"resumeTopActivityLocked next="+next+",mTopOfLauncher:"+next.task.mTopOfLauncher+" state="+next.state+
 				"mResumeActivity ="+mResumedActivity+" prev="+prev);
 			
 		}
@@ -1668,7 +1670,7 @@ final class ActivityStack {
             if (DEBUG_STACK) mStackSupervisor.validateTopActivitiesLocked();
             return false;
         }
-
+		
         final TaskRecord nextTask = next.task;
         if (prevTask != null && prevTask.stack == this &&
                 prevTask.isOverHomeStack() && prev.finishing && prev.frontOfTask) {
@@ -1722,6 +1724,7 @@ final class ActivityStack {
         mStackSupervisor.mGoingToSleepActivities.remove(next);
         next.sleeping = false;
         mStackSupervisor.mWaitingVisibleActivities.remove(next);
+		next.task.mTopOfLauncher = true;
 
         if (DEBUG_SWITCH) Slog.v(TAG, "Resuming " + next);
 
@@ -1771,13 +1774,23 @@ final class ActivityStack {
         boolean pausing = mStackSupervisor.pauseBackStacks(userLeaving, true, dontWaitForPause);
         boolean multiconfig = mService.mConfiguration.enableMultiWindow();
 		boolean condition ;
+		boolean samePackInDifTask;
+		int removeTaskId = -1;
 		if(multiconfig){
-			condition = mResumedActivity != null &&mResumedActivity!=next && mResumedActivity.task.taskId==next.task.taskId;
+	    	samePackInDifTask = mResumedActivity != null && mResumedActivity.task.taskId != next.task.taskId && mResumedActivity.packageName.equals(next.packageName);
+	    	if (samePackInDifTask) {
+			mResumedActivity.difPkgTask = true;		
+			removeTaskId = mResumedActivity.task.taskId;
+            if (DEBUG_STATES) Slog.d(TAG, "==========================ddddddd====== " +mResumedActivity.difPkgTask);
+	    }
+	    condition = mResumedActivity != null &&mResumedActivity!=next && (mResumedActivity.task.taskId==next.task.taskId ||samePackInDifTask);//mResumedActivity.packageName.equals(next.packageName));
+	//	condition = mResumedActivity != null &&mResumedActivity!=next && mResumedActivity.task.taskId==next.task.taskId;
+            if (DEBUG_STATES) Slog.d(TAG, "========================ddddd======== " +mResumedActivity);
 		}else{
-			condition = mResumedActivity != null;
+	    condition = mResumedActivity != null;
 		}
         if (condition) {
-            if (DEBUG_STATES) Slog.d(TAG, "resumeTopActivityLocked: Pausing " + mResumedActivity);
+            if (DEBUG_STATES) Slog.d(TAG,dontWaitForPause+ "resumeTopActivityLocked: Pausing " + mResumedActivity);
             pausing |= startPausingLocked(userLeaving, false, true, dontWaitForPause);
         }
         if (pausing) {
@@ -1795,14 +1808,16 @@ final class ActivityStack {
         }
 		//schedule to pause all history recorder that behind the home activity
 		if(multiconfig){
-			if (DEBUG_ZJY) Slog.d(TAG, "====multiconfig====");
+			if (DEBUG_ZJY) Slog.d(TAG, "====multiconfig===="+mTaskHistory.size());
 			for (int taskNdx = mTaskHistory.size()-1; taskNdx >= 0; taskNdx--) {
             	final ArrayList<ActivityRecord> activities = mTaskHistory.get(taskNdx).mActivities;
 				TaskRecord task = mTaskHistory.get(taskNdx);
+				if (DEBUG_ZJY) Slog.d(TAG,this.mStackId+ "====multiconfig===="+task);
 				if(task == null){
                    continue;
-				}
-				if(!task.mTopOfLauncher){
+				}	
+				//||(nextTask != null && task.mTopOfLauncher && task.taskId != nextTask.taskId)
+				if(!task.mTopOfLauncher ){
 					for(int i=0;i<activities.size();i++){
 						ActivityRecord r = activities.get(i);	
 						if(DEBUG_ZJY)Slog.d(TAG,"prepare startPausing title="+r.intent.getComponent().flattenToShortString());
@@ -1812,7 +1827,6 @@ final class ActivityStack {
            	 			}
 			  		}
 				}	
-			  	
 			}
 		}
 
@@ -2128,7 +2142,7 @@ final class ActivityStack {
         } else {
             task.setTaskToReturnTo(APPLICATION_ACTIVITY_TYPE);
         }
- if (DEBUG_SWITCH) Slog.v(TAG, "--------------------insertTaskAtTop: " + task);
+        if (DEBUG_SWITCH) Slog.v(TAG, "--------------------insertTaskAtTop: " + task);
         task.mTopOfLauncher = true;
         mTaskHistory.remove(task);
         // Now put task at top.
@@ -3855,8 +3869,10 @@ final class ActivityStack {
         // There is an assumption that moving a task to the back moves it behind the home activity.
         // We make sure here that some activity in the stack will launch home.
         int numTasks = mTaskHistory.size();
+		int numTs = numTasks;
         for (int taskNdx = numTasks - 1; taskNdx >= 1; --taskNdx) {
             final TaskRecord task = mTaskHistory.get(taskNdx);
+			
             if (task.isOverHomeStack()) {
                 break;
             }
@@ -3864,8 +3880,15 @@ final class ActivityStack {
                 // Set the last task before tr to go to home.
                 task.setTaskToReturnTo(HOME_ACTIVITY_TYPE);
             }
+		
         }
-	
+	for (int taskNdx = numTasks - 1; taskNdx >= 1; --taskNdx) {
+            final TaskRecord task = mTaskHistory.get(taskNdx);
+			Slog.i(TAG,task.getTaskToReturnTo()+ "================   " +task +" numTs: "+task.mTopOfLauncher);
+			if(!task.mTopOfLauncher){
+				numTs --;
+			}
+        }
 
         mWindowManager.prepareAppTransition(AppTransition.TRANSIT_TASK_TO_BACK, false);
         mWindowManager.moveTaskToBottom(taskId);
@@ -3876,7 +3899,7 @@ final class ActivityStack {
 
         final TaskRecord task = mResumedActivity != null ? mResumedActivity.task : null;
 		boolean succed = true;
-        if (task == tr && tr.isOverHomeStack() || numTasks <= 1 && isOnHomeDisplay()) {
+        if (task == tr && tr.isOverHomeStack() || numTs <= 1 && isOnHomeDisplay()) {
             if (!mService.mBooting && !mService.mBooted) {
                 // Not ready yet!
                 return false;
@@ -3885,6 +3908,26 @@ final class ActivityStack {
 			Slog.i(TAG,taskToReturnTo+ "move task to back resumeHomeStackTask   " +tr);
             tr.setTaskToReturnTo(APPLICATION_ACTIVITY_TYPE);
             succed = mStackSupervisor.resumeHomeStackTask(taskToReturnTo, null, "moveTaskToBack");
+			if(mService.mConfiguration.enableMultiWindow()){
+				if (DEBUG_ZJY) Slog.d(TAG, "====1moveTaskToBackLocked multiconfig====");
+				for (int taskNdx = mTaskHistory.size()-1; taskNdx >= 0; taskNdx--) {
+	            	final ArrayList<ActivityRecord> activities = mTaskHistory.get(taskNdx).mActivities;
+					TaskRecord temptask = mTaskHistory.get(taskNdx);
+					if(temptask == null){
+	                   continue;
+					}
+					if(!temptask.mTopOfLauncher){
+						for(int i=0;i<activities.size();i++){
+							ActivityRecord r = activities.get(i);	
+							if(DEBUG_ZJY)Slog.d(TAG,"prepare startPausing title="+r.intent.getComponent().flattenToShortString());
+	            			if (!r.finishing && r.state == ActivityState.RESUMED) {
+								if(DEBUG_ZJY)Slog.d(TAG,"startPausing title="+r.intent.getComponent().flattenToShortString());
+								startPausingLastNoCallbackLocked(r,mStackSupervisor.mUserLeaving,false);
+	           	 			}
+				  		}
+					}	 	
+				}
+		    }
         }else{
 		    if(mService.mConfiguration.enableMultiWindow()){
 				if (DEBUG_ZJY) Slog.d(TAG, "====moveTaskToBackLocked multiconfig====");

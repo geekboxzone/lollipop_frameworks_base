@@ -16,8 +16,8 @@
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mApps_item"
-	android:layout_width="54dp"
-	android:layout_height="54dp"
+	android:layout_width="64dp"
+	android:layout_height="48dip"
 	android:background="@drawable/bg_item_taskbar">
 	<TextView android:id="@+id/mAppsText"
 	    android:layout_width="0dp"
@@ -25,8 +25,8 @@
 		android:layout_below="@+id/mImage"
 		android:layout_alignParentLeft="true">
 	</TextView>
-	<ImageView android:id="@+id/mAppsImage" android:layout_width="48dp"
-		android:layout_height="48dp"
+	<ImageView android:id="@+id/mAppsImage" android:layout_width="40dp"
+		android:layout_height="40dp"
 		
 		android:layout_centerInParent="true"
 		>

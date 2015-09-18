@@ -12,8 +12,11 @@
     <app package="com.sohu.newsclient" phonemode="false"/>
     <app package="com.letv.android.client.pad" phonemode="false"/>
     <app package="com.hdzdy.game" phonemode="false"/>
+<app package="com.iflytek.inputmethod" phonemode="false"/>
+    <app package="com.baidu.input" phonemode="false"/>
     <app package="com.gamedo.ZombieTerminator.bd" phonemode="false"/>
     
 <app package="com.tencent.mm" phonemode="true"/>
 <app package="com.yongqv.XXL2048" phonemode="true"/>
+<app package="cn.wps.moffice_eng" phonemode="false"/>
 </office-package>

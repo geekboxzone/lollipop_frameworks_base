@@ -2609,7 +2609,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 	/**
 	*@hide
 	*/
-	public static final int SYSTEM_UI_FLAG_MULTI_HALF_WINDOW = 0x00000800;
+	public static final int SYSTEM_UI_FLAG_MULTI_HALF_WINDOW = 0x00002000;
 
     /**
      * @deprecated Use {@link #SYSTEM_UI_FLAG_LOW_PROFILE} instead.
@@ -2917,7 +2917,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * {@hide}
      */
     AttachInfo mAttachInfo;
-	private boolean isDecorView = false;
+	public boolean isDecorView = false;
 	private int mTopPadding = 0;
 
 	public void setIsDecorView(boolean flag){
@@ -4864,6 +4864,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      */
     protected boolean performButtonActionOnTouchDown(MotionEvent event) {
         if ((event.getButtonState() & MotionEvent.BUTTON_SECONDARY) != 0) {
+          //$_rockchip_$_modify_by_huangjc: right mouse click default show ContextMenu for mutilwindow
+            if(mContext.getResources().getConfiguration().enableMultiWindow()){ 
+              performLongClick();
+               return true;
+            }
+          //$_rockchip_$_end
             if (showContextMenu(event.getX(), event.getY(), event.getMetaState())) {
                 return true;
             }
