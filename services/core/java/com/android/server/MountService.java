@@ -1005,6 +1005,7 @@ class MountService extends IMountService.Stub
             }
 
             if (code == VoldResponseCode.VolumeDiskInserted) {
+             if (DEBUG_EVENTS) Slog.i(TAG, "disk insert,do mount disk");
                 new Thread("MountService#VolumeDiskInserted") {
                     @Override
                     public void run() {
@@ -1025,6 +1026,7 @@ class MountService extends IMountService.Stub
                 if (getVolumeState(path).equals(Environment.MEDIA_BAD_REMOVAL)) {
                     return true;
                 }
+                
                 /* Send the media unmounted event first */
                 if (DEBUG_EVENTS) Slog.i(TAG, "Sending unmounted event first");
                 updatePublicVolumeState(volume, Environment.MEDIA_UNMOUNTED);
@@ -1035,13 +1037,25 @@ class MountService extends IMountService.Stub
                 action = Intent.ACTION_MEDIA_REMOVED;
             } else if (code == VoldResponseCode.VolumeBadRemoval) {
                 if (DEBUG_EVENTS) Slog.i(TAG, "Sending unmounted event first");
-                /* Send the media unmounted event first */
-                updatePublicVolumeState(volume, Environment.MEDIA_UNMOUNTED);
-                sendStorageIntent(Intent.ACTION_MEDIA_UNMOUNTED, volume, UserHandle.ALL);
+                 new Thread() {
+                    public void run() {
+                        try {
+                            int rc;
+                            if ((rc = doBadRemoveVolume(path, true, true)) != StorageResultCode.OperationSucceeded) {
+                                Slog.w(TAG, String.format("unmount %s failed (%d)", path, rc));
+                            }
+                            updatePublicVolumeState(volume, Environment.MEDIA_UNMOUNTED);
+                            sendStorageIntent(Intent.ACTION_MEDIA_UNMOUNTED, volume, UserHandle.ALL);
 
-                if (DEBUG_EVENTS) Slog.i(TAG, "Sending media bad removal");
-                updatePublicVolumeState(volume, Environment.MEDIA_BAD_REMOVAL);
+                            if (DEBUG_EVENTS) Slog.i(TAG, "Sending media bad removal");
+                            updatePublicVolumeState(volume, Environment.MEDIA_BAD_REMOVAL);
+                        } catch (Exception ex) {
+                            Slog.w(TAG, "Failed to unmount media", ex);
+                        }
+                    }
+                }.start();
                 action = Intent.ACTION_MEDIA_BAD_REMOVAL;
+              
             } else if (code == VoldResponseCode.FstrimCompleted) {
                 EventLogTags.writeFstrimFinish(SystemClock.elapsedRealtime());
             } else {
@@ -1214,6 +1228,62 @@ class MountService extends IMountService.Stub
         }
         try {
             final Command cmd = new Command("volume", "unmount", path);
+            if (removeEncryption) {
+                cmd.appendArg("force_and_revert");
+            } else if (force) {
+                cmd.appendArg("force");
+            }
+            mConnector.execute(cmd);
+            // We unmounted the volume. None of the asec containers are available now.
+            synchronized (mAsecMountSet) {
+                mAsecMountSet.clear();
+            }
+            return StorageResultCode.OperationSucceeded;
+        } catch (NativeDaemonConnectorException e) {
+            // Don't worry about mismatch in PackageManager since the
+            // call back will handle the status changes any way.
+            int code = e.getCode();
+            if (code == VoldResponseCode.OpFailedVolNotMounted) {
+                return StorageResultCode.OperationFailedStorageNotMounted;
+            } else if (code == VoldResponseCode.OpFailedStorageBusy) {
+                return StorageResultCode.OperationFailedStorageBusy;
+            } else {
+                return StorageResultCode.OperationFailedInternalError;
+            }
+        }
+    }
+
+    /*
+     * If force is not set, we do not unmount if there are
+     * processes holding references to the volume about to be unmounted.
+     * If force is set, all the processes holding references need to be
+     * killed via the ActivityManager before actually unmounting the volume.
+     * This might even take a while and might be retried after timed delays
+     * to make sure we dont end up in an instable state and kill some core
+     * processes.
+     * If removeEncryption is set, force is implied, and the system will remove any encryption
+     * mapping set on the volume when unmounting.
+     */
+    private int doBadRemoveVolume(String path, boolean force, boolean removeEncryption) {
+        if (!getVolumeState(path).equals(Environment.MEDIA_MOUNTED)) {
+            return VoldResponseCode.OpFailedVolNotMounted;
+        }
+
+        /*
+         * Force a GC to make sure AssetManagers in other threads of the
+         * system_server are cleaned up. We have to do this since AssetManager
+         * instances are kept as a WeakReference and it's possible we have files
+         * open on the external storage.
+         */
+        Runtime.getRuntime().gc();
+
+        // Redundant probably. But no harm in updating state again.
+        if (path.equals(mExternalStoragePath)) //only flash
+        {
+        	mPms.updateExternalMediaStatus(false, false);
+        }
+        try {
+            final Command cmd = new Command("volume", "unmount_bad", path);
             if (removeEncryption) {
                 cmd.appendArg("force_and_revert");
             } else if (force) {
