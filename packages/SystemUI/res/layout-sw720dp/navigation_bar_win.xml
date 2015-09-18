@@ -236,7 +236,16 @@
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 />
-            
+            <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:src="@drawable/capture"
+                android:layout_marginRight="0dp"
+                android:layout_marginStart="2dp"
+                   android:layout_weight="0"
+                android:visibility="invisible"
+                   android:contentDescription="@string/accessibility_recent"
+             />
             
             <View
                 android:layout_width="0dp"
