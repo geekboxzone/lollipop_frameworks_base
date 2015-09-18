@@ -27,7 +27,7 @@
     <color name="primary_dark_material_light">#ff757575</color>
 
     <color name="ripple_material_dark">#4dffffff</color>
-    <color name="ripple_material_light">#1f000000</color>
+    <color name="ripple_material_light">#ff1874cd</color>
 
     <color name="accent_material_light">@color/material_deep_teal_500</color>
     <color name="accent_material_dark">@color/material_deep_teal_200</color>
@@ -74,8 +74,8 @@
     <color name="primary_text_default_material_dark">#ffffffff</color>
     <color name="secondary_text_default_material_dark">#b3ffffff</color>
 
-    <item name="disabled_alpha_material_light" format="float" type="dimen">0.26</item>
-    <item name="disabled_alpha_material_dark" format="float" type="dimen">0.30</item>
+    <item name="disabled_alpha_material_light" format="float" type="dimen">0.7</item>
+    <item name="disabled_alpha_material_dark" format="float" type="dimen">0.7</item>
 
     <!-- Primary & accent colors -->
     <eat-comment />
