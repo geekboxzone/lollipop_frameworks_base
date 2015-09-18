@@ -4467,7 +4467,6 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 }
  	   }	
        if(getTaskForActivity(token, true) >= 0){
-	   	 new RuntimeException("here").printStackTrace();
             Intent winintent=new Intent();
             winintent.setAction("rk.android.wintask.FINISH");
             if(getTasks(1,0).get(0).topActivity!=null)
