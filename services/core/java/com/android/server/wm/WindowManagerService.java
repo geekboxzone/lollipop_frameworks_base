@@ -227,6 +227,7 @@ public class WindowManagerService extends IWindowManager.Stub
 
     static final boolean PROFILE_ORIENTATION = false;
     static final boolean localLOGV = DEBUG;
+	static final boolean DEBUG_3D_FUNCTIONS = false;//djw:add for 3d functions
 
     /** How much to multiply the policy's type layer, to reserve room
      * for multiple windows of the same type and Z-ordering adjustment
@@ -8384,6 +8385,16 @@ public class WindowManagerService extends IWindowManager.Stub
              mRotation = Surface.ROTATION_0;
              rotation = Surface.ROTATION_90;
         }
+
+        //djw:add for 3d functions
+        if(DEBUG_3D_FUNCTIONS){
+     	   if("vr".equals(SystemProperties.get("sys.3d.vr","false"))){
+       		 //force 0
+       		 rotation = Surface.ROTATION_0;
+       		 }
+        }
+          //add ends
+
 		if(mCurConfiguration.enableMultiWindow()){
         	rotation = Surface.ROTATION_0; 
 		}

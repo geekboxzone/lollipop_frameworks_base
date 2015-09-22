@@ -159,6 +159,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     static final boolean DEBUG_WAKEUP = false;
     static final boolean SHOW_STARTING_ANIMATIONS = false;
     static final boolean SHOW_PROCESSES_ON_ALT_MENU = false;
+	static final boolean DEBUG_3D_FUNCTIONS = false;//djw:add for 3d functions
 
     // Whether to allow dock apps with METADATA_DOCK_HOME to temporarily take over the Home key.
     // No longer recommended for desk docks; still useful in car docks.
@@ -5020,6 +5021,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     }
 
+	private long lastTime=0;
+
     /** {@inheritDoc} */
     @Override
     public int interceptKeyBeforeQueueing(KeyEvent event, int policyFlags) {
@@ -5050,6 +5053,31 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 			performHapticFeedbackLw(null, HapticFeedbackConstants.VIRTUAL_KEY, false);
 		}
 		//END 
+		
+		//djw:add for 3d functions
+		if(DEBUG_3D_FUNCTIONS){
+			if(event.getKeyCode()==KeyEvent.KEYCODE_VOLUME_UP && event.isDown()){
+	              if((System.currentTimeMillis()-lastTime) < 400){
+				  	SystemProperties.set("sys.hwc.force3d.primary", "1");
+					SystemProperties.set("sys.game.3d", "1");
+					SystemProperties.set("sys.hwc.compose_policy", "0");
+					SystemProperties.set("sys.3d.vr", "vr");
+	             }
+	          lastTime=System.currentTimeMillis();
+			}
+
+			if(event.getKeyCode()==KeyEvent.KEYCODE_VOLUME_DOWN && event.isDown()){
+	              if((System.currentTimeMillis()-lastTime) < 400){
+				  	SystemProperties.set("sys.hwc.force3d.primary", "0");
+					SystemProperties.set("sys.game.3d", "0");
+					SystemProperties.set("sys.hwc.compose_policy", "6");
+					SystemProperties.set("sys.3d.vr", "0");
+	             }
+	          lastTime=System.currentTimeMillis();
+			}
+		}
+		//add end
+
         if (DEBUG_INPUT) {
             Log.d(TAG, "interceptKeyTq keycode=" + keyCode
                     + " interactive=" + interactive + " keyguardActive=" + keyguardActive
