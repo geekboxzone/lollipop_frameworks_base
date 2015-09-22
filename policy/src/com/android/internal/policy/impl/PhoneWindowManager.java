@@ -2991,10 +2991,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         } else if (KeyEvent.isMetaKey(keyCode)) {
             if (down) {
                 mPendingMetaAction = true;
-            } else if (mPendingMetaAction) {
+            } else if (mPendingMetaAction &&MultiWindowSettings.checkConfig(mContext) ) {
                 launchAssistAction(Intent.EXTRA_ASSIST_INPUT_HINT_KEYBOARD);
             }
-            if(!down){
+            if(!down &&!MultiWindowSettings.checkConfig(mContext)){
            //modify by huangjc: win button when shortpress start windows menu
               final long MetaKeyDownTime = event.getDownTime();
               final long MetaKeyEventTime = event.getEventTime();
@@ -3017,7 +3017,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return -1;
          }
          //huangjc:Ctrl + ESC funtion
-         if (keyCode == KeyEvent.KEYCODE_ESCAPE ) {
+         if (keyCode == KeyEvent.KEYCODE_ESCAPE &&!MultiWindowSettings.checkConfig(mContext) ) {
            if(down && event.isCtrlPressed()){
              if(isServiceRunning("com.android.winstart.ManderService")){
               Intent mIntent = new Intent();
