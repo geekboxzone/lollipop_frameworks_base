@@ -256,6 +256,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     private final Object mLock = new Object();
 
     Context mContext;
+    MultiWindowSettings multiwindowSettings;
     IWindowManager mWindowManager;
     WindowManagerFuncs mWindowManagerFuncs;
     WindowManagerInternal mWindowManagerInternal;
@@ -1293,7 +1294,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         } catch (RemoteException ex) { }
         mSettingsObserver = new SettingsObserver(mHandler);
         mSettingsObserver.observe();
-	MultiWindowSettings multiwindowSettings = new MultiWindowSettings(mHandler);
+	multiwindowSettings = new MultiWindowSettings(mHandler);
 	multiwindowSettings.init(mContext, mWindowManager);
         mShortcutManager = new ShortcutManager(context, mHandler);
         mShortcutManager.observe();
@@ -3040,6 +3041,43 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return -1;
            }
         }        
+
+                 // huangjc:Alt + F4
+        if (keyCode == KeyEvent.KEYCODE_F4 ) {
+           if(down && event.isAltPressed()){
+            // remove current task!
+             multiwindowSettings.removeCurrentApp();
+
+            return -1;
+           }
+        }
+        // huangjc:ALT+CTRL+A 
+        if (keyCode == KeyEvent.KEYCODE_A ) {
+           if(down && event.isAltPressed()&&event.isCtrlPressed()){
+            // take screenshot!
+            Intent intent = new Intent("rk.android.screenshot.action");
+                        mContext.sendBroadcast(intent);
+            return -1;
+           }
+        }
+                // huangjc:CTRL+SPACE
+        if (keyCode == KeyEvent.KEYCODE_SPACE ) {
+           if(event.isCtrlPressed()){
+            // Handle keyboard language switching
+            if(down)
+              multiwindowSettings.changeInputMethod(mHandler);
+            return -1;
+           }
+        }
+                // huangjc:CTRL+SHIFT_LEFT
+        if (keyCode == KeyEvent.KEYCODE_SHIFT_LEFT ) {
+           if(event.isCtrlPressed()){
+            // Handle keyboard language switching
+            if(down)
+              multiwindowSettings.changeInputMethod(mHandler);
+            return -1;
+           }
+        }
 
         // Shortcuts are invoked through Search+key, so intercept those here
         // Any printing key that is chorded with Search should be consumed

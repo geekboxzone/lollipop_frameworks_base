@@ -19,4 +19,7 @@
 <app package="com.tencent.mm" phonemode="true"/>
 <app package="com.yongqv.XXL2048" phonemode="true"/>
 <app package="cn.wps.moffice_eng" phonemode="false"/>
+<app package="com.tencent.androidqqmail" phonemode="false"/>
+<app package="cn.cj.pe" phonemode="false"/>
+<app package="com.tencent.qqpinyin" phonemode="false"/>
 </office-package>

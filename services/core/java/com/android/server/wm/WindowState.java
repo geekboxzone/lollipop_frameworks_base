@@ -732,6 +732,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			//cf.bottom = vf.bottom ;
 			
 		    LOGD(adjust+"---computeFrameLw---222--------,cf:"+cf+",vf:"+vf+",pf:"+pf+","+this);
+                        if (!cf.contains(vf))
 			cf.set(vf);
 		}
         mContentFrame.set(cf);

@@ -4371,16 +4371,19 @@ public final class ViewRootImpl implements ViewParent,
             final MotionEvent event = (MotionEvent)q.mEvent;
 
             mAttachInfo.mUnbufferedDispatchRequested = false;
-	    if(mWindowAttributes!= null && mWindowAttributes.type == WindowManager.LayoutParams.FIRST_SUB_WINDOW 
-		&& mView.getResources().getConfiguration().enableMultiWindow() && !mView.isDecorView){
+	    if(mWindowAttributes!= null && mWindowAttributes.type == WindowManager.LayoutParams.FIRST_SUB_WINDOW  &&mWindowAttributes.windowAnimations == 0 
+		&& mView.getResources().getConfiguration().enableMultiWindow() && ("com.android.browser".equals(mView.getContext().getPackageName()) 
+	|| "com.tencent.androidqqmail".equals(mView.getContext().getPackageName()))&& !mView.isDecorView){
 	       MultiWindowInfo info = new MultiWindowInfo();
 	       try{				
 		   mWindowSession.getTransFormInfo(mWindow, info);
 		}catch(RemoteException e){}
+
 		int statusBarHeight =
-                mView.getContext().getResources().getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);	
+                mView.getContext().getResources().getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);
+		if("com.tencent.androidqqmail".equals(mView.getContext().getPackageName())) statusBarHeight = 0;
 		if(info.mHScale != 1.0f && info.mVScale != 1.0f)
-		   event.transformCoordinate(info.mPosX, info.mPosY-25 >0 ?info.mPosY-25:0, info.mHScale, info.mVScale);
+		   event.transformCoordinate(info.mPosX, info.mPosY-statusBarHeight>0?info.mPosY-statusBarHeight:0, info.mHScale, info.mVScale);
               }
 			
 	    boolean handled = mView.dispatchPointerEvent(event,mScaleDrageMode);

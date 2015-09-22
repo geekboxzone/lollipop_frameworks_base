@@ -213,7 +213,7 @@ public class WindowManagerService extends IWindowManager.Stub
     static final boolean DEBUG_SCREEN_ON = false;
     static final boolean DEBUG_SCREENSHOT = false;
     static final boolean DEBUG_BOOT = false;
-    static final boolean DEBUG_LAYOUT_REPEATS = true;
+    static final boolean DEBUG_LAYOUT_REPEATS = false;
     static final boolean DEBUG_SURFACE_TRACE = false;
     static final boolean DEBUG_WINDOW_TRACE = false;
     static final boolean DEBUG_TASK_MOVEMENT = false;

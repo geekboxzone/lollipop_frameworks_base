@@ -1062,8 +1062,8 @@ final class ActivityStack {
                 prev = finishCurrentActivityLocked(prev, FINISH_AFTER_VISIBLE, false);
             } else if (prev.app != null) {
                 if (DEBUG_PAUSE) Slog.v(TAG, "Enqueueing pending stop: " + prev);
-			   if(r.difPkgTask)
-			   mService.moveTaskToBack(r.task.taskId);
+			   if(prev.difPkgTask)
+			   mService.moveTaskToBack(prev.task.taskId);
                 if (prev.waitingVisible) {
                     prev.waitingVisible = false;
                     mStackSupervisor.mWaitingVisibleActivities.remove(prev);
@@ -1476,6 +1476,10 @@ final class ActivityStack {
 
                                 case INITIALIZING:
                                 case RESUMED:
+                                      if (r.state == ActivityState.RESUMED &&!r.finishing) {
+                                                        if(DEBUG_VISBILITY)Slog.d(TAG,"we call startPausing before be added in StoppingActivities : "+r);
+                                                        startPausingLastNoCallbackLocked(r, mStackSupervisor.mUserLeaving, false);
+                                      }
                                 case PAUSING:
                                 case PAUSED:
                                     // This case created for transitioning activities from
@@ -1775,17 +1779,13 @@ final class ActivityStack {
         boolean multiconfig = mService.mConfiguration.enableMultiWindow();
 		boolean condition ;
 		boolean samePackInDifTask;
-		int removeTaskId = -1;
 		if(multiconfig){
 	    	samePackInDifTask = mResumedActivity != null && mResumedActivity.task.taskId != next.task.taskId && mResumedActivity.packageName.equals(next.packageName);
 	    	if (samePackInDifTask) {
 			mResumedActivity.difPkgTask = true;		
-			removeTaskId = mResumedActivity.task.taskId;
-            if (DEBUG_STATES) Slog.d(TAG, "==========================ddddddd====== " +mResumedActivity.difPkgTask);
 	    }
 	    condition = mResumedActivity != null &&mResumedActivity!=next && (mResumedActivity.task.taskId==next.task.taskId ||samePackInDifTask);//mResumedActivity.packageName.equals(next.packageName));
 	//	condition = mResumedActivity != null &&mResumedActivity!=next && mResumedActivity.task.taskId==next.task.taskId;
-            if (DEBUG_STATES) Slog.d(TAG, "========================ddddd======== " +mResumedActivity);
 		}else{
 	    condition = mResumedActivity != null;
 		}
@@ -4033,12 +4033,6 @@ final class ActivityStack {
                     + Integer.toHexString(r.info.getRealConfigChanged())
                     + ", newConfig=" + newConfig);
         }
-	if (false && oldConfig.phoneMode != 0) {
-        	if (DEBUG_SWITCH || DEBUG_CONFIGURATION) {
-            		Slog.v(TAG, "we don't want to restart " + r.info.name);
-		}
-		return true;
-	}
         if ((changes&(~r.info.getRealConfigChanged())) != 0 || r.forceNewConfig) {
             // Aha, the activity isn't handling the change, so DIE DIE DIE.
             r.configChangeFlags |= changes;

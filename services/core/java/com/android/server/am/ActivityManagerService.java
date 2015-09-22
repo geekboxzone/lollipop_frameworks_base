@@ -91,7 +91,7 @@ import com.android.server.wm.AppTransition;
 import com.android.server.wm.WindowManagerService;
 import com.google.android.collect.Lists;
 import com.google.android.collect.Maps;
-
+import com.android.multiwindow.wmservice.MulActivityService;
 import libcore.io.IoUtils;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -926,9 +926,7 @@ public final class ActivityManagerService extends ActivityManagerNative
      */
     Configuration mConfiguration = new Configuration();
 
-    Configuration mPhoneConfiguration = new Configuration();
-
-    ArrayList<Integer> mPhoneModeUID;
+    MulActivityService mMulActivityService;
 
     /**
      * Current sequencing integer of the configuration, for skipping old
@@ -2134,11 +2132,7 @@ public final class ActivityManagerService extends ActivityManagerNative
         mConfiguration.setToDefaults();
         mConfiguration.locale = Locale.getDefault();
 
-        mPhoneConfiguration.setToDefaults();
-        mPhoneConfiguration.locale = Locale.getDefault();
-        mPhoneConfiguration.seq = 1;
-
-	mPhoneModeUID = new ArrayList<Integer>();
+	mMulActivityService = new MulActivityService(mContext);
 
         mConfigurationSeq = mConfiguration.seq = 1;
         mProcessCpuTracker.init();
@@ -6161,17 +6155,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             }
             ProfilerInfo profilerInfo = profileFile == null ? null
                     : new ProfilerInfo(profileFile, profileFd, samplingInterval, profileAutoStop);
-	    //Log.e(TAG, "------- processName = " + processName + ", phoneMode = " + appInfo.phoneMode + ", uid = " + appInfo.uid);
-	    Configuration realConfiguration = new Configuration(mConfiguration);
-	    //if (processName != null && processName.contains("tencent")) {
-	    if (appInfo.phoneMode) {
-	    	realConfiguration = new Configuration(mPhoneConfiguration);
-		if (!phoneUID(appInfo.uid)) {
-			Integer UID = new Integer(appInfo.uid);
-			//Log.e(TAG, "------- add PHONEMODE uid = " + appInfo.uid);
-			mPhoneModeUID.add(UID);
-		}
-	    }
+	    Configuration realConfiguration = mMulActivityService.getConfiguration(appInfo, mConfiguration);
             thread.bindApplication(processName, appInfo, providers, app.instrumentationClass,
                     profilerInfo, app.instrumentationArguments, app.instrumentationWatcher,
                     app.instrumentationUiAutomationConnection, testMode, enableOpenGlTrace,
@@ -6262,18 +6246,15 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         return true;
     }
 
-    @Override
-    public boolean phoneUID(int uid) {
-    	if (mPhoneModeUID != null) {
-		for (int i = 0; i < mPhoneModeUID.size(); i++) {
-			Integer matchuid = mPhoneModeUID.get(i);
-			if (uid == matchuid.intValue()) 
-				return true;
-		}
-	}
-	return false;
-    }
 
+    public boolean getRights(int id) {
+       if(mMulActivityService != null)
+          return mMulActivityService.getRight(id);
+	return false;
+     }
+     public boolean getEnableMulWindow(){
+	return mMulActivityService.getEnableMulWindow();
+    }
     @Override
     public final void attachApplication(IApplicationThread thread) {
         synchronized (this) {
@@ -16955,12 +16936,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 }
                 newConfig.seq = mConfigurationSeq;
                 mConfiguration = newConfig;
-		mPhoneConfiguration.setTo(newConfig);
-		mPhoneConfiguration.orientation = Configuration.ORIENTATION_PORTRAIT;
-		mPhoneConfiguration.smallestScreenWidthDp = 360;
-		mPhoneConfiguration.screenWidthDp = 360;
-		mPhoneConfiguration.screenHeightDp = 567;
-		mPhoneConfiguration.phoneMode = 1;
+		mMulActivityService.updateConfiguration(newConfig);
 
                 Slog.i(TAG, "Config changes=" + Integer.toHexString(changes) + " " + newConfig);
                 mUsageStatsService.reportConfigurationChange(newConfig, mCurrentUserId);

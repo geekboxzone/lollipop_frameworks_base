@@ -707,12 +707,20 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
 
 	case IF_UID_SUPPORT_PHONEMODE: {
             data.enforceInterface(IActivityManager.descriptor);
-	    int uid = data.readInt();
-	    boolean result = phoneUID(uid);
+	    int id = data.readInt();
+	    boolean result = getRights(id);
             reply.writeNoException();
             reply.writeInt(result ? 1 : 0);
             return true;
 	}
+        case GET_ENABLE_MULTI_WINDOW: {
+            data.enforceInterface(IActivityManager.descriptor);
+            int id = data.readInt();
+            boolean result = getEnableMulWindow();
+            reply.writeNoException();
+            reply.writeInt(result ? 1 : 0);
+            return true;
+        }
         case MOVE_ACTIVITY_TASK_TO_BACK_TRANSACTION: {
             data.enforceInterface(IActivityManager.descriptor);
             IBinder token = data.readStrongBinder();
@@ -5495,11 +5503,11 @@ class ActivityManagerProxy implements IActivityManager
     }
 
     @Override
-    public boolean phoneUID(int uid) throws RemoteException {
+    public boolean getRights(int id) throws RemoteException {
 	Parcel data = Parcel.obtain();
 	Parcel reply = Parcel.obtain();
 	data.writeInterfaceToken(IActivityManager.descriptor);
-        data.writeInt(uid);
+        data.writeInt(id);
 	mRemote.transact(IF_UID_SUPPORT_PHONEMODE, data, reply, 0);
 	reply.readException();
 	boolean res = reply.readInt() != 0;
@@ -5508,5 +5516,17 @@ class ActivityManagerProxy implements IActivityManager
 	return res;
     }
 
+      @Override
+    public boolean getEnableMulWindow() throws RemoteException {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        data.writeInterfaceToken(IActivityManager.descriptor);
+        mRemote.transact(GET_ENABLE_MULTI_WINDOW, data, reply, 0);
+        reply.readException();
+        boolean res = reply.readInt() != 0;
+        data.recycle();
+        reply.recycle();
+        return res;
+    }
     private IBinder mRemote;
 }

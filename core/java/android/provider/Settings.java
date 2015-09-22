@@ -1458,7 +1458,6 @@ public final class Settings {
          * @return true if the value was set, false on database errors
          */
         public static boolean putInt(ContentResolver cr, String name, int value) {
-           java.lang.System.out.println(name+"==============================================="+value);
             return putIntForUser(cr, name, value, UserHandle.myUserId());
         }
 
@@ -3510,7 +3509,6 @@ public final class Settings {
          * @return true if the value was set, false on database errors
          */
         public static boolean putInt(ContentResolver cr, String name, int value) {
-           java.lang.System.out.println(name+"==============================================="+value);
             return putIntForUser(cr, name, value, UserHandle.myUserId());
         }
 
@@ -7133,7 +7131,6 @@ public final class Settings {
          * @return true if the value was set, false on database errors
          */
         public static boolean putInt(ContentResolver cr, String name, int value) {
-           java.lang.System.out.println(name+"==============================================="+value);
             return putString(cr, name, Integer.toString(value));
         }
 

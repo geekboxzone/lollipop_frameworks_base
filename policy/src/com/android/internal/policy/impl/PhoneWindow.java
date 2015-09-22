@@ -350,6 +350,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     public PhoneWindow(Context context) {
         super(context);
 		mContext = context;
+         // if( context.getResources().getConfiguration() != null &&  context.getResources().getConfiguration().enableMultiWindow())
 		mMultiWindowUtil = new MultiWindowUtil(context,this);
         mLayoutInflater = LayoutInflater.from(context);
     }
@@ -2383,7 +2384,6 @@ if(mDecorContentParent != null)
             final int action = event.getAction();
             final boolean isDown = action == KeyEvent.ACTION_DOWN;
 
-              Log.d(TAG, keyCode+"  -========dispatchKeyEvent======  ======="+action);
             if (isDown && (event.getRepeatCount() == 0)) {
                 // First handle chording of panel key: if a panel key is held
                 // but not released, try to execute a shortcut in it.
