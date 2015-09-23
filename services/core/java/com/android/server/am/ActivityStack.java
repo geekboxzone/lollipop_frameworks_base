@@ -29,6 +29,7 @@ import static com.android.server.am.ActivityManagerService.DEBUG_TRANSITION;
 import static com.android.server.am.ActivityManagerService.DEBUG_USER_LEAVING;
 import static com.android.server.am.ActivityManagerService.DEBUG_VISBILITY;
 import static com.android.server.am.ActivityManagerService.VALIDATE_TOKENS;
+import static com.android.server.am.ActivityManagerService.DEBUG_LOWMEM;
 
 import static com.android.server.am.ActivityRecord.HOME_ACTIVITY_TYPE;
 import static com.android.server.am.ActivityRecord.APPLICATION_ACTIVITY_TYPE;
@@ -1103,11 +1104,10 @@ final class ActivityStack {
 	    	if(prev!= null && mResumingActivity!= null && mResumingActivity.toString().contains("recents.RecentsActivity"))
 	    	{
 			String prevstring = prev.toString();
-	    		if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk")))
-			{
-                		Slog.d("xzj","------pause packages because recent "+prevstring);
+			if(!shouldExcludePrevApp(prevstring)) {
+                		if(DEBUG_LOWMEM)Slog.d("xzj","------pause packages because recent "+prevstring);
 		        	mService.killAppAtUsersRequest(prev.app, null);		
-			}	
+			}
 	    	}
  	    }
             mPausingActivity = null;
@@ -1616,6 +1616,41 @@ final class ActivityStack {
         return result;
     }
 
+    boolean shouldExcludePrevApp(String prevApp) {
+	    if(prevApp == null)
+	    {
+		if(DEBUG_LOWMEM)Slog.d("xzj","---prevApp is null in shouldExcludePrevApp--");
+		return false;
+	    }
+            int N = mService.mExcludePrevApp.size();
+            for (int i=0; i<N; i++) {
+		if(prevApp.contains(mService.mExcludePrevApp.get(i)))
+		{
+			if(DEBUG_LOWMEM)Slog.d("xzj","------shouldExcludePrevApp prevApp= "+prevApp);
+			return true;
+		}
+            }
+	    return false;
+    }
+
+    boolean shouldExcludeNextApp(String nextApp) {
+            if(nextApp == null)
+            {
+                if(DEBUG_LOWMEM)Slog.d("xzj","---nextApp is null in shouldExcludeNextApp--");
+                return false;
+            }
+            int N = mService.mExcludeNextApp.size();
+            for (int i=0; i<N; i++) {
+                if(nextApp.contains(mService.mExcludeNextApp.get(i)))
+                {
+                        if(DEBUG_LOWMEM)Slog.d("xzj","------shouldExcludeNextApp nextApp= "+nextApp);
+                        return true;
+                }
+            }
+            return false;
+    }
+
+
     final boolean resumeTopActivityInnerLocked(ActivityRecord prev, Bundle options) {
         if (ActivityManagerService.DEBUG_LOCKSCREEN) mService.logLockScreen("");
         if (!mService.mBooting && !mService.mBooted) {
@@ -1930,18 +1965,18 @@ final class ActivityStack {
 	    	{
 			String prevstring = prev.toString();
 			String nextstring = next.toString();
-			if((!prevstring.contains("com.android.launcher"))&&(!prevstring.contains("com.android.settings"))&&(!prevstring.contains("com.android.systemui"))&&(!prevstring.contains("com.android.rk"))&&(!prevstring.contains("com.antutu.ABenchMark"))&&(!prevstring.contains("com.google.android.setupwizard"))&&(!prevstring.contains("packageinstaller"))&&(!prevstring.contains("apkinstaller")))//exclude some apk
+			if(!shouldExcludePrevApp(prevstring))
 			{
-				if((!nextstring.contains("com.qihoo"))&&(!nextstring.contains("com.dragon.android.pandaspace"))&&(!nextstring.contains(".auth.gsf.AccountIntroActivity"))&&(!nextstring.contains(".auth.login."))&&(!nextstring.contains("com.android.systemui")))//exclude 360,91,google login
+				if(!shouldExcludeNextApp(nextstring))
 				{
-	    				Slog.d("xzj","------pause packages "+prevstring+" next = "+ nextstring);
+	    				if(DEBUG_LOWMEM)Slog.d("xzj","------pause packages "+prevstring+" next = "+ nextstring);
 					mService.killAppAtUsersRequest(prev.app, null);
 				}
 			}
 			if(mService.mGameMap.get(prev.processName) != null)
 			{
 				mService.killAllBackgroundProcesses();
-				Slog.v("xzj", "----clean memory for stop " + prev.processName);                                      
+				if(DEBUG_LOWMEM)Slog.v("xzj", "----clean memory for stop " + prev.processName);                                      
 			}
 	    	}
             }

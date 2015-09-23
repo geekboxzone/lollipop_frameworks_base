@@ -1216,8 +1216,10 @@ public final class ActivityManagerService extends ActivityManagerNative
 
     final Map<String,String> mProcessMap  =new HashMap<String,String>(); //process which do not start auto by broadcast and contentprovider from lowmem_package_filter.xml       
     final Map<String,String> mServiceMap  =new HashMap<String,String>(); //service which do not start auto by call startService or bindService from lowmem_package_filter.xml 
-		final Map<String,String> mGameMap     =new HashMap<String,String>(); //games,need to do memory cleanup
-		
+    final Map<String,String> mGameMap     =new HashMap<String,String>(); //games,need to do memory cleanup
+    final ArrayList<String> mExcludePrevApp = new ArrayList<String>();   //process which would not stop when go to pause
+    final ArrayList<String> mExcludeNextApp = new ArrayList<String>();   //process which would not pause prev app when starting
+		 
     private final class AppDeathRecipient implements IBinder.DeathRecipient {
         final ProcessRecord mApp;
         final int mPid;
@@ -1347,7 +1349,7 @@ public final class ActivityManagerService extends ActivityManagerNative
 		    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 		    {
                     	if((mProcessMap.get(proc.processName) != null)||(mServiceMap.get(proc.processName) != null)){
-                        	Slog.w("xzj", "Skipping crash dialog of " + proc + ": filter");
+                        	if(DEBUG_LOWMEM)Slog.w("xzj", "Skipping crash dialog of " + proc + ": filter");
                         	if (res != null) {
                                 	res.set(0);
                         	}
@@ -2188,25 +2190,25 @@ public final class ActivityManagerService extends ActivityManagerNative
           		do {
               			type = parser.next();
               			if (type == XmlPullParser.START_TAG) {
-                  		String tag = parser.getName();
-                  		if ("app".equals(tag)) {
-                      			String pkgName = parser.getAttributeValue(null, "package");
-		      			if(pkgName!=null)
-		      			{
-		      				mProcessMap.put(pkgName,pkgName);
-						if(DEBUG_LOWMEM)Slog.d("xzj","--add filter package "+pkgName);
-		      			}
-                  		}
-		  		else if("service".equals(tag))
-		  		{
-		      			String serviceName = parser.getAttributeValue(null, "package");
-		      			if(serviceName!=null)
-		      			{
-		      				mServiceMap.put(serviceName,serviceName);
-						if(DEBUG_LOWMEM)Slog.d("xzj","---add filter service "+serviceName);
-		      			}
-		  		}
-		  		else if("game".equals(tag))
+                  			String tag = parser.getName();
+                  			if ("app".equals(tag)) {
+                      				String pkgName = parser.getAttributeValue(null, "package");
+		      				if(pkgName!=null)
+		      				{
+		      					mProcessMap.put(pkgName,pkgName);
+							if(DEBUG_LOWMEM)Slog.d("xzj","--add filter package "+pkgName);
+		      				}
+                  			}
+		  			else if("service".equals(tag))
+		  			{
+		      				String serviceName = parser.getAttributeValue(null, "package");
+		      				if(serviceName!=null)
+		      				{
+		      					mServiceMap.put(serviceName,serviceName);
+							if(DEBUG_LOWMEM)Slog.d("xzj","---add filter service "+serviceName);
+		      				}
+		  			}
+		  			else if("game".equals(tag))
 					{
 						String gameName = parser.getAttributeValue(null, "package");
 						if(gameName!=null)
@@ -2215,7 +2217,25 @@ public final class ActivityManagerService extends ActivityManagerNative
 							if(DEBUG_LOWMEM)Slog.d("xzj","---add filter game "+gameName);
 						}	
 					}
-              			}
+                                	else if("prev".equals(tag))
+                                	{
+                                		String prevName = parser.getAttributeValue(null, "package");
+                                        	if(prevName!=null)
+                                        	{
+                                        		mExcludePrevApp.add(prevName);
+                                        		if(DEBUG_LOWMEM)Slog.d("xzj","---add filter prevApp "+prevName);
+                                        	}
+                                	}
+                                	else if("next".equals(tag))
+                                	{
+                                		String nextName = parser.getAttributeValue(null, "package");
+                                        	if(nextName!=null)
+                                        	{
+                                        		mExcludeNextApp.add(nextName);
+                                        		if(DEBUG_LOWMEM)Slog.d("xzj","---add filter nextApp "+nextName);
+                                        	}
+                                	}
+				}
           		} while (type != XmlPullParser.END_DOCUMENT);
       		} catch (NullPointerException e) {
          		Slog.w(TAG, "failed parsing " + packageForLowmemFilter, e);
@@ -12322,7 +12342,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
 	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
 	    {
             	if((mProcessMap.get(r.processName) != null)||(mServiceMap.get(r.processName) != null)){
-                	Slog.d("xzj","-----hide error msg for filter process "+r);
+                	if(DEBUG_LOWMEM)Slog.d("xzj","-----hide error msg for filter process "+r);
                 	Binder.restoreCallingIdentity(origId);
                 	return;
             	}
