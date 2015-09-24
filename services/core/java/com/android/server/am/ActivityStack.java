@@ -1476,7 +1476,7 @@ final class ActivityStack {
 
                                 case INITIALIZING:
                                 case RESUMED:
-                                      if (r.state == ActivityState.RESUMED &&!r.finishing) {
+                                      if (mService.mConfiguration.enableMultiWindow() && r.state == ActivityState.RESUMED &&!r.finishing) {
                                                         if(DEBUG_VISBILITY)Slog.d(TAG,"we call startPausing before be added in StoppingActivities : "+r);
                                                         startPausingLastNoCallbackLocked(r, mStackSupervisor.mUserLeaving, false);
                                       }

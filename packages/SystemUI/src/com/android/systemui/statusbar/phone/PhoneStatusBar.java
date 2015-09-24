@@ -1624,15 +1624,19 @@ final Object mScreenshotLock = new Object();
 						
 						mAppsGridView.setAdapter(listadapter);//
 						LinearLayout.LayoutParams params;
-								 if(mDisplayMetrics.densityDpi > 160){
-									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (130+0),
-									LayoutParams.WRAP_CONTENT);
-								 mAppsGridView.setColumnWidth(130); 
-								 }else{
-									 params = new LinearLayout.LayoutParams(listadapter.getCount() * (70+0),
-														LayoutParams.WRAP_CONTENT);
-												 mAppsGridView.setColumnWidth(70);
-								 }
+						if(mDisplayMetrics.densityDpi > 240){
+		                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (130+0),
+						 	LayoutParams.WRAP_CONTENT);
+						 mAppsGridView.setColumnWidth(130); 
+		                 }else if(mDisplayMetrics.densityDpi > 160){
+		                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (100+0),
+						 	LayoutParams.WRAP_CONTENT);
+						 mAppsGridView.setColumnWidth(100); 
+		                 }else{
+		                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (70),
+		                                        LayoutParams.WRAP_CONTENT);
+		                                 mAppsGridView.setColumnWidth(70);
+		                 }
 										 mAppsGridView.setLayoutParams(params);
 								 mAppsGridView.setHorizontalSpacing(0);
 								 mAppsGridView.setStretchMode(GridView.NO_STRETCH);
@@ -1809,7 +1813,7 @@ final Object mScreenshotLock = new Object();
          //ArrayList<HashMap<String, Object>> appslist=new ArrayList<HashMap<String, Object>>(); 
          LOGD("wintask UpdateAppsList,appslist bdeforce====:"+appslist.size());
 		PackageManager pm = mContext.getApplicationContext().getPackageManager();
-		if(isCurrentHomeActivity(pkName,null) || "com.android.providers.downloads.ui".equals(pkName) || "com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName)){
+		if(isCurrentHomeActivity(pkName,null) ||"com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName)){
 			return;
 			}
 			
@@ -1864,7 +1868,7 @@ final Object mScreenshotLock = new Object();
             //make sure some apk no add
             if(getCurrentApps==null)
                  return;
-            if("com.android.providers.downloads.ui".equals(getCurrentApps) || "com.android.inputmethod.latin".equals(getCurrentApps)||"com.android.packageinstaller".equals(getCurrentApps)){
+            if("com.android.inputmethod.latin".equals(getCurrentApps)||"com.android.packageinstaller".equals(getCurrentApps)){
                         return;
             }
 
@@ -1890,12 +1894,16 @@ final Object mScreenshotLock = new Object();
 		if(mAppsGridView !=null){
 		mAppsGridView.setAdapter(listadapter);//
 		LinearLayout.LayoutParams params;
-                 if(mDisplayMetrics.densityDpi > 160){
+                 if(mDisplayMetrics.densityDpi > 240){
                      params = new LinearLayout.LayoutParams(listadapter.getCount() * (130+0),
 				 	LayoutParams.WRAP_CONTENT);
 				 mAppsGridView.setColumnWidth(130); 
+                 }else if(mDisplayMetrics.densityDpi > 160){
+                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (100+0),
+				 	LayoutParams.WRAP_CONTENT);
+				 mAppsGridView.setColumnWidth(100); 
                  }else{
-                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (70+0),
+                     params = new LinearLayout.LayoutParams(listadapter.getCount() * (70),
                                         LayoutParams.WRAP_CONTENT);
                                  mAppsGridView.setColumnWidth(70);
                  }
@@ -1948,9 +1956,12 @@ private String appclosename = null;
 			wmDParams = popupWindow.getWindow().getAttributes();
 			wmDParams.width = 250;		
 			wmDParams.height =100;
-      if(mDisplayMetrics.densityDpi > 160){
+      if(mDisplayMetrics.densityDpi > 240){
 			wmDParams.x = x-45;
 			wmDParams.y = wm.getDefaultDisplay().getHeight()-810;
+			}else if(mDisplayMetrics.densityDpi > 160){
+			wmDParams.x = x-30;
+			wmDParams.y = wm.getDefaultDisplay().getHeight()-400;
 			}else{
 			wmDParams.x = x-25;
       wmDParams.y = wm.getDefaultDisplay().getHeight()-200;
@@ -6313,7 +6324,7 @@ private String appclosename = null;
 			            final boolean isshow = 0 != Settings.System.getInt(
 			                    mContext.getContentResolver(), Settings.System.MULTI_WINDOW_CONFIG, 0);
 			                    isMultiChange=true;
-						       try {
+					/*	       try {
 					            IActivityManager am = ActivityManagerNative.getDefault();
 					            Configuration config = am.getConfiguration();
 					
@@ -6327,7 +6338,7 @@ private String appclosename = null;
 					        } catch (RemoteException e) {
 					            // Intentionally left blank
 					        }
-		
+		            */
 									if(isshow){
 										LOGD("=======MULTI_WINDOW_CONFIG is open ========");
 										if(appslist!=null && appslist.size() > 0)
@@ -6553,6 +6564,11 @@ private String lastInputMethodId = null;
         
         //huangjc win bar
          if(isMultiChange){
+		 	if("box".equals(SystemProperties.get("ro.target.product", "tablet"))){
+				isMultiChange = false;
+	//	 	 android.os.Process.killProcess(android.os.Process.myPid()); 
+			 return;
+		 		}
 	        removeBar();
 					try {
 			    Thread.sleep(1500);

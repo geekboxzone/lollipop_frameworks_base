@@ -102,6 +102,10 @@ import com.android.systemui.statusbar.stack.NotificationStackScrollLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import android.os.SystemProperties;
+
+import android.app.IActivityManager;
+
 
 import static com.android.keyguard.KeyguardHostView.OnDismissAction;
 
@@ -245,7 +249,33 @@ public abstract class BaseStatusBar extends SystemUI implements
     public boolean isDeviceProvisioned() {
         return mDeviceProvisioned;
     }
+    //huangjc win bar
+    protected final ContentObserver mMultiConfigBoxObserver = new ContentObserver(new Handler()){
+		     @Override
+		     public void onChange(boolean selfChange) {
+			final boolean isshow = 0 != Settings.System.getInt(
+                    mContext.getContentResolver(), Settings.System.MULTI_WINDOW_CONFIG, 0);
+			       try {
+		            IActivityManager am = ActivityManagerNative.getDefault();
+		            Configuration config = am.getConfiguration();
+		
+		            // Will set userSetLocale to indicate this isn't some passing default - the user
+		            // wants this remembered
+		            config.setMultiWindowFlag(isshow);
+		
+		            am.updateConfiguration(config);
+		            // Trigger the dirty bit for the Settings Provider.
+		            //BackupManager.dataChanged("com.android.providers.settings");
+		        } catch (RemoteException e) {
+		            // Intentionally left blank
+		        }
+				
+			if("box".equals(SystemProperties.get("ro.target.product", "tablet"))){
+		 	 android.os.Process.killProcess(android.os.Process.myPid()); 
+		 	}			
+		      }
 
+	};
     protected final ContentObserver mSettingsObserver = new ContentObserver(mHandler) {
         @Override
         public void onChange(boolean selfChange) {
@@ -510,6 +540,10 @@ public abstract class BaseStatusBar extends SystemUI implements
         mDreamManager = IDreamManager.Stub.asInterface(
                 ServiceManager.checkService(DreamService.DREAM_SERVICE));
         mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+       //huangjc:win bar 
+        mContext.getContentResolver().registerContentObserver(
+                Settings.System.getUriFor(Settings.System.MULTI_WINDOW_CONFIG), false,
+                mMultiConfigBoxObserver);        
 
         mSettingsObserver.onChange(false); // set up
         mContext.getContentResolver().registerContentObserver(
