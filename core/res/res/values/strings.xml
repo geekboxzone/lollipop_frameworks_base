@@ -5300,4 +5300,7 @@
    <string name="prebuilt_media">Prebuilt_media</string>
 	<string name="application_use_landscape_alert">The <xliff:g id="application">%1$s</xliff:g> application should be used in landscape screen.</string>
 	<string name="application_use_portrait_alert">The <xliff:g id="application">%1$s</xliff:g> application should be used in portrait screen.</string>
+
+    <string name="actionbar_share">Share</string>
+    <string name="actionbar_web_search">Search</string>
 </resources>

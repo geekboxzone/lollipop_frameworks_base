@@ -10860,6 +10860,7 @@ public class PackageManagerService extends IPackageManager.Stub
         PackageParser pp = new PackageParser();
         pp.setSeparateProcesses(mSeparateProcesses);
         pp.setDisplayMetrics(mMetrics);
+	pp.setModeList(this);
 
         final PackageParser.Package pkg;
         try {

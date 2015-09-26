@@ -3479,6 +3479,11 @@ if(mDecorContentParent != null)
             }
 
             public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+                // ==ADD BY YHC==
+                if(mMultiWindowUtil != null) {
+                   mMultiWindowUtil.createWebviewPopupWindow(mode, this, mWrapped);
+                }
+                // END ==ADD BY YHC==
                 return mWrapped.onCreateActionMode(mode, menu);
             }
 
@@ -3492,6 +3497,11 @@ if(mDecorContentParent != null)
             }
 
             public void onDestroyActionMode(ActionMode mode) {
+                // ==ADD BY YHC==
+                if(mMultiWindowUtil != null) {
+                    mMultiWindowUtil.dismissWebviewPopupWindow();
+                }
+                // END ==ADD BY YHC==
                 mWrapped.onDestroyActionMode(mode);
                 if (mActionModePopup != null) {
                     removeCallbacks(mShowActionModePopup);
