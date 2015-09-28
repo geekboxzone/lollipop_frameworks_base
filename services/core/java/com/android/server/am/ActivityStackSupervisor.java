@@ -551,6 +551,12 @@ public final class ActivityStackSupervisor implements DisplayListener {
         return mCurTaskId;
     }
 
+	public ArrayList<TaskRecord> getAllTasks() {
+		if (mFocusedStack != null)
+			return mFocusedStack.getAllTasks();
+		return null;
+    	}
+
     ActivityRecord resumedAppLocked() {
         ActivityStack stack = getFocusedStack();
         if (stack == null) {

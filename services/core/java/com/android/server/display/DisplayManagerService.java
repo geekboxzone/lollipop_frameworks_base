@@ -862,7 +862,7 @@ public final class DisplayManagerService extends SystemService {
                     + device.getDisplayDeviceInfoLocked());
             return;
         }
-        display.configureDisplayInTransactionLocked(device, info.state == Display.STATE_OFF);
+        display.configureDisplayInTransactionLocked(device, info.state == Display.STATE_OFF, mLogicalDisplays.get(Display.DEFAULT_DISPLAY).mInfo);
 
         // Update the viewports if needed.
         if (!mDefaultViewport.valid

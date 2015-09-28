@@ -155,6 +155,10 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ActivityInfo;
 import android.widget.LinearLayout;
+import android.view.GestureDetector;
+import android.view.GestureDetector.OnGestureListener;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.Display;
 
 import com.android.multiwindow.policy.MultiWindowUtil;
 /**
@@ -167,6 +171,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
     private final static String TAG = "PhoneWindow";
 	private final boolean DEBUG =false;
+	private final boolean DEBUG_WINDOW =true;
 	private static final boolean DEBUG_ROTATE = false;
 	private static void LOGR(String msg){
 		if(DEBUG_ROTATE){
@@ -175,6 +180,11 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 	}
 	private void LOGD(String msg){
 		if(DEBUG){
+			Log.d(TAG,msg);
+		}
+	}
+	private void LOGWINDOW(String msg){
+		if(DEBUG_WINDOW){
 			Log.d(TAG,msg);
 		}
 	}
@@ -308,6 +318,9 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
     private KeyguardManager mKeyguardManager;
 
     private int mUiOptions = 0;
+	private GestureDetector mDisplayDector = null;
+	private int SCREEN_WEITH = 0;
+	private int SCREE_HEIGHT = 0;
 	private IActivityManager mActivityManager;
     private boolean mInvalidatePanelMenuPosted;
     private int mInvalidatePanelMenuFeatures;
@@ -714,6 +727,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		if(mMultiWindowUtil != null){
 			mMultiWindowUtil.setScreenWH();
 		}
+	LOGWINDOW("onConfigurationChanged - SCREEN_WEITH = " + SCREEN_WEITH + " - SCREE_HEIGHT = " + SCREE_HEIGHT);
     }
 
     private static void clearMenuViews(PanelFeatureState st) {
@@ -2346,6 +2360,13 @@ if(mDecorContentParent != null)
 			if(mMultiWindowUtil != null){
 				mMultiWindowUtil.initDecorView();
 			}
+			mDisplayDector = new GestureDetector(mContext,new MyDisplayGestureDetectorListener(),null,true);
+			WindowManager wm = (WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+			Display mDisplay = wm.getDefaultDisplay();
+			SCREEN_WEITH = mDisplay.getWidth();
+			SCREE_HEIGHT = mDisplay.getHeight();
+			LOGWINDOW("DecorView - SCREEN_WEITH = " + SCREEN_WEITH + " - SCREE_HEIGHT = " + SCREE_HEIGHT);
+			
         }
 
 		// ==MODIFY BY YHC==
@@ -2460,6 +2481,10 @@ if(mDecorContentParent != null)
 	public  boolean dispatchPointerEvent(MotionEvent ev,boolean block) {
 			Configuration config = getResources().getConfiguration();
 		if(config.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
+			if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
+				LOGWINDOW(" mDisplayDector.onTouchEvent  ");
+				mDisplayDector.onTouchEvent(ev);
+			}
 			return super.dispatchPointerEvent(ev,block);
 		}
 			if(mMultiWindowUtil != null){
@@ -4983,6 +5008,87 @@ if(mDecorContentParent != null)
 
     void sendCloseSystemWindows(String reason) {
         PhoneWindowManager.sendCloseSystemWindows(getContext(), reason);
+    }
+    
+    private boolean isSendToSecondDisplay = false;
+    private final int DISTANCE = 50;
+    private int moveDirection;
+    private final int LEFT = 1;
+    private final int RIGHT = 2;
+    private class MyDisplayGestureDetectorListener extends SimpleOnGestureListener{
+    	@Override
+        public boolean onDown(MotionEvent e) {
+        	LOGWINDOW("onDown");
+                if(e.getRawX() < DISTANCE){
+        		LOGWINDOW("onDown RIGHT");
+                	moveDirection = RIGHT;
+                	isSendToSecondDisplay = true;
+                }else if(e.getRawX() > SCREEN_WEITH - DISTANCE){
+        		LOGWINDOW("onDown LEFT");
+                	moveDirection = LEFT;
+                	isSendToSecondDisplay = true;
+                }else{
+                	isSendToSecondDisplay = false;
+                }
+                return true;
+	}
+
+        @Override
+        public void onShowPress(MotionEvent e) {
+        	LOGWINDOW("onShowPress");
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+        	return super.onSingleTapUp(e);
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2,
+        			float distanceX, float distanceY) {
+        	LOGWINDOW("onScroll title="+getAttributes().getTitle().toString());
+        	return true;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+		LOGWINDOW("onLongPress");
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+		LOGWINDOW("onFling");
+		if(!isSendToSecondDisplay){
+			return true;
+		}
+		
+		int direction = -1;
+		int res = -1;
+		if(Math.abs(velocityX)>Math.abs(velocityY)){
+			float maxVelocityX = 5000;
+			//left or right direction
+			if(velocityX < -maxVelocityX && moveDirection == LEFT){
+				//direction = LEFT;
+                          res = com.android.internal.R.anim.translucent_exitleft;
+			}
+			if(velocityX > maxVelocityX && moveDirection == RIGHT){
+				//direction = RIGHT;
+				res = com.android.internal.R.anim.translucent_exitright;
+			}
+		}
+
+		LOGWINDOW("onFling res="+res);
+		if(res != -1){
+			if(mDecor != null && mDecor.getRootWindowSession() != null &&
+					mDecor.getWindow() != null){
+				try {
+					mDecor.getRootWindowSession().setOnlyShowInExtendDisplay(mDecor.getWindow(),res);
+				} catch (RemoteException ex) {}
+			}
+		}
+		return true;
+	}
     }
 
     @Override

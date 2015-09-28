@@ -112,16 +112,15 @@
                 android:contentDescription="@string/accessibility_recent"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView
-                android:id="@+id/add"
+                android:id="@+id/displaycopy"
                 android:layout_width="120dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 android:paddingLeft="0dp"
                 android:paddingRight="0dp"
-                android:src="@drawable/add_normal"
+                android:src="@drawable/display_copy"
                 android:visibility="invisible"
-                systemui:keyCode="24"
                 />
             <Space 
                 android:layout_width="match_parent"
@@ -306,15 +305,14 @@
                 android:contentDescription="@string/accessibility_recent"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView
-                android:id="@+id/add"
+                android:id="@+id/displaycopy"
                 android:layout_width="84dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 android:paddingLeft="0dp"
                 android:paddingRight="0dp"
-                android:src="@drawable/add_normal"
-                android:visibility="invisible"
+                android:src="@drawable/display_copy"
                 systemui:keyCode="24"
                 />
             <Space 
