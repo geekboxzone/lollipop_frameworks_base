@@ -29,6 +29,7 @@ import android.os.UEventObserver;
 import android.util.Slog;
 import android.media.AudioManager;
 import android.util.Log;
+import android.os.SystemProperties;
 import android.view.InputDevice;
 
 import com.android.internal.R;
