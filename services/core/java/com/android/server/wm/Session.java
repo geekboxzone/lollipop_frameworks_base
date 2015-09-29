@@ -213,10 +213,6 @@ final class Session extends IWindowSession.Stub
         return res;
     }
 
-	public void setOnlyShowInExtendDisplay(IWindow window,int transit){
-		mService.setOnlyShowInExtendDisplay(this, window,transit);
-    }	
-
     public void performDeferredDestroy(IWindow window) {
         mService.performDeferredDestroyWindow(this, window);
     }
@@ -257,7 +253,7 @@ final class Session extends IWindowSession.Stub
 		return mService.isMultiWindowMode();
 	}
 	public boolean isHomeWindow(IWindow window){
-		return mService.isSessionHomeWindow(this, window );
+		return mService.isHomeWindow(this, window );
 	}
 
 	public void setHalfScreenTransFormInfo(IWindow window, int posX,int posY){

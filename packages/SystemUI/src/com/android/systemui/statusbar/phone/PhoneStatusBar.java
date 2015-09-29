@@ -759,9 +759,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         // Lastly, call to the icon policy to install/update all the icons.
         mIconPolicy = new PhoneStatusBarPolicy(mContext, mCastController, mHotspotController);
         mSettingsObserver.onChange(false); // set up
-        
-	mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Dual_Screen_KEY), false,mDualScreenValueObserver);
-	mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Dual_Screen_Icon_used_KEY), false,mDualScreenIconUsedObserver);
 
         mHeadsUpObserver.onChange(true); // set up
         if (ENABLE_HEADS_UP) {
@@ -1569,19 +1566,6 @@ final Object mScreenshotLock = new Object();
         mNavigationBarView.getHomeButton().setOnTouchListener(mHomeActionListener);
 		mNavigationBarView.getHomeButton().setLongClickable(true);
         mNavigationBarView.getHomeButton().setOnLongClickListener(mLongPressBackRecentsListener);
-		
-		if(mNavigationBarView != null && mNavigationBarView.getDisplaycopyButton() != null){
-			
-			final boolean enable = (getDualScreenValue() != 0) && (getDualScreenIconUsedValue() != 0);
-			if(enable){
-				mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
-			}else{
-				mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
-			}
-			
-			mNavigationBarView.getDisplaycopyButton().setOnTouchListener(mDisplaycopyPreloadOnTouchListener);
-		}
-		
         updateSearchPanel();
         if("true".equals(SystemProperties.get("sys.status.hidebar_enable","false"))||mContext.getResources().getConfiguration().enableMultiWindow())
          {
@@ -2173,59 +2157,7 @@ private String appclosename = null;
                         return false;
                 }
         };
-
-    private View.OnTouchListener mDisplaycopyPreloadOnTouchListener = new View.OnTouchListener() {
-	// additional optimization when we have software system buttons - start loading the recent
-	// tasks on touch down
-	@Override
-	public boolean onTouch(View v, MotionEvent event) {
-		int action = event.getAction() & MotionEvent.ACTION_MASK;
-		if (action == MotionEvent.ACTION_DOWN) {
-		} else if (action == MotionEvent.ACTION_CANCEL) {
-		} else if (action == MotionEvent.ACTION_UP) {
-			Log.d("SystemUI","onTouch display copy ");
-			int display_sync = Settings.System.getInt(mContext.getContentResolver(),
-				Settings.System.DISPLAY_SHOW_SYNCHRONIZATION,0);
-			Settings.System.putInt(mContext.getContentResolver(),
-				Settings.System.DISPLAY_SHOW_SYNCHRONIZATION, (display_sync + 1) % 2);
-		}
-		return false;
-	}
-    };
-
-    private final String Dual_Screen_KEY = Settings.System.DUAL_SCREEN_MODE;
-    private final String Dual_Screen_Icon_used_KEY = Settings.System.DUAL_SCREEN_ICON_USED;
-    private final ContentObserver mDualScreenValueObserver = new ContentObserver(new Handler()) {
-	@Override
-	public void onChange(boolean selfChange) {
-		final boolean enable = getDualScreenValue() != 0;
-		if(enable){
-			mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
-		} else {
-			mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
-		}
-	}
-    };
-
-    private final ContentObserver mDualScreenIconUsedObserver = new ContentObserver(new Handler()) {
-	@Override
-	public void onChange(boolean selfChange) {
-		final boolean enable = getDualScreenIconUsedValue() != 0;
-		if(enable){
-			mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
-		} else {
-			mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
-		}
-	}
-    };
-
-    private int getDualScreenValue(){
-	return Settings.System.getInt(mContext.getContentResolver(), Dual_Screen_KEY, 0);
-    }
-
-    private int getDualScreenIconUsedValue(){
-	return Settings.System.getInt(mContext.getContentResolver(), Dual_Screen_Icon_used_KEY, 0);
-    }
+	 
 	
     private View.OnTouchListener mScreenshotPreloadOnTouchListener = new View.OnTouchListener() {
 		        // additional optimization when we have software system buttons - start loading the recent

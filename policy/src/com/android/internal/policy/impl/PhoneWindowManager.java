@@ -744,31 +744,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     };
 
-    class DisplayShowSynchronizationObserver extends ContentObserver{
-		DisplayShowSynchronizationObserver(Handler handler){
-			super(handler);
-			}
-
-		void observer(){
-			ContentResolver resolver = mContext.getContentResolver();
-			resolver.registerContentObserver(Settings.System.getUriFor(
-			Settings.System.DISPLAY_SHOW_SYNCHRONIZATION), false, this);
-		}
-
-		@Override public void onChange(boolean selfChange) {
-		}
-
-		@Override public void onChange(boolean selfchange,Uri uri){
-			try {
-			mWindowManager.updateDisplayShowSynchronization();
-			} catch (RemoteException e) {
-			// Ignore
-			}
-		}
-    }
-
-
-
     class SettingsObserver extends ContentObserver {
         SettingsObserver(Handler handler) {
             super(handler);
@@ -1320,8 +1295,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         } catch (RemoteException ex) { }
         mSettingsObserver = new SettingsObserver(mHandler);
         mSettingsObserver.observe();
-	DisplayShowSynchronizationObserver mDisplayShowSynchronizationObserver = new DisplayShowSynchronizationObserver(mHandler);
-	mDisplayShowSynchronizationObserver.observer();
 	multiwindowSettings = new MultiWindowSettings(mHandler);
 	multiwindowSettings.init(mContext, mWindowManager);
         mShortcutManager = new ShortcutManager(context, mHandler);

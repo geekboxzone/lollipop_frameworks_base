@@ -680,12 +680,12 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         if (ad.taskId >= 0) {
             // This is an active task; it should just go to the foreground.
             if(context.getResources().getConfiguration().enableMultiWindow()){
-			am.moveTaskToFront(ad.taskId,0,opts);
-		} else if (context.getResources().getConfiguration().enableDualScreen()) {
-			am.moveTaskToFront(ad.taskId,0,opts);
-		}else{
-			am.moveTaskToFront(ad.taskId, ActivityManager.MOVE_TASK_WITH_HOME, opts);
-		}
+				am.moveTaskToFront(ad.taskId,0,opts);
+
+			}else{
+				am.moveTaskToFront(ad.taskId, ActivityManager.MOVE_TASK_WITH_HOME,
+						opts);
+			}
         } else {
             Intent intent = ad.intent;
             intent.addFlags(Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY
@@ -704,9 +704,6 @@ public class RecentsPanelView extends FrameLayout implements OnItemClickListener
         if (usingDrawingCache) {
             holder.thumbnailViewImage.setDrawingCacheEnabled(false);
         }
-	if(context.getResources().getConfiguration().enableDualScreen()){
-		dismissAndGoBack();
-	}
     }
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

@@ -63,7 +63,7 @@ final class LogicalDisplay {
     private final int mDisplayId;
     private final int mLayerStack;
     private DisplayInfo mOverrideDisplayInfo; // set by the window manager
-    public DisplayInfo mInfo;
+    private DisplayInfo mInfo;
 
     // The display device that this logical display is based on and which
     // determines the base metrics that it uses.
@@ -254,9 +254,8 @@ final class LogicalDisplay {
      * @param isBlanked True if the device is being blanked.
      */
     public void configureDisplayInTransactionLocked(DisplayDevice device,
-            boolean isBlanked, DisplayInfo info) {
-        //final DisplayInfo displayInfo = getDisplayInfoLocked();
-        final DisplayInfo displayInfo = info != null?info:getDisplayInfoLocked();
+            boolean isBlanked) {
+        final DisplayInfo displayInfo = getDisplayInfoLocked();
         final DisplayDeviceInfo displayDeviceInfo = device.getDisplayDeviceInfoLocked();
 
         // Set the layer stack.

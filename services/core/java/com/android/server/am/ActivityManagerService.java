@@ -8778,8 +8778,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 }
                 final long origId = Binder.clearCallingIdentity();
                 try {
-                    //stack.moveTaskToBackLocked(taskId,flag);
-			 stack.moveTaskToBackLocked(taskId, null, flag);
+                    stack.moveTaskToBackLocked(taskId,flag);
                 } finally {
                     Binder.restoreCallingIdentity(origId);
                 }
@@ -11223,7 +11222,6 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             resolver, Settings.Global.WAIT_FOR_DEBUGGER, 0) != 0;
         boolean alwaysFinishActivities = Settings.Global.getInt(
             resolver, Settings.Global.ALWAYS_FINISH_ACTIVITIES, 0) != 0;
-	boolean dualScreenConfig = Settings.System.getInt(resolver, Settings.System.DUAL_SCREEN_MODE,0) != 0;
 		boolean multiWindowConfig = Settings.System.getInt(
 			resolver, Settings.System.MULTI_WINDOW_CONFIG,0) != 0;
         boolean forceRtl = Settings.Global.getInt(
@@ -11234,7 +11232,6 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         Configuration configuration = new Configuration();
 		configuration.multiwindowflag = multiWindowConfig ?
 									Configuration.ENABLE_MULTI_WINDOW:Configuration.DISABLE_MULTI_WINDOW;
-		configuration.dualscreenflag= dualScreenConfig ?Configuration.ENABLE_DUAL_SCREEN:Configuration.DISABLE_DUAL_SCREEN;
 		//mConfiguration.multiwindowflag = multiWindowConfig;
         Settings.System.getConfiguration(resolver, configuration);
 		if(DEBUG_CONFIGURATION)Slog.v(TAG,"~~~~~~~~~~~~retriveSettings configuration="+configuration);
@@ -17058,29 +17055,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 }
             }
 		}
-	if((changes & ActivityInfo.CONFIG_DUAL_SCREEN) != 0) {
-	    Slog.d(TAG,"---------Move Home To Top & CLEAN THE ALL TASK");
-	    //mStackSupervisor.resumeHomeActivity(null);//moveHomeToTop();
-	    ArrayList<TaskRecord> focusTaskList = mStackSupervisor.getAllTasks();
-	    if (focusTaskList != null) {
-	    	for(int i = 0; i < focusTaskList.size(); i ++){
-		    TaskRecord task = focusTaskList.get(i);
-		    if(task != null){
-		    	Slog.d(TAG,"---------remove the taskId = " + task);
-		    	removeTask(task.taskId);
-		    }
-	    	}
-	    }
-	}
         return kept;
     }
-
-	public boolean isTaskShowInExtendDisplay(ActivityRecord r){
-		if(r != null){
-			return mWindowManager.isTaskShowInExtendDisplay(r.appToken);
-		}
-		return false;
-	}
 
     /**
      * Decide based on the configuration whether we should shouw the ANR,

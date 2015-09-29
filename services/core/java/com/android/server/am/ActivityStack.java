@@ -978,16 +978,13 @@ final class ActivityStack {
         final ActivityRecord r = isInStackLocked(token);
         if (r != null) {
             mHandler.removeMessages(PAUSE_TIMEOUT_MSG, r);
-		boolean cond = false;
-		Slog.e(TAG, "activityPausedLocked enableDualScreen(): " + mService.mConfiguration.enableDualScreen());
-		if(mService.mConfiguration.enableMultiWindow()){
-			cond = r != null;
-		}else if (mService.mConfiguration.enableDualScreen()) {
-				cond = r != null;
-		}else{
-			cond = mPausingActivity == r;
-		}
-             if (cond) {
+				boolean cond = false;
+				if(mService.mConfiguration.enableMultiWindow()){
+					cond = r != null;
+				}else{
+					cond = mPausingActivity == r;
+				}
+                if (cond) {
                 if (DEBUG_STATES) Slog.v(TAG, "Moving to PAUSED: " + r
                         + (timeout ? " (due to timeout)" : " (pause complete)"));
                 r.state = ActivityState.PAUSED;
@@ -1052,10 +1049,7 @@ final class ActivityStack {
     private void completePauseLocked(ActivityRecord r,boolean resumeNext) {
         //ActivityRecord prev = mPausingActivity;
         ActivityRecord prev = null;
-		Slog.e(TAG, " completePauseLocked enableDualScreen(): " + mService.mConfiguration.enableDualScreen() + ", resumeNext: " + resumeNext);
-		if(mService.mConfiguration.enableMultiWindow() && r != null) {
-			prev = r;
-		} else if (mService.mConfiguration.enableDualScreen() && r != null) {
+		if(mService.mConfiguration.enableMultiWindow() && r != null){
 			prev = r;
 		}else{
 			prev = mPausingActivity;
@@ -1463,16 +1457,7 @@ final class ActivityStack {
                         + " state=" + r.state
 						+ " behindFullscreen=" + behindFullscreen+" top.packageName="+top.packageName+
                     	" r.packagea="+r.packageName);
-			boolean cond = behindFullscreen;
-		       if (mService.mConfiguration.enableDualScreen()) {
-				if(mService.isTaskShowInExtendDisplay(r) || r.isHomeActivity()){
-			    		cond = false;
-				}
-			    	} else {
-					cond = true;
-			    	}
 					
-		    if (cond) {		
                     // Now for any activities that aren't visible to the user, make
                     // sure they no longer are keeping the screen frozen.
                     if (r.visible) {
@@ -1521,18 +1506,6 @@ final class ActivityStack {
                     } else {
                         if (DEBUG_VISBILITY) Slog.v(TAG, "Already invisible: " + r);
                     }
-		    }else {
-		    		if(mService.mConfiguration.enableDualScreen()){
-					if (r != starting) {
-						ensureActivityConfigurationLocked(r, 0);
-					}
-					configChanges |= r.configChangeFlags;
-				} else {
-					if(r.fullscreen){
-						behindFullscreen = true;
-					}
-				}
-		    }
                 }
             }
         }
@@ -1839,24 +1812,19 @@ final class ActivityStack {
         boolean dontWaitForPause = (next.info.flags&ActivityInfo.FLAG_RESUME_WHILE_PAUSING) != 0;
         boolean pausing = mStackSupervisor.pauseBackStacks(userLeaving, true, dontWaitForPause);
         boolean multiconfig = mService.mConfiguration.enableMultiWindow();
-	boolean condition_multiWin = false;
+		boolean condition ;
 		boolean samePackInDifTask;
-	boolean dualconfig = mService.mConfiguration.enableDualScreen();
-	boolean condition_dualScreen  = false;
 		if(multiconfig){
 	    	samePackInDifTask = mResumedActivity != null && mResumedActivity.task.taskId != next.task.taskId && mResumedActivity.packageName.equals(next.packageName);
 	    	if (samePackInDifTask) {
 			mResumedActivity.difPkgTask = true;		
 	    }
-	    condition_multiWin = mResumedActivity != null &&mResumedActivity!=next && (mResumedActivity.task.taskId==next.task.taskId ||samePackInDifTask);//mResumedActivity.packageName.equals(next.packageName));
+	    condition = mResumedActivity != null &&mResumedActivity!=next && (mResumedActivity.task.taskId==next.task.taskId ||samePackInDifTask);//mResumedActivity.packageName.equals(next.packageName));
 	//	condition = mResumedActivity != null &&mResumedActivity!=next && mResumedActivity.task.taskId==next.task.taskId;
-		} else if (dualconfig) {
-		condition_dualScreen = mResumedActivity != null && mResumedActivity!=next && mResumedActivity.task.taskId==next.task.taskId && (!mService.isTaskShowInExtendDisplay(mResumedActivity));
-		} else {
-			condition_multiWin = mResumedActivity != null;
-			condition_dualScreen = mResumedActivity != null;
+		}else{
+	    condition = mResumedActivity != null;
 		}
-        if (condition_multiWin || condition_dualScreen) {
+        if (condition) {
             if (DEBUG_STATES) Slog.d(TAG,dontWaitForPause+ "resumeTopActivityLocked: Pausing " + mResumedActivity);
             pausing |= startPausingLocked(userLeaving, false, true, dontWaitForPause);
         }
@@ -1894,27 +1862,8 @@ final class ActivityStack {
            	 			}
 			  		}
 				}	
-			  	
 			}
 		}
-
-	
-	if (dualconfig) {
-		for (int i = 0; i < mTaskHistory.size(); i ++) {
-			final TaskRecord task = mTaskHistory.get(i);
-            		final ArrayList<ActivityRecord> activities = task.mActivities;
-            		for (int activityNdx = activities.size() - 1; activityNdx >= 0; --activityNdx) {
-                		ActivityRecord r = activities.get(activityNdx);
-				if (mService.mConfiguration.enableDualScreen() && r.isHomeActivity) {
-					break;
-				}
-				if (r!=next && !r.finishing && r.state == ActivityState.RESUMED && !mService.isTaskShowInExtendDisplay(r)) {
-					Slog.d(TAG," TASK startPausing title="+r.intent.getComponent().flattenToShortString());
-					startPausingLastNoCallbackLocked(r,userLeaving,false);
-				}
-			}
-		}
-	}
 
         // If the most recent activity was noHistory but was only stopped rather
         // than stopped+finished because the device went to sleep, we need to make
@@ -2070,12 +2019,9 @@ final class ActivityStack {
             mService.updateCpuStats();
 
             if (DEBUG_STATES) Slog.v(TAG, "Moving to RESUMED: " + next + " (in existing)");
-		if(multiconfig && next.state == ActivityState.RESUMED){
-			stateChage = false;
-		}
-		if (dualconfig && next.state == ActivityState.RESUMED) {
-			stateChage = false;
-		}
+			if(multiconfig && next.state == ActivityState.RESUMED){
+				stateChage = false;
+			}
             next.state = ActivityState.RESUMED;
             mResumedActivity = next;
             next.task.touchActiveTime();
@@ -3892,7 +3838,7 @@ final class ActivityStack {
         resumeTopActivityLocked(null);
     }
 	final boolean moveTaskToBackLocked(int task){
-		return moveTaskToBackLocked(task,null, 0);
+		return moveTaskToBackLocked(task,0);
 	}
     /**
      * Worker method for rearranging history stack. Implements the function of moving all
@@ -3905,7 +3851,7 @@ final class ActivityStack {
      * @param taskId The taskId to collect and move to the bottom.
      * @return Returns true if the move completed, false if not.
      */
-    final boolean moveTaskToBackLocked(int taskId, ActivityRecord reason, int flag) {
+    final boolean moveTaskToBackLocked(int taskId, int flag) {
         final TaskRecord tr = taskForIdLocked(taskId);
         if (tr == null) {
             Slog.i(TAG, "moveTaskToBack: bad taskId=" + taskId);

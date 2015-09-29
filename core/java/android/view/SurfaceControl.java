@@ -48,8 +48,6 @@ public class SurfaceControl {
     private static native void nativeCloseTransaction();
     private static native void nativeSetAnimationTransaction();
 
-	private native void nativeSetAttach(int token);
-
     private static native void nativeSetLayer(long nativeObject, int zorder);
     private static native void nativeSetPosition(long nativeObject, float x, float y);
     private static native void nativeSetSize(long nativeObject, int w, int h);
@@ -364,11 +362,6 @@ public class SurfaceControl {
     public static void setAnimationTransaction() {
         nativeSetAnimationTransaction();
     }
-
-	/** @hide*/
-	public void setAttach(int token){
-		nativeSetAttach(token);
-	}
 
     public void setLayer(int zorder) {
         checkNotReleased();

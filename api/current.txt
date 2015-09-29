@@ -8287,7 +8287,6 @@ package android.content.pm {
     method public void dump(android.util.Printer, java.lang.String);
     method public final int getThemeResource();
     field public static final int CONFIG_DENSITY = 4096; // 0x1000
-    field public static final int CONFIG_DUAL_SCREEN = -2147483648; // 0x80000000
     field public static final int CONFIG_FONT_SCALE = 1073741824; // 0x40000000
     field public static final int CONFIG_KEYBOARD = 16; // 0x10
     field public static final int CONFIG_KEYBOARD_HIDDEN = 32; // 0x20
@@ -9141,14 +9140,12 @@ package android.content.res {
     method public int compareTo(android.content.res.Configuration);
     method public int describeContents();
     method public int diff(android.content.res.Configuration);
-    method public boolean enableDualScreen();
     method public boolean enableMultiWindow();
     method public boolean equals(android.content.res.Configuration);
     method public int getLayoutDirection();
     method public boolean isLayoutSizeAtLeast(int);
     method public static boolean needNewResources(int, int);
     method public void readFromParcel(android.os.Parcel);
-    method public void setDualScreenFlag(boolean);
     method public void setLayoutDirection(java.util.Locale);
     method public void setLocale(java.util.Locale);
     method public void setTo(android.content.res.Configuration);
@@ -9216,7 +9213,6 @@ package android.content.res {
     field public static final int UI_MODE_TYPE_UNDEFINED = 0; // 0x0
     field public static final int UI_MODE_TYPE_WATCH = 6; // 0x6
     field public int densityDpi;
-    field public int dualscreenflag;
     field public float fontScale;
     field public int hardKeyboardHidden;
     field public int keyboard;

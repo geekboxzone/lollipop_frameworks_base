@@ -1801,18 +1801,6 @@ public final class Settings {
 	    	*@hide
 	    	*/
 	    public static final String MULTI_WINDOW_BUTTON_SHOW = "multi_window_button_show";
-   		 /**
-	    	*@hide
-	    	*/
-	    public static final String DUAL_SCREEN_MODE = "dual_screen_mode";
-		  /**
-	    	*@hide
-	    	*/
-	    public static final String DUAL_SCREEN_ICON_USED = "dual_screen_icon_used";
-		   /**
-	    	*@hide
-	    	*/
-	    public static final String DISPLAY_SHOW_SYNCHRONIZATION = "display_show_synchronization";
 		/**
 		*@hide
 		*/
