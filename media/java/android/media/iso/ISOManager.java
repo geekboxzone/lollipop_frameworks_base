@@ -29,13 +29,13 @@ public class ISOManager
 
 	private static final int OPERATE_BASE = 7000;
 
-	public static final int GET_VIDEO_INFOR = OPERATE_BASE;
-	public static final int GET_AUDIO_INFOR = OPERATE_BASE+1;
-	public static final int GET_SUBTITLE_INFOR = OPERATE_BASE+2;
-	public static final int GET_AUDIO_TRACK = OPERATE_BASE+3;
-	public static final int GET_SUBTITLE_TRACK = OPERATE_BASE+4;
-	public static final int SET_AUDIO_TRACK = OPERATE_BASE+5;
-	public static final int SET_SUBTITLE_TRACK = OPERATE_BASE+6;
+//	public static final int GET_VIDEO_INFOR = OPERATE_BASE;
+//	public static final int GET_AUDIO_INFOR = OPERATE_BASE+1;
+//	public static final int GET_SUBTITLE_INFOR = OPERATE_BASE+2;
+//	public static final int GET_AUDIO_TRACK = OPERATE_BASE+3;
+//	public static final int GET_SUBTITLE_TRACK = OPERATE_BASE+4;
+//	public static final int SET_AUDIO_TRACK = OPERATE_BASE+5;
+//	public static final int SET_SUBTITLE_TRACK = OPERATE_BASE+6;
 	public static final int SET_IG_VISIBLE = OPERATE_BASE+7;
 	public static final int GET_IG_VISIBLE = OPERATE_BASE+8;
 	public static final int SET_SUBTITLE_VISIBLE = OPERATE_BASE+9;
@@ -242,143 +242,22 @@ public class ISOManager
 		return false;
 	}
 
-	public ISOVideoInfor  getVideoInfor()
-	{
-		if(mMediaPlayer != null)
-		{
-			Parcel reply = mMediaPlayer.getParcelParameter(GET_VIDEO_INFOR);
-			if(reply != null)
-			{
-				ISOVideoInfor videoInfo[] = reply.createTypedArray(ISOVideoInfor.CREATOR);
-				if(videoInfo != null)
-				{
-					for(int i = 0; i < videoInfo.length; i++)
-					{
-						videoInfo[i].tostring();
-					}
-					
-					return videoInfo[0];
-				}
-				
-			}
-		}
-		return null;
-	}
-
-	public ISOAudioInfor  getAudioInfor()
-	{
-		if(mMediaPlayer != null)
-		{
-			Parcel reply = mMediaPlayer.getParcelParameter(GET_AUDIO_INFOR);
-			if(reply != null)
-			{
-				ISOAudioInfor audioInfo[] = reply.createTypedArray(ISOAudioInfor.CREATOR);
-				if((audioInfo != null) && (audioInfo.length > 0))
-				{
-					for(int i = 0; i < audioInfo.length; i++)
-					{
-						audioInfo[i].tostring();
-					}
-					
-					return audioInfo[0];
-				}
-			}
-		}
-		return null;
-	}
-
-	public ISOSubtitleInfor  getSubtitleInfor()
-	{
-		if(mMediaPlayer != null)
-		{
-			Parcel reply = mMediaPlayer.getParcelParameter(GET_SUBTITLE_INFOR);
-			if(reply != null)
-			{
-				ISOSubtitleInfor subtitleInfo[] = reply.createTypedArray(ISOSubtitleInfor.CREATOR);;
-				if((subtitleInfo != null) && (subtitleInfo.length > 0))
-				{
-					for(int i = 0; i < subtitleInfo.length; i++)
-					{
-						subtitleInfo[i].tostring();
-					}
-					
-					return subtitleInfo[0];
-				}
-			}
-		}
-		return null;
-	}
-
-	public ISOAudioInfor[]  getAudioTrack()
-	{
-		if(mMediaPlayer != null)
-		{
-			Parcel reply = mMediaPlayer.getParcelParameter(GET_AUDIO_TRACK);
-			if(reply != null)
-			{
-				ISOAudioInfor trackInfo[] = reply.createTypedArray(ISOAudioInfor.CREATOR);
-				if((trackInfo != null) && (trackInfo.length > 0))
-				{
-					Log.d(TAG,"Audio Track Count = "+trackInfo.length);
-					for(int i = 0; i < trackInfo.length; i++)
-					{
-						trackInfo[i].tostring();
-					}
-				}
-				return trackInfo;
-			}
-		}
-		return null;
-	}
-
-	public ISOSubtitleInfor[]  getSubtitleTrack()
-	{
-		if(mMediaPlayer != null)
-		{
-            Parcel reply = mMediaPlayer.getParcelParameter(GET_SUBTITLE_TRACK);
-			if(reply != null)
-			{
-				ISOSubtitleInfor trackInfo[] = reply.createTypedArray(ISOSubtitleInfor.CREATOR);
-				if((trackInfo != null) && (trackInfo.length > 0))
-				{
-					Log.d(TAG,"Subtitle Track Count = "+trackInfo.length);
-					for(int i = 0; i < trackInfo.length; i++)
-					{
-						trackInfo[i].tostring();
-					}
-				}
-				return trackInfo;
-			}
-
-		}
-		return null;
-	}
-
-	public boolean  setAudioTrack(int index)
-	{
-		if(mMediaPlayer != null)
-		{
-			return mMediaPlayer.setParameter(SET_AUDIO_TRACK,index);
-		}
-
-		return false;
-	}
-
-	public boolean  setSubtitleTrack(int index)
-	{
-		if(mMediaPlayer != null)
-		{
-			return mMediaPlayer.setParameter(SET_SUBTITLE_TRACK,index);
-		}
-
-		return false;
-	}
-
 	public boolean setSubtitleSurfaceVisible(int visible)
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(SET_SUBTITLE_VISIBLE,visible);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(SET_SUBTITLE_VISIBLE);
+				request.writeInt(visible);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return false;
@@ -388,7 +267,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_SUBITTLE_VISIBLE);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_SUBITTLE_VISIBLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return SURFACE_HIDE;
@@ -398,7 +287,18 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(SET_IG_VISIBLE,visible);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(SET_IG_VISIBLE);
+				request.writeInt(visible);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return false;
@@ -408,7 +308,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_IG_VISIBLE);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_IG_VISIBLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return SURFACE_HIDE;
@@ -418,7 +328,18 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(SET_IG_OPERATION,direction);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(SET_IG_OPERATION);
+				request.writeInt(direction);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return false;
@@ -428,7 +349,18 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_CHAPTER);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_CHAPTER);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
+			
 		}
 		return 0;
 	}
@@ -440,11 +372,11 @@ public class ISOManager
 			Parcel request = mMediaPlayer.newRequest();
 			Parcel reply = Parcel.obtain();
 			try {
-		            request.writeInt(PLAY_CHAPTER);
-			        request.writeInt(chapter);
-		            mMediaPlayer.invoke(request, reply);
-			        int result = reply.readInt();
-					return (result==0);
+				request.writeInt(PLAY_CHAPTER);
+				request.writeInt(chapter);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
 		        } finally {
 		            request.recycle();
 		            reply.recycle();
@@ -458,7 +390,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_CURRENT_CHAPTER);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_CURRENT_CHAPTER);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return 0;
@@ -468,7 +410,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_NUMBER_OF_ANGLE);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_NUMBER_OF_ANGLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return 0;
@@ -478,7 +430,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_CURRENT_ANGLE);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_CURRENT_ANGLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return 0;
@@ -488,7 +450,18 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(PLAY_ANGLE,angle);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(PLAY_ANGLE);
+				request.writeInt(angle);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return false;
@@ -498,7 +471,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_NUMBER_OF_TITLE);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_NUMBER_OF_TITLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return 0;
@@ -508,7 +491,19 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(GET_CURRENT_TITLE);
+		//	return mMediaPlayer.getIntParameter(GET_CURRENT_TITLE);
+
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(GET_CURRENT_TITLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return 0;
@@ -518,7 +513,20 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(PLAY_TITLE,title);
+	//		return mMediaPlayer.setParameter(PLAY_TITLE,title);
+			
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(PLAY_TITLE);
+				request.writeInt(title);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return false;
@@ -528,7 +536,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(PLAY_TOP_TITLE,0);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(PLAY_TOP_TITLE);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 		
 		return false;
@@ -538,7 +556,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.setParameter(SKIP_CURRENT_CONTEXT,0);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(SKIP_CURRENT_CONTEXT);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return (result==0);
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return false;
@@ -548,7 +576,17 @@ public class ISOManager
 	{
 		if(mMediaPlayer != null)
 		{
-			return mMediaPlayer.getIntParameter(PLAY_QUERY_NAVIGATION_MENU);
+			Parcel request = mMediaPlayer.newRequest();
+			Parcel reply = Parcel.obtain();
+			try {
+				request.writeInt(PLAY_QUERY_NAVIGATION_MENU);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
+		        } finally {
+		            request.recycle();
+		            reply.recycle();
+		        }
 		}
 
 		return 0;
@@ -561,11 +599,11 @@ public class ISOManager
 			Parcel request = mMediaPlayer.newRequest();
 			Parcel reply = Parcel.obtain();
 			try {
-		            request.writeInt(GET_CHAPTER_TIME_POS);
-					request.writeInt(index);
-		            mMediaPlayer.invoke(request, reply);
-					int result = reply.readInt();
-					return result;
+				request.writeInt(GET_CHAPTER_TIME_POS);
+				request.writeInt(index);
+				mMediaPlayer.invoke(request, reply);
+				int result = reply.readInt();
+				return result;
 		        } finally {
 		            request.recycle();
 		            reply.recycle();

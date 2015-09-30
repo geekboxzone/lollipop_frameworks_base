@@ -665,8 +665,8 @@ public class MediaPlayer implements SubtitleController.Listener
 	private static final int MEDIAPLAYER_GET_VIDEO_TRACK = 961;	
 	private static final int MEDIAPLAYER_GET_ALL_AUDIO_TRACK = 962;	
 	private static final int MEDIAPLAYER_GET_ALL_SUBTITLE_TRACK = 963;	
-	private static final int MEDIAPLAYER_GET_PLAYING_AUDIO_TRACK_INDEX = 964;	
-	private static final int MEDIAPLAYER_GET_PLAYING_SUBTITLE_TRACK_INDEX = 965;	
+	private static final int MEDIAPLAYER_GET_PLAYING_AUDIO = 964;	
+	private static final int MEDIAPLAYER_GET_PLAYING_SUBTITLE= 965;	
 	private static final int MEDIAPLAYER_SET_AUDIO_TRACK_INDEX = 966;	
 	private static final int MEDIAPLAYER_SET_SUBTITLE_TRACK_INDEX = 967;	
 	private static final int MEDIAPLAYER_GET_SUBTITLE_VISIBLE = 968;	
@@ -674,6 +674,140 @@ public class MediaPlayer implements SubtitleController.Listener
 	private static final int MEDIAPLAYER_SET_VIDEO_SURFACEVIEW_ZORDER = 970;	
 	private static final int MEDIAPLAYER_SET_MAX_QUEUE_SIZE = 971;	
 	private static final int MEDIAPLAYER_GET_WHETHER_DOBLY = 972;
+    /*
+    * add by hh for ffplayer
+    */
+    public void setSubtitleVisible(int visible){
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(MEDIAPLAYER_SET_SUBTITLE_VISIBLE);
+	      request.writeInt(visible);
+            invoke(request, reply);
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+    }
+
+    public VideoTrackInfor getVideoTrackInfor(){
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(MEDIAPLAYER_GET_VIDEO_TRACK);
+            invoke(request, reply);
+	      VideoTrackInfor videoInfo[] = reply.createTypedArray(VideoTrackInfor.CREATOR);
+		if(videoInfo != null)
+		{
+			for(int i = 0; i < videoInfo.length; i++)
+			{
+				videoInfo[i].tostring();
+			}
+
+			return videoInfo[0];
+		}
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+	  
+        return null;
+    }
+
+    public AudioTrackInfor[] getAudioTrackInfor(){
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(MEDIAPLAYER_GET_ALL_AUDIO_TRACK);
+            invoke(request, reply);
+	      AudioTrackInfor audio[] = reply.createTypedArray(AudioTrackInfor.CREATOR);
+		if(audio != null)
+		{
+			for(int i = 0; i < audio.length; i++)
+			{
+				audio[i].tostring();
+			}
+
+			return audio;
+		}
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+	  
+        return null;
+    }
+
+    public SubtitleTrackInfor[] getSubtitleTrackInfor(){
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(MEDIAPLAYER_GET_ALL_SUBTITLE_TRACK);
+            invoke(request, reply);
+	      SubtitleTrackInfor subtitle[] = reply.createTypedArray(SubtitleTrackInfor.CREATOR);
+		if(subtitle != null)
+		{
+			for(int i = 0; i < subtitle.length; i++)
+			{
+				subtitle[i].tostring();
+			}
+
+			return subtitle;
+		}
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+	  
+        return null;
+    }
+
+    public AudioTrackInfor getCurrentAudioTrackInfor(){
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(MEDIAPLAYER_GET_PLAYING_AUDIO);
+            invoke(request, reply);
+	      AudioTrackInfor audio[] = reply.createTypedArray(AudioTrackInfor.CREATOR);
+		if(audio != null)
+		{
+			audio[0].tostring();
+
+			return audio[0];
+		}
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+	  
+        return null;
+    }
+
+    public SubtitleTrackInfor getCurrentSubtitleTrackInfor(){
+        Parcel request = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            request.writeInterfaceToken(IMEDIA_PLAYER);
+            request.writeInt(MEDIAPLAYER_GET_PLAYING_SUBTITLE);
+            invoke(request, reply);
+	      SubtitleTrackInfor subitle[] = reply.createTypedArray(SubtitleTrackInfor.CREATOR);
+		if(subitle != null)
+		{
+			subitle[0].tostring();
+			return subitle[0];
+		}
+        } finally {
+            request.recycle();
+            reply.recycle();
+        }
+	  
+        return null;
+    }
 
     /**
      * Create a request parcel which can be routed to the native media
@@ -1611,12 +1745,6 @@ public class MediaPlayer implements SubtitleController.Listener
     }
 
     public static boolean useFrameworkSubtitle(){
-        if ("box".equals(android.os.SystemProperties.get("ro.target.product",  "unknown"))){
-            //box use framework subtitle default
-            Log.d(TAG, "perperty[ro.target.product]=box  ------------------->     box use framework external subtitle default");
-            return true;
-        }
-
 	return android.os.SystemProperties.getBoolean("media.extsubtitle", false);
     }
 
@@ -1936,13 +2064,9 @@ public class MediaPlayer implements SubtitleController.Listener
          * unknown or could not be determined, null is returned.
          */
         public MediaFormat getFormat() {
-            switch(mTrackType){
-                case MEDIA_TRACK_TYPE_AUDIO:
-                case MEDIA_TRACK_TYPE_TIMEDTEXT:
-                case MEDIA_TRACK_TYPE_SUBTITLE:
-                    return mFormat;
-                default:
-                    break;
+            if (mTrackType == MEDIA_TRACK_TYPE_TIMEDTEXT
+                    || mTrackType == MEDIA_TRACK_TYPE_SUBTITLE) {
+                return mFormat;
             }
             return null;
         }
@@ -1955,54 +2079,23 @@ public class MediaPlayer implements SubtitleController.Listener
 
         final int mTrackType;
         final MediaFormat mFormat;
-        public int mTrackIndex;
 
         TrackInfo(Parcel in) {
             mTrackType = in.readInt();
             // TODO: parcel in the full MediaFormat
             String language = in.readString();
-            if(useFrameworkSubtitle()){
-              switch(mTrackType){
-                case MEDIA_TRACK_TYPE_TIMEDTEXT:
-                    Log.e(TAG, "parcel --> MEDIA_TRACK_TYPE_TIMEDTEXT");
-                    String mime1 = in.readString();
-                    mFormat = MediaFormat.createSubtitleFormat(mime1, language);
-                    mFormat.setInteger(MediaFormat.KEY_SOURCE_TYPE, in.readInt()); 
-                    break;
-                case MEDIA_TRACK_TYPE_SUBTITLE:
-                    Log.e(TAG, "parcel --> MEDIA_TRACK_TYPE_SUBTITLE");
-                    String mime2 = in.readString();
-                    mFormat = MediaFormat.createSubtitleFormat(mime2, language);
-                    mFormat.setInteger(MediaFormat.KEY_IS_AUTOSELECT, in.readInt());
-                    mFormat.setInteger(MediaFormat.KEY_IS_DEFAULT, in.readInt());
-                    mFormat.setInteger(MediaFormat.KEY_IS_FORCED_SUBTITLE, in.readInt()); 
-                    mFormat.setInteger(MediaFormat.KEY_SOURCE_TYPE, in.readInt()); 
-                    break;
-                case MEDIA_TRACK_TYPE_AUDIO:
-                    Log.e(TAG, "parcel --> MEDIA_TRACK_TYPE_AUDIO");
-                    String mime3 = in.readString();
-                    mFormat = MediaFormat.createAudioFormat(mime3,in.readInt(),in.readInt());
-                    mFormat.setString(MediaFormat.KEY_LANGUAGE, language); 
-                    break;
-                default:
-                    mFormat = new MediaFormat();
-                    mFormat.setString(MediaFormat.KEY_LANGUAGE, language);
-                    break;
-              }
-            }else{
-                 if (mTrackType == MEDIA_TRACK_TYPE_TIMEDTEXT) {
-                     mFormat = MediaFormat.createSubtitleFormat(
-                         MEDIA_MIMETYPE_TEXT_SUBRIP, language);
-                 } else if (mTrackType == MEDIA_TRACK_TYPE_SUBTITLE) {
-                    String mime = in.readString();
-                    mFormat = MediaFormat.createSubtitleFormat(mime, language);
-                    mFormat.setInteger(MediaFormat.KEY_IS_AUTOSELECT, in.readInt());
-                    mFormat.setInteger(MediaFormat.KEY_IS_DEFAULT, in.readInt());
-                    mFormat.setInteger(MediaFormat.KEY_IS_FORCED_SUBTITLE, in.readInt());
-                 } else {
-                    mFormat = new MediaFormat();
-                    mFormat.setString(MediaFormat.KEY_LANGUAGE, language);
-                 }
+            if (mTrackType == MEDIA_TRACK_TYPE_TIMEDTEXT) {
+                mFormat = MediaFormat.createSubtitleFormat(
+                    MEDIA_MIMETYPE_TEXT_SUBRIP, language);
+            } else if (mTrackType == MEDIA_TRACK_TYPE_SUBTITLE) {
+                String mime = in.readString();
+                mFormat = MediaFormat.createSubtitleFormat(mime, language);
+                mFormat.setInteger(MediaFormat.KEY_IS_AUTOSELECT, in.readInt());
+                mFormat.setInteger(MediaFormat.KEY_IS_DEFAULT, in.readInt());
+                mFormat.setInteger(MediaFormat.KEY_IS_FORCED_SUBTITLE, in.readInt());
+            } else {
+                mFormat = new MediaFormat();
+                mFormat.setString(MediaFormat.KEY_LANGUAGE, language);
             }
         }
 
@@ -2033,7 +2126,6 @@ public class MediaPlayer implements SubtitleController.Listener
                 dest.writeInt(mFormat.getInteger(MediaFormat.KEY_IS_AUTOSELECT));
                 dest.writeInt(mFormat.getInteger(MediaFormat.KEY_IS_DEFAULT));
                 dest.writeInt(mFormat.getInteger(MediaFormat.KEY_IS_FORCED_SUBTITLE));
-                dest.writeInt(mFormat.getInteger(MediaFormat.KEY_SOURCE_TYPE)); 
             }
         }
 
@@ -2138,9 +2230,6 @@ public class MediaPlayer implements SubtitleController.Listener
             }
         }
 
-        for(int i = 0; i < allTrackInfo.length; i++){
-            allTrackInfo[i].mTrackIndex = i; 
-        }
 
         return allTrackInfo;
         
@@ -2694,7 +2783,7 @@ public class MediaPlayer implements SubtitleController.Listener
         if((mMediaPlayerSubTitle != null) && (index >= trackCount)){
 			//make external subtitle visible or invisible
 			mMediaPlayerSubTitle.enableSubtitle(select);
-			setParameter(MEDIAPLAYER_SET_SUBTITLE_VISIBLE, 0);
+			setSubtitleVisible(0);
 
             if(select){
                 mMediaPlayerSubTitle.selectTrack(index-trackCount);
@@ -2710,7 +2799,7 @@ public class MediaPlayer implements SubtitleController.Listener
                 if((mMediaPlayerSubTitle != null)&&select){
                     mMediaPlayerSubTitle.enableSubtitle(false);
                 }
-                setParameter(MEDIAPLAYER_SET_SUBTITLE_VISIBLE, 1);
+		   setSubtitleVisible(1);
             }
 			
             selectOrDeselectInbandTrack(index, select);
@@ -2737,7 +2826,7 @@ public class MediaPlayer implements SubtitleController.Listener
 			mMediaPlayerSubTitle.enableSubtitle(visible);
 		}
 		int value = visible?1:0;
-		setParameter(MEDIAPLAYER_SET_SUBTITLE_VISIBLE, value);
+		setSubtitleVisible(value);
 
 	}
 	//$_media_$_modify_$_end
