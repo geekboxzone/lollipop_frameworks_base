@@ -627,6 +627,11 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
         return mVScale;
 	}
 
+ 	public boolean isHalfMode() {
+               int w = (mDecorFrame.right - mDecorFrame.left)/2;
+               return (mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT &&
+                       mAttrs.width == w);
+       }
     @Override
     public int getOwningUid() {
         return mOwnerUid;

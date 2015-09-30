@@ -515,7 +515,7 @@ private boolean validWindowState(WindowState win){
 		long result = 0;
 		int policy = WindowManagerPolicy.MOTION_PASS_TO_USER;
 
-		//LOGV(event.getPointerCount()+"MotionEvent event="+event.getAction()+"    event"+(windowState.getAttrs().getTitle()));
+		LOGV(windowState.getAttrs().width+"MotionEvent event="+screenWidth+"    event"+(windowState.getAttrs()));
 		if(windowState != null){
 			if(validWindowState(windowState)){
 				mCurFocusWindowState = windowState;
@@ -524,7 +524,8 @@ private boolean validWindowState(WindowState win){
 				mCurFocusWindowState = null;
 			}
 
-                if(mService.isMultiWindowMode() || (windowState.getAttrs() != null && windowState.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+                if(mService.isMultiWindowMode() || (windowState.getAttrs() != null && windowState.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
+							&&windowState.getAttrs().width != screenWidth/2)){
 			if(event.getPointerCount() == 1 && windowState != null){
 			    WindowState ws = null;
 			    if(windowState.mAppWindowState != null){

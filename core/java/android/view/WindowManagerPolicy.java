@@ -208,11 +208,13 @@ public interface WindowManagerPolicy {
          */
         public Rect getFrameLw();
 
-		public float getHScale();
+	public float getHScale();
 
-		public float getVScale();
+	public float getVScale();
 
-		public Rect getSurfaceFrameLw();
+	public Rect getSurfaceFrameLw();
+
+        public boolean isHalfMode();
         /**
          * Retrieve the current frame of the window that is actually shown.
          * Must be called with the window manager lock held.

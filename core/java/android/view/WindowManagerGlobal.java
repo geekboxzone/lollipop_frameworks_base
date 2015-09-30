@@ -241,9 +241,10 @@ public final class WindowManagerGlobal {
 		
 		if((wparams.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION ||
 			wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING
-			|| wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION)&&
-			wparams.align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+			|| wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION)/*&&
+			wparams.align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT*/){
 			int count = mViews!=null?mViews.size():0;
+			if (wparams.align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT) {
 			boolean found = false;
 			wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 			for(int i=0;i<count;i++){
@@ -294,14 +295,38 @@ public final class WindowManagerGlobal {
 						
 				    int SCREEN_WEITH = display.getWidth(true);
 				    int SCREE_HEIGHT = display.getHeight(true);
-				    wparams.width = SCREEN_WEITH/2-200;
+
+				    if (("com.microsoft.office.excel".equals(wparams.packageName)) ||
+						("com.microsoft.office.word".equals(wparams.packageName) ||
+						("com.microsoft.office.powerpoint".equals(wparams.packageName)))) {
+					boolean countB = true;
+					int countH = -1;
+					try {
+						countH = getWindowManagerService().countHalf();
+					} catch (RemoteException re) {}
+					if (countH != -1) {
+						countB = (countH%2 == 0);
+					}
+					if (countB) {
+						wparams.x = 0;
+						wparams.y = 38*3;
+						wparams.width = SCREEN_WEITH/2;
+					} else {
+						wparams.x = SCREEN_WEITH/2;
+						wparams.y = 38*3;
+						wparams.width = SCREEN_WEITH/2;
+					}
+						updateAppLayout(wparams);
+				    } else {
+				    	wparams.width = SCREEN_WEITH/2-200;
 			      
-				    wparams.x = SCREEN_WEITH/2-200;
-				    wparams.y = 50;
+				    	wparams.x = SCREEN_WEITH/2-200;
+				    	wparams.y = 50;
 				  
-		            if(/*!found && */wparams.height == -1) {
-					  wparams.height = SCREE_HEIGHT -50;
-				     }
+		            		if(/*!found && */wparams.height == -1) {
+						wparams.height = SCREE_HEIGHT -50;
+				     	}
+				    }
 				 
 				  Log.d(TAG,wparams.width+"change the def="+wparams.height);
 				// wparams.gravity = Gravity.NO_GRAVITY;
@@ -310,6 +335,36 @@ public final class WindowManagerGlobal {
 				    Log.d(TAG,"at mulitwindow mod clear the halfscreen flags");
 					wparams.flags &= ~WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
 				}
+			} else {
+				if (("com.microsoft.office.excel".equals(wparams.packageName)) ||
+                                                ("com.microsoft.office.word".equals(wparams.packageName) ||
+                                                ("com.microsoft.office.powerpoint".equals(wparams.packageName)))) {
+					boolean countB = true;
+					int SCREEN_WEITH = display.getWidth(true);
+                                    	int SCREE_HEIGHT = display.getHeight(true);
+
+					//wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					int countH = -1;
+					try {
+                                                countH = getWindowManagerService().countHalf();
+                                        } catch (RemoteException re) {}
+					//Log.e(TAG, wparams.packageName+"-------------- sec count = " + countH);
+					if (countH != -1) {
+						wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+						countB = (countH%2 == 0);
+						if (countB) {
+                                                	wparams.x = 0;
+                                                	wparams.y = 38*3;
+                                                	wparams.width = SCREEN_WEITH/2;
+                                        	} else {
+                                                	wparams.x = SCREEN_WEITH/2;
+                                                	wparams.y = 38*3;
+                                                	wparams.width = SCREEN_WEITH/2;
+                                        	}
+						updateAppLayout(wparams);
+					}
+				}
+			}
 			}
         }
 

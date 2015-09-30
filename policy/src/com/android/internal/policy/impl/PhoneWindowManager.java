@@ -4485,7 +4485,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 + " dcf=" + dcf.toShortString()
                 + " sf=" + sf.toShortString());
 
-        win.computeFrameLw(pf, df, of, cf, vf, dcf, sf);
+ 	if(!MultiWindowSettings.checkConfig(mContext) && win != null && win.isHalfMode()) {
+                if (mSystemTop == 0) {
+                       dcf.top = 0;
+                       cf.top = 0;
+                       vf.top = 0;
+               }
+        }       win.computeFrameLw(pf, df, of, cf, vf, dcf, sf);
 
         // Dock windows carve out the bottom of the screen, so normal windows
         // can't appear underneath them.

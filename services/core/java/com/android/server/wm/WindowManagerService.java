@@ -3775,6 +3775,7 @@ public class WindowManagerService extends IWindowManager.Stub
             WindowStateAnimator winAnimator = win.mWinAnimator;
             if (viewVisibility != View.GONE && (win.mRequestedWidth != requestedWidth
                     || win.mRequestedHeight != requestedHeight)) {
+                    
                 win.mLayoutNeeded = true;
                 win.mRequestedWidth = requestedWidth;
                 win.mRequestedHeight = requestedHeight;
@@ -7499,8 +7500,10 @@ public class WindowManagerService extends IWindowManager.Stub
 		if(isHomeWindow(win)){
 			return false;
 		}
-        if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
-			return false;
+		int screenW = (win.mDecorFrame.right - win.mDecorFrame.left)/2 - 200;
+        if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT  &&
+               win.getAttrs().width == screenW){
+			return true;
 		}
 		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION ||
 			win.getAttrs().type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION ||
@@ -7779,6 +7782,13 @@ public class WindowManagerService extends IWindowManager.Stub
 				//SurfaceControl.closeTransaction();
 			}
 		}
+ 	 public int countHalf() {
+                boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+                if (multiWindowConfig)
+                        return mMulWindowService.countHalf(getAllWindowListInDefaultDisplay());
+                else
+                        return -1;
+        }
        public void applyPositionForMultiWindow(WindowState win,int posX,int posY){
 	   	mMulWindowService.applyPositionForMultiWindow(mAppAlignWatcher,win,posX,posY);
 	
@@ -8009,7 +8019,7 @@ public class WindowManagerService extends IWindowManager.Stub
 	                   
 				}
 			}catch(RemoteException ex){}
-			 mTopMultiApp = mMulWindowService.multiWindowMenuOperation(mActivityManager,mTopMultiApp,operationWindowState, mCurConfiguration,operation,operter);
+			 mTopMultiApp = mMulWindowService.multiWindowMenuOperation(mAppAlignWatcher, mActivityManager,mTopMultiApp,operationWindowState, mCurConfiguration,operation,operter);
 			 if(mTopMultiApp!=null)
 			 	operter = 1;
 			 return operter;

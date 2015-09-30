@@ -3402,7 +3402,12 @@ if(mDecorContentParent != null)
 		@Override
 		protected void onAppAlignChanged(int align,boolean rotate){
 			if(mMultiWindowUtil != null){
-				mMultiWindowUtil.onAppAlignChanged(align, rotate);
+				int countH = -1;
+				try {
+					countH = WindowManagerHolder.sWindowManager.countHalf();
+				} catch (RemoteException re) {}
+				
+					mMultiWindowUtil.onAppAlignChanged(align, rotate, countH);
 			}
 		}
 		
