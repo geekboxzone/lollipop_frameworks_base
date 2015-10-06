@@ -33606,6 +33606,7 @@ package android.view {
     method public void addTouchables(java.util.ArrayList<android.view.View>);
     method public android.view.ViewPropertyAnimator animate();
     method public void announceForAccessibility(java.lang.CharSequence);
+    method protected void applyXTrac(int);
     method protected boolean awakenScrollBars();
     method protected boolean awakenScrollBars(int);
     method protected boolean awakenScrollBars(int, boolean);

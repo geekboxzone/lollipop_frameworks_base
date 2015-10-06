@@ -4865,7 +4865,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     protected boolean performButtonActionOnTouchDown(MotionEvent event) {
         if ((event.getButtonState() & MotionEvent.BUTTON_SECONDARY) != 0) {
           //$_rockchip_$_modify_by_huangjc: right mouse click default show ContextMenu for mutilwindow
-            if(mContext.getResources().getConfiguration().enableMultiWindow()){ 
+            if(mContext.getResources().getConfiguration().enableMultiWindow()&&event.getToolType(0) == MotionEvent.TOOL_TYPE_MOUSE){ 
               performLongClick();
                return true;
             }
@@ -13612,6 +13612,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 	* @hide
 	*/
 	protected void onTopAllWindowChanged(int taskid){}
+
+	void dispatchApplyXTrac(int x) {
+		applyXTrac(x);
+	}
+
+	protected void applyXTrac(int x) {}
 	
     /**
      * @param info the {@link android.view.View.AttachInfo} to associated with
@@ -18199,12 +18205,14 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * and {@link #SYSTEM_UI_FLAG_IMMERSIVE_STICKY}.
      */
     public void setSystemUiVisibility(int visibility) {
+    	visibility &= ~SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
         if (visibility != mSystemUiVisibility) {
             mSystemUiVisibility = visibility;
             if (mParent != null && mAttachInfo != null && !mAttachInfo.mRecomputeGlobalAttributes) {
                 mParent.recomputeViewAttributes(this);
             }
         }
+		
     }
 
     /**

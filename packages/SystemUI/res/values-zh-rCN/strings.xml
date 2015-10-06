@@ -391,4 +391,5 @@
     <string name="quick_settings_reset_confirmation_button" msgid="2660339101868367515">"隐藏"</string>
     <string name="popuwindow_close_app">关闭应用</string>
     <string name="popuwindow_lock_app">解除锁定</string>
+    <string name="config_multi_dialog_title">请选择</string>
 </resources>

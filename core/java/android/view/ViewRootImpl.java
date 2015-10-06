@@ -6822,6 +6822,13 @@ public final class ViewRootImpl implements ViewParent,
 			  }
 
 		   }
+
+		@Override
+		public void applyXTrac(int x) {
+			if(mView != null){
+				mView.dispatchApplyXTrac(x);
+			}
+		}
     }
 
     static class W extends IWindow.Stub {

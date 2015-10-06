@@ -10,4 +10,5 @@ import android.view.KeyEvent;
     void onHalfScreenWindowPositionChanged(int posX,int posY);  
     void dispatchUnhandledKey(in KeyEvent event);   
     void onTopAllWindowChanged(int taskid);
+    void applyXTrac(int x);
  }

@@ -238,6 +238,7 @@ import java.util.Iterator;
 import java.util.Set;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.Dialog;
+import android.app.AlertDialog;
 import android.widget.ListView;
 import android.widget.Button;
 import android.view.InputDevice;
@@ -245,7 +246,7 @@ import android.app.AppGlobals;
 
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodInfo;
-
+import android.content.DialogInterface;
 
 
 public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
@@ -763,6 +764,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 	mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Dual_Screen_KEY), false,mDualScreenValueObserver);
 	mContext.getContentResolver().registerContentObserver(Settings.System.getUriFor(Dual_Screen_Icon_used_KEY), false,mDualScreenIconUsedObserver);
 
+	
         mHeadsUpObserver.onChange(true); // set up
         if (ENABLE_HEADS_UP) {
             mContext.getContentResolver().registerContentObserver(
@@ -1581,7 +1583,6 @@ final Object mScreenshotLock = new Object();
 			
 			mNavigationBarView.getDisplaycopyButton().setOnTouchListener(mDisplaycopyPreloadOnTouchListener);
 		}
-		
         updateSearchPanel();
         if("true".equals(SystemProperties.get("sys.status.hidebar_enable","false"))||mContext.getResources().getConfiguration().enableMultiWindow())
          {
@@ -1604,7 +1605,7 @@ final Object mScreenshotLock = new Object();
 			 mAppsScrollView.setOnTouchListener(new View.OnTouchListener() {
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
-				   
+				  Log.d("hjc","====MotionEvent:"+event.toString()); 
 					if (popupWindow != null){
 						LOGD("wintask ==mAppsScrollView== dismiss==");
 									  popupWindow.dismiss();
@@ -1829,7 +1830,8 @@ final Object mScreenshotLock = new Object();
          //ArrayList<HashMap<String, Object>> appslist=new ArrayList<HashMap<String, Object>>(); 
          LOGD("wintask UpdateAppsList,appslist bdeforce====:"+appslist.size());
 		PackageManager pm = mContext.getApplicationContext().getPackageManager();
-		if(isCurrentHomeActivity(pkName,null) ||"com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName)){
+		if(isCurrentHomeActivity(pkName,null) ||"com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName) ||
+					"com.rockchip.projectx".equals(pkName)){
 			return;
 			}
 			
@@ -2227,6 +2229,81 @@ private String appclosename = null;
 	return Settings.System.getInt(mContext.getContentResolver(), Dual_Screen_Icon_used_KEY, 0);
     }
 	
+//huangjc:showSingleChoiceButton
+    private AlertDialog builder;	 
+    private void showSingleChoiceButton(){
+         String title = mContext.getResources()
+            .getString(R.string.config_multi_dialog_title);  
+         String ok = mContext.getResources()
+            .getString(com.android.internal.R.string.ok);
+         String cancel = mContext.getResources()
+            .getString(com.android.internal.R.string.cancel);
+         String[] province = mContext.getResources()
+            .getStringArray(R.array.config_multi_dialog_chose);
+         
+       MButtonOnClick buttonOnClick = new MButtonOnClick(0);
+       builder = new AlertDialog.Builder(mContext)
+              .setTitle(title)
+              .setSingleChoiceItems(province, 0, buttonOnClick)
+              .setPositiveButton(ok, buttonOnClick)
+              .setNegativeButton(cancel, buttonOnClick)
+              .create();
+       builder.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+       builder.show();
+    }	
+  private class MButtonOnClick implements DialogInterface.OnClickListener
+    {
+       private int index;
+       public MButtonOnClick(int index)
+       {
+           this.index = index;
+       }
+       @Override
+       public void onClick(DialogInterface dialog,int which)
+       {
+           if(which >0||which == 0){
+             index = which;
+           }else if(which == DialogInterface.BUTTON_POSITIVE){
+             switch(index){
+               case 0:
+                Intent intent1 = new Intent();
+                intent1.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
+                intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent1);
+                  break;
+               case 1:
+                Intent intent2 = new Intent();
+                intent2.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RecordScreenActivity"));
+                intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent2);
+                  break;
+                case 2:
+                 mHandler.postDelayed(new Runnable() {
+                        public void run() {
+                            Intent intent0 = new Intent("rk.android.screenshot.action");
+                  mContext.sendBroadcast(intent0);
+                        }
+                    }, 500);
+                  break;
+               case 3:
+                  Intent intent3 = new Intent();
+                intent3.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
+                intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent3.putExtra("IS_FULL_SCREEN_POSTIL", true);
+                mContext.startActivity(intent3);
+                  break;
+               default:
+                 dialog.dismiss();
+           }
+            dialog.dismiss();
+       }else {
+        dialog.dismiss();
+       }
+    }
+   }
+
+
+   
     private View.OnTouchListener mScreenshotPreloadOnTouchListener = new View.OnTouchListener() {
 		        // additional optimization when we have software system buttons - start loading the recent
 		        // tasks on touch down
@@ -2235,11 +2312,16 @@ private String appclosename = null;
 				            int action = event.getAction() & MotionEvent.ACTION_MASK;
 				            if (action == MotionEvent.ACTION_DOWN) {
 						                Log.d("dzy","onTouch screenshot ");
-						             //   takeScreenshot();
-
+	               		          //   takeScreenshot();
+                       if(mContext.getResources().getConfiguration().enableMultiWindow()){
+                       //add by huangjc for Multi ScreenShot
+                              if(builder!=null)
+                                builder.dismiss();
+                                showSingleChoiceButton();
+                        }else {
                               Intent intent = new Intent("rk.android.screenshot.action");
-							  mContext.sendBroadcast(intent);
-
+						  mContext.sendBroadcast(intent);
+                        }
 						            } else if (action == MotionEvent.ACTION_CANCEL) {
 								            } else if (action == MotionEvent.ACTION_UP) {
              }

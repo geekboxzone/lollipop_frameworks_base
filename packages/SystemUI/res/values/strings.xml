@@ -955,4 +955,6 @@
     <string name="accessibility_desc_app_bar">App Bar.</string>
      <string name="popuwindow_close_app">close app</string>
     <string name="popuwindow_lock_app">unlock app</string>
+    
+      <string name="config_multi_dialog_title">Please select</string>
 </resources>

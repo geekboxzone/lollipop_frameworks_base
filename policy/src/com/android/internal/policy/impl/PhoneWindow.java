@@ -3029,6 +3029,7 @@ if(mDecorContentParent != null)
 
         @Override
         public void onWindowSystemUiVisibilityChanged(int visible) {
+       
            updateColorViews(null /* insets */, true /* animate */);
         }
 
@@ -3408,6 +3409,13 @@ if(mDecorContentParent != null)
 				} catch (RemoteException re) {}
 				
 					mMultiWindowUtil.onAppAlignChanged(align, rotate, countH);
+			}
+		}
+
+		@Override
+		protected void applyXTrac(int x) {
+			if (mMultiWindowUtil != null) {
+				mMultiWindowUtil.applyXTrac(x);
 			}
 		}
 		

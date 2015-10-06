@@ -7782,6 +7782,17 @@ public class WindowManagerService extends IWindowManager.Stub
 				//SurfaceControl.closeTransaction();
 			}
 		}
+	
+       public void applySizeForMultiWindow(WindowState win) {
+               mMulWindowService.applySizeForMultiWindow(getAllWindowListInDefaultDisplay(), mActivityManager, win);
+       }
+
+       public void applyXTrac(WindowState win, int action, MotionEvent event) {
+               boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+               if (multiWindowConfig)
+                       mMulWindowService.applyXTrac(mAppAlignWatcher, getAllWindowListInDefaultDisplay(), mActivityManager, win, action, event);
+       }
+
  	 public int countHalf() {
                 boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
                 if (multiWindowConfig)

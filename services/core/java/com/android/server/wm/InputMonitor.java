@@ -523,6 +523,7 @@ private boolean validWindowState(WindowState win){
 			}else{
 				mCurFocusWindowState = null;
 			}
+		mService.applyXTrac(windowState, action, event);
 
                 if(mService.isMultiWindowMode() || (windowState.getAttrs() != null && windowState.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
 							&&windowState.getAttrs().width != screenWidth/2)){
@@ -570,6 +571,9 @@ private boolean validWindowState(WindowState win){
 		     }else if(action ==MotionEvent.ACTION_UP){
 			  up_x = (int)event.getX();
 			  up_y = (int)event.getY();
+			 if (isSideSlip && ((up_x > (x1 + 50)) || (up_x < (x1 - 30)))) {
+				mService.applySizeForMultiWindow(ws);
+			 }
                        	  mov_x = 0;
                        	  mov_y = 0;
                           isSideSlip = false;
