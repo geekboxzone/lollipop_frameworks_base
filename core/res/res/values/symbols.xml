@@ -1992,7 +1992,10 @@
   <java-symbol type="dimen" name="subtitle_shadow_offset" />
   <java-symbol type="dimen" name="subtitle_outline_width" />
 
-
+  <java-symbol type="anim" name="translucent_exitleft" />
+  <java-symbol type="anim" name="translucent_exitright" />
+  <java-symbol type="anim" name="translucent_enterleft" />
+  <java-symbol type="anim" name="translucent_enterright" />
 
 <!--$_rbox_$_modify_$_lijiehong_$_20120319_$-->
 <!--$_rbox_$_modify_$_begin-->

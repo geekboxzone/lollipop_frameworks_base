@@ -2129,6 +2129,9 @@ public interface WindowManager extends ViewManager {
                 sb.append(" needsMenuKey=");
                 sb.append(needsMenuKey);
             }
+		sb.append("packageName=").append(packageName);
+		sb.append("token=").append(token);
+		
             sb.append('}');
             return sb.toString();
         }

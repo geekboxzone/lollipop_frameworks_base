@@ -230,4 +230,6 @@ interface IWindowSession {
     void hideWindowLayer(IWindow window, boolean visible);
 
     void updatePositionAndSize(IWindow window,int x,int y,int widht,int height);
+
+	void setOnlyShowInExtendDisplay(IWindow window,int transit);
 }

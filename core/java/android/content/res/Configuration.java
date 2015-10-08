@@ -53,10 +53,18 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 	/** @hide */
 	public static final int ENABLE_MULTI_WINDOW = 0x02;
 
+	/** @hide */
+	public static final int UNDEFINE_DUAL_SCREEN = 0x03;
+	/** @hide */
+	public static final int DISABLE_DUAL_SCREEN = 0x04;
+	/** @hide */
+	public static final int ENABLE_DUAL_SCREEN = 0x05;
+
 	/**
 	*@hide
 	*/
 	public int multiwindowflag;
+	public int dualscreenflag;
 
 	public int phoneMode;
 
@@ -634,6 +642,7 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 
     public void setTo(Configuration o) {
 		multiwindowflag = o.multiwindowflag;
+		dualscreenflag = o.dualscreenflag;
 		phoneMode = o.phoneMode;
         fontScale = o.fontScale;
         mcc = o.mcc;
@@ -666,16 +675,26 @@ public final class Configuration implements Parcelable, Comparable<Configuration
         sb.append("{");
         sb.append(fontScale);
         sb.append(" ");
-		if(multiwindowflag != UNDEFINE_MULTI_WINDOW){
-			sb.append("multiwindowflag=");
-			if(multiwindowflag == UNDEFINE_MULTI_WINDOW){
-				sb.append("UNDEFINE ");
-			}else if(multiwindowflag == ENABLE_MULTI_WINDOW){
-				sb.append("ENABLE ");
-			}else if(multiwindowflag == DISABLE_MULTI_WINDOW){
-				sb.append("DISABLE ");
-			}
+	if(multiwindowflag != UNDEFINE_MULTI_WINDOW){
+		sb.append("multiwindowflag=");
+		if(multiwindowflag == UNDEFINE_MULTI_WINDOW){
+			sb.append("UNDEFINE ");
+		}else if(multiwindowflag == ENABLE_MULTI_WINDOW){
+			sb.append("ENABLE ");
+		}else if(multiwindowflag == DISABLE_MULTI_WINDOW){
+			sb.append("DISABLE ");
 		}
+	}
+	if(dualscreenflag != UNDEFINE_DUAL_SCREEN){
+		sb.append("dualscreenflag=");
+		if(dualscreenflag == UNDEFINE_DUAL_SCREEN){
+			sb.append("UNDEFINE ");
+		}else if(dualscreenflag == ENABLE_DUAL_SCREEN){
+			sb.append("ENABLE ");
+		}else if(dualscreenflag == DISABLE_DUAL_SCREEN){
+			sb.append("DISABLE ");
+		}
+	}
 	if (phoneMode != 0) {
 		sb.append("phoneMode ");
 	}
@@ -817,6 +836,7 @@ public final class Configuration implements Parcelable, Comparable<Configuration
      */
     public void setToDefaults() {
     	multiwindowflag = UNDEFINE_MULTI_WINDOW;
+	dualscreenflag = UNDEFINE_DUAL_SCREEN;//UNDEFINE_DUAL_SCREEN;
 	phoneMode = 0;
         fontScale = 1;
         mcc = mnc = 0;
@@ -856,6 +876,10 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 		if(delta.multiwindowflag != UNDEFINE_MULTI_WINDOW && multiwindowflag != delta.multiwindowflag){
 			changed |= ActivityInfo.CONFIG_MULTI_WINDOW;
 			multiwindowflag = delta.multiwindowflag;
+		}
+		if(delta.dualscreenflag != UNDEFINE_DUAL_SCREEN && dualscreenflag != delta.dualscreenflag){
+			changed |= ActivityInfo.CONFIG_DUAL_SCREEN;
+			dualscreenflag = delta.dualscreenflag;
 		}
 		if(delta.phoneMode != 0 && phoneMode != delta.phoneMode) {
 			phoneMode = delta.phoneMode;
@@ -1025,6 +1049,9 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 		if(delta.multiwindowflag != UNDEFINE_MULTI_WINDOW && multiwindowflag != delta.multiwindowflag){
 			changed |= ActivityInfo.CONFIG_MULTI_WINDOW;
 		}
+		if(delta.dualscreenflag != UNDEFINE_DUAL_SCREEN && dualscreenflag != delta.dualscreenflag){
+			changed |= ActivityInfo.CONFIG_DUAL_SCREEN;
+		}
 		if(phoneMode == 0
         				&& delta.phoneMode != 0 
         				&& phoneMode != delta.phoneMode) {
@@ -1163,6 +1190,7 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 
     public void writeToParcel(Parcel dest, int flags) {
 		dest.writeInt(multiwindowflag);
+		dest.writeInt(dualscreenflag);
 		dest.writeInt(phoneMode);
         dest.writeFloat(fontScale);
         dest.writeInt(mcc);
@@ -1201,6 +1229,7 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 
     public void readFromParcel(Parcel source) {
 		multiwindowflag = source.readInt();
+		dualscreenflag= source.readInt();
 		phoneMode = source.readInt();
         fontScale = source.readFloat();
         mcc = source.readInt();
@@ -1250,6 +1279,8 @@ public final class Configuration implements Parcelable, Comparable<Configuration
     public int compareTo(Configuration that) {
         int n;
 		n = this.multiwindowflag - that.multiwindowflag;
+		if(n != 0)return n;
+		n = this.dualscreenflag - that.dualscreenflag;
 		if(n != 0)return n;
 		n = this.phoneMode - that.phoneMode;
 		if(n != 0)return n;
@@ -1319,6 +1350,7 @@ public final class Configuration implements Parcelable, Comparable<Configuration
     public int hashCode() {
         int result = 17;
 		result = 31 * result + multiwindowflag;
+		result = 31 * result + dualscreenflag;
 		result = 31 * result + phoneMode;
         result = 31 * result + Float.floatToIntBits(fontScale);
         result = 31 * result + mcc;
@@ -1361,6 +1393,14 @@ public final class Configuration implements Parcelable, Comparable<Configuration
 	public boolean enableMultiWindow(){
 		return multiwindowflag == ENABLE_MULTI_WINDOW;
 	}
+
+	public void setDualScreenFlag(boolean enable){
+		dualscreenflag = enable ? ENABLE_DUAL_SCREEN : DISABLE_DUAL_SCREEN;
+	}
+	public boolean enableDualScreen(){
+		return dualscreenflag == ENABLE_DUAL_SCREEN;
+	}
+	
     /**
      * Return the layout direction. Will be either {@link View#LAYOUT_DIRECTION_LTR} or
      * {@link View#LAYOUT_DIRECTION_RTL}.

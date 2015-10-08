@@ -2319,6 +2319,7 @@ public final class ActivityThread {
                 }
                 if (!r.activity.mFinished) {
                     activity.mCalled = false;
+			activity.getWindow().getAttributes().taskId = r.taskId;	// set the layout attributes taskid by shenzhicheng
                     if (r.isPersistable()) {
                         mInstrumentation.callActivityOnPostCreate(activity, r.state,
                                 r.persistentState);

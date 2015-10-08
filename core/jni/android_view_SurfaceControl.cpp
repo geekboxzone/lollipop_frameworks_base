@@ -225,6 +225,16 @@ static void nativeSetAnimationTransaction(JNIEnv* env, jclass clazz) {
     SurfaceComposerClient::setAnimationTransaction();
 }
 
+static void nativeSetAttach(JNIEnv* env, jobject surfaceObj, jint token){
+/*    sp<SurfaceControl> surface(getSurfaceControl(env, surfaceObj));
+    if (surface == NULL) return;
+
+    status_t err = surface->setAttach(token);
+    if (err < 0 && err != NO_INIT) {
+	doThrowIAE(env);
+    }*/
+}
+
 static void nativeSetLayer(JNIEnv* env, jclass clazz, jlong nativeObject, jint zorder) {
     SurfaceControl* const ctrl = reinterpret_cast<SurfaceControl *>(nativeObject);
     status_t err = ctrl->setLayer(zorder);
