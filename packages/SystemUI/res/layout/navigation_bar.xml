@@ -137,6 +137,7 @@
                 android:contentDescription="@string/accessibility_recent"
                 android:paddingLeft="0dp"
                 android:paddingRight="0dp"
+				android:scaleType="centerInside"
                 android:src="@drawable/display_copy"
                 android:visibility="invisible"
                 />
@@ -331,6 +332,7 @@
                 android:contentDescription="@string/accessibility_recent"
                 android:paddingLeft="0dp"
                 android:paddingRight="0dp"
+				android:scaleType="centerInside"
                 android:src="@drawable/display_copy"
                 android:visibility="invisible"
                 />

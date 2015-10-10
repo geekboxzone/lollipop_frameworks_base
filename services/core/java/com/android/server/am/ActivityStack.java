@@ -1899,7 +1899,7 @@ final class ActivityStack {
 		}
 
 	
-	if (dualconfig) {
+	if (!multiconfig && dualconfig) {
 		for (int i = 0; i < mTaskHistory.size(); i ++) {
 			final TaskRecord task = mTaskHistory.get(i);
             		final ArrayList<ActivityRecord> activities = task.mActivities;

@@ -2480,18 +2480,21 @@ if(mDecorContentParent != null)
 	@Override
 	public  boolean dispatchPointerEvent(MotionEvent ev,boolean block) {
 			Configuration config = getResources().getConfiguration();
-		if(config.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
+		/*if(config.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
 			if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
 				LOGWINDOW(" mDisplayDector.onTouchEvent  ");
 				mDisplayDector.onTouchEvent(ev);
 			}
 			return super.dispatchPointerEvent(ev,block);
+		}*/
+		if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
+			LOGWINDOW(" mDisplayDector.onTouchEvent  ");
+			mDisplayDector.onTouchEvent(ev);
 		}
-			if(mMultiWindowUtil != null){
-				return mMultiWindowUtil.dispatchPointerEvent(ev,block);
-			}else{
-				return true;
-			}
+		if(mMultiWindowUtil != null){
+			mMultiWindowUtil.dispatchPointerEvent(ev,block);
+		}
+		return true;
     }
 	
         @Override
