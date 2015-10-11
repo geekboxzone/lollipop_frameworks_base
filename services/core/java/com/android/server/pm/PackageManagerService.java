@@ -124,6 +124,7 @@ import android.content.pm.PackageParser.PackageLite;
 import android.content.pm.PackageParser.PackageParserException;
 import android.content.pm.PackageParser.ScanPkg;
 import android.content.pm.PackageParser;
+import android.content.pm.PackageParser.MultiWindowMode;
 import android.content.pm.PackageStats;
 import android.content.pm.PackageUserState;
 import android.content.pm.ParceledListSlice;
@@ -14027,18 +14028,19 @@ public class PackageManagerService extends IPackageManager.Stub
         }
         mSettings.writeLPr();
     }
-	
-    public int scanModePkg(String pkg) {
+
+    public MultiWindowMode scanModePkg(String pkg) {
 		return checkAppSupportPhonemode(pkg);
     }
 
-   private HashMap<String,Boolean> phoneModeList;// = new ArrayList<String>();
-   public int checkAppSupportPhonemode(String pkgName) {
-	File configureDir = Environment.getRootDirectory();
-	File phoneModeWhiteList = new File(configureDir, "etc/package_phonemode.xml");
-        if (phoneModeList == null && phoneModeWhiteList.exists()) {
-	    phoneModeList = new HashMap<String,Boolean>();
-	    phoneModeList.clear();
+    private HashMap<String,MultiWindowMode> phoneModeList;// = new ArrayList<String>();
+    public MultiWindowMode checkAppSupportPhonemode(String pkgName) {
+       MultiWindowMode multiWindowMode = null;
+       File configureDir = Environment.getRootDirectory();
+       File phoneModeWhiteList = new File(configureDir, "etc/package_phonemode.xml");
+       if (phoneModeList == null && phoneModeWhiteList.exists()) {
+            phoneModeList = new HashMap<String,MultiWindowMode>();
+            phoneModeList.clear();
             try {
                 FileInputStream stream = new FileInputStream(phoneModeWhiteList);
                 XmlPullParser parser = Xml.newPullParser();
@@ -14050,12 +14052,15 @@ public class PackageManagerService extends IPackageManager.Stub
                     if (type == XmlPullParser.START_TAG) {
                         String tag = parser.getName();
                         if ("app".equals(tag)) {
-			    if (parser.getAttributeCount() > 0) {
-                        	String pkgname = parser.getAttributeValue(0);//null, "package");
-                        	String pkgmode = parser.getAttributeValue(1);
-			    	if(pkgname != null)
-                       phoneModeList.put(pkgname,Boolean.parseBoolean(pkgmode));
-			    }
+                            if (parser.getAttributeCount() > 0) {
+                                String pkgname = parser.getAttributeValue(0);//null, "package");
+                                String pkgmode = parser.getAttributeValue(1);
+                                String pkghalfscreen = parser.getAttributeValue(2);
+                                if(pkgname != null)
+                                    phoneModeList.put(pkgname,new MultiWindowMode(
+                                            Boolean.parseBoolean(pkgmode),
+                                            Boolean.parseBoolean(pkghalfscreen)));
+                            }
                         }
                     }
                 } while (type != XmlPullParser.END_DOCUMENT);
@@ -14071,9 +14076,8 @@ public class PackageManagerService extends IPackageManager.Stub
                 Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
             }
         }
-		if(pkgName == null || phoneModeList == null) return -1;
-		Boolean mode = phoneModeList.get(pkgName);
-		int phonemode = mode==null?-1:(mode?1:0);
-		return phonemode;
+        if(pkgName == null || phoneModeList == null) return null;
+        multiWindowMode = phoneModeList.get(pkgName);
+        return multiWindowMode;
     }
 }

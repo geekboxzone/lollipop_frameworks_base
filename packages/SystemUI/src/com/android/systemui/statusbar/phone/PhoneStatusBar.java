@@ -1831,7 +1831,7 @@ final Object mScreenshotLock = new Object();
          LOGD("wintask UpdateAppsList,appslist bdeforce====:"+appslist.size());
 		PackageManager pm = mContext.getApplicationContext().getPackageManager();
 		if(isCurrentHomeActivity(pkName,null) ||"com.android.inputmethod.latin".equals(pkName)||"com.android.packageinstaller".equals(pkName) ||
-					"com.rockchip.projectx".equals(pkName)){
+					"com.rockchip.projectx".equals(pkName)|| "com.android.systemui".equals(pkName)){
 			return;
 			}
 			

@@ -27,5 +27,6 @@ interface IApplicationToken
     long getKeyDispatchingTimeout();
     long getLastLaunchTimeout();
     boolean isHomeActivity();
+    boolean isSupportHalfScreen();
 }
 

@@ -348,6 +348,14 @@ final class ActivityRecord {
             return false;
         }
 
+        @Override public boolean isSupportHalfScreen() throws RemoteException {
+            ActivityRecord activity = weakActivity.get();
+            if (activity != null && activity.appInfo.halfScreenMode) {
+                return true;
+            }
+            return false;
+        }
+
         @Override public void windowsGone() {
             ActivityRecord activity = weakActivity.get();
             if (activity != null) {

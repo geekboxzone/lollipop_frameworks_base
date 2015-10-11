@@ -589,6 +589,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
     public int installLocation = PackageInfo.INSTALL_LOCATION_UNSPECIFIED;
 
     public boolean phoneMode = false;
+    public boolean halfScreenMode = false;
     public boolean isHomeApp = false;
 	
     public void dump(Printer pw, String prefix) {
@@ -710,6 +711,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         enabledSetting = orig.enabledSetting;
         installLocation = orig.installLocation;
         phoneMode = orig.phoneMode;
+        halfScreenMode= orig.halfScreenMode;
         manageSpaceActivityName = orig.manageSpaceActivityName;
         descriptionRes = orig.descriptionRes;
         uiOptions = orig.uiOptions;
@@ -762,6 +764,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         dest.writeInt(enabledSetting);
         dest.writeInt(installLocation);
         dest.writeInt(phoneMode? 1 : 0);
+        dest.writeInt(halfScreenMode? 1 : 0);
         dest.writeString(manageSpaceActivityName);
         dest.writeString(backupAgentName);
         dest.writeInt(descriptionRes);
@@ -813,6 +816,7 @@ public class ApplicationInfo extends PackageItemInfo implements Parcelable {
         enabledSetting = source.readInt();
         installLocation = source.readInt();
         phoneMode = source.readInt() != 0;
+        halfScreenMode = source.readInt() != 0;
         manageSpaceActivityName = source.readString();
         backupAgentName = source.readString();
         descriptionRes = source.readInt();

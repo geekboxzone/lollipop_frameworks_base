@@ -128,13 +128,12 @@ import static android.view.WindowManagerPolicy.WindowManagerFuncs.LID_CLOSED;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_COVER_ABSENT;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_UNCOVERED;
 import static android.view.WindowManagerPolicy.WindowManagerFuncs.CAMERA_LENS_COVERED;
-//add by ljh
 import java.util.ArrayList;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.IActivityManager;
 import com.android.multiwindow.policy.MultiWindowSettings;
-
+import android.app.Instrumentation;
 
 /**
  * WindowManagerPolicy implementation for the Android phone UI.  This
@@ -2615,18 +2614,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
             WindowManager.LayoutParams.TYPE_SYSTEM_ERROR,
         };
-	//add by ljh
-    public boolean isWorked(String servicename){
-	ActivityManager myManager=(ActivityManager)mContext.getSystemService(mContext.ACTIVITY_SERVICE);
-	ArrayList<RunningServiceInfo> runningService = 
-			(ArrayList<RunningServiceInfo>) myManager.getRunningServices(30);
-	for(int i = 0 ; i<runningService.size();i++){
-		if(runningService.get(i).service.getClassName().equals(servicename)){
-    			return true;
-   		}
-  	}
-	return false;
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -2796,21 +2783,6 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         if (mPendingMetaAction && !KeyEvent.isMetaKey(keyCode)) {
             mPendingMetaAction = false;
         }
-	if (keyCode == KeyEvent.KEYCODE_BACK) {
-			if (down&&(repeatCount != 0)) {
-				if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
-					if (!keyguardOn) {
-                                                 Intent intent  = new Intent("com.android.ZENGJUN");
-                                                 intent.setPackage("com.android.Listappinfo");
-						if(isWorked("com.android.Listappinfo.ManderService")){
-							mContext.stopServiceAsUser(intent,android.os.UserHandle.CURRENT );
-						}else{
-							mContext.startServiceAsUser(intent,android.os.UserHandle.CURRENT );
-						}
-					}
-				}
-			}
-		}
 
         // First we always handle the home key here, so applications
         // can never break it, although if keyguard is on, we do let
@@ -3085,11 +3057,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
            if(!down){
             SystemProperties.set("sys.stylus.issecondary","true");
            }else if(down){
-              final long FKeyDownTime = event.getDownTime();
               final long FKeyEventTime = event.getEventTime();
+              final long FKeyDownTime = event.getDownTime();
+              if((FKeyEventTime - FKeyDownTime)<300&& "true".equals(SystemProperties.get("sys.stylus.issecondary","true"))){
+                SystemProperties.set("sys.stylus.issecondary","false");
+               mHandler.postDelayed(stylusrunnable, 500);
+              }
               if((FKeyEventTime - FKeyDownTime) > 300&&"true".equals(SystemProperties.get("sys.stylus.issecondary","true"))){
                 Intent intentp = new Intent();
-                intentp.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.egionCapture2"));
+                mHandler.removeCallbacks(stylusrunnable);
+                SystemProperties.set("sys.stylus.issecondary","true");
+                intentp.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
                 intentp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intentp.putExtra("IS_FULL_SCREEN_POSTIL", true);
                 mContext.startActivity(intentp);
@@ -3242,6 +3220,26 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Let the application handle the key.
         return 0;
+    }
+ 
+    //TOOL_TYPE_STYLUS for BUTTON_SECONDARY click for MENU
+    private final Runnable stylusrunnable = new Runnable() {
+        @Override
+        public void run() {
+                simulateKey(KeyEvent.KEYCODE_MENU);
+            }
+    };
+    public static void simulateKey(final int KeyCode) {
+        new Thread() {
+            public void run() {
+                try {
+                    Instrumentation inst = new Instrumentation();
+                    inst.sendKeyDownUpSync(KeyCode);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 
     /** {@inheritDoc} */

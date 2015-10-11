@@ -2480,20 +2480,20 @@ if(mDecorContentParent != null)
 	@Override
 	public  boolean dispatchPointerEvent(MotionEvent ev,boolean block) {
 			Configuration config = getResources().getConfiguration();
-		/*if(config.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
+		if(config.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
 			if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
 				LOGWINDOW(" mDisplayDector.onTouchEvent  ");
 				mDisplayDector.onTouchEvent(ev);
 			}
 			return super.dispatchPointerEvent(ev,block);
-		}*/
-		if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
-			LOGWINDOW(" mDisplayDector.onTouchEvent  ");
-			mDisplayDector.onTouchEvent(ev);
 		}
 		if(mMultiWindowUtil != null){
 			mMultiWindowUtil.dispatchPointerEvent(ev,block);
 		}
+		if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
+                       LOGWINDOW(" mDisplayDector.onTouchEvent  ");
+                       mDisplayDector.onTouchEvent(ev);
+                 }
 		return true;
     }
 	
@@ -3372,6 +3372,9 @@ if(mDecorContentParent != null)
             if (hasFeature(FEATURE_OPTIONS_PANEL) && !hasWindowFocus && mPanelChordingKey != 0) {
                 closePanel(FEATURE_OPTIONS_PANEL);
             }
+	    if(mMultiWindowUtil != null) {
+               mMultiWindowUtil.onWindowFocusChanged(hasWindowFocus);
+             }
 
             final Callback cb = getCallback();
             if (cb != null && !isDestroyed() && mFeatureId < 0) {
@@ -3405,7 +3408,7 @@ if(mDecorContentParent != null)
 			if(mMultiWindowUtil != null){
 				int countH = -1;
 				try {
-					countH = WindowManagerHolder.sWindowManager.countHalf();
+					countH = WindowManagerHolder.sWindowManager.countHalf(getAttributes().taskId);
 				} catch (RemoteException re) {}
 				
 					mMultiWindowUtil.onAppAlignChanged(align, rotate, countH);

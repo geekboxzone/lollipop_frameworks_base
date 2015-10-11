@@ -18205,7 +18205,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * and {@link #SYSTEM_UI_FLAG_IMMERSIVE_STICKY}.
      */
     public void setSystemUiVisibility(int visibility) {
-    	visibility &= ~SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+         if(this.getContext().getResources().getConfiguration().multiwindowflag
+                == Configuration.ENABLE_MULTI_WINDOW) {
+            if(!(this.getContext().getPackageName().contains("launcher"))) {
+               visibility &= ~(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+            }
+        }
         if (visibility != mSystemUiVisibility) {
             mSystemUiVisibility = visibility;
             if (mParent != null && mAttachInfo != null && !mAttachInfo.mRecomputeGlobalAttributes) {

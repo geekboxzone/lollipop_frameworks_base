@@ -38,6 +38,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import android.provider.Settings;
 import android.graphics.Point;
+import android.os.Process;
 
 /**
  * Provides low-level communication with the system window manager for
@@ -296,13 +297,11 @@ public final class WindowManagerGlobal {
 				    int SCREEN_WEITH = display.getWidth(true);
 				    int SCREE_HEIGHT = display.getHeight(true);
 
-				    if (("com.microsoft.office.excel".equals(wparams.packageName)) ||
-						("com.microsoft.office.word".equals(wparams.packageName) ||
-						("com.microsoft.office.powerpoint".equals(wparams.packageName)))) {
+				    if (view.getContext().getApplicationInfo().halfScreenMode) {
 					boolean countB = true;
 					int countH = -1;
 					try {
-						countH = getWindowManagerService().countHalf();
+                        countH = getWindowManagerService().countHalf(wparams.taskId);
 					} catch (RemoteException re) {}
 					if (countH != -1) {
 						countB = (countH%2 == 0);
@@ -336,9 +335,7 @@ public final class WindowManagerGlobal {
 					wparams.flags &= ~WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
 				}
 			} else {
-				if (("com.microsoft.office.excel".equals(wparams.packageName)) ||
-                                                ("com.microsoft.office.word".equals(wparams.packageName) ||
-                                                ("com.microsoft.office.powerpoint".equals(wparams.packageName)))) {
+				if (view.getContext().getApplicationInfo().halfScreenMode) {
 					boolean countB = true;
 					int SCREEN_WEITH = display.getWidth(true);
                                     	int SCREE_HEIGHT = display.getHeight(true);
@@ -346,7 +343,7 @@ public final class WindowManagerGlobal {
 					//wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 					int countH = -1;
 					try {
-                                                countH = getWindowManagerService().countHalf();
+                        countH = getWindowManagerService().countHalf(wparams.taskId);
                                         } catch (RemoteException re) {}
 					//Log.e(TAG, wparams.packageName+"-------------- sec count = " + countH);
 					if (countH != -1) {

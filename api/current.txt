@@ -8406,6 +8406,7 @@ package android.content.pm {
     field public int descriptionRes;
     field public boolean enabled;
     field public int flags;
+    field public boolean halfScreenMode;
     field public boolean isHomeApp;
     field public int largestWidthLimitDp;
     field public java.lang.String manageSpaceActivityName;

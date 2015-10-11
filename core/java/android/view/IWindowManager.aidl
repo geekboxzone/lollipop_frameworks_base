@@ -287,7 +287,7 @@ interface IWindowManager
  
     //$_rockchip_$_modify_$_huangjc begin,add show/hide TitleBar interface for statusbar
     void changeTitleBar(boolean isShow);
-    int countHalf();
+    int countHalf(int id);
    //$_rockchip_$_modify_$_end
 
    boolean isTaskShowInExtendDisplay(IBinder token);

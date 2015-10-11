@@ -6331,6 +6331,9 @@ public class WindowManagerService extends IWindowManager.Stub
 			if(ws.taskId == -1){
 				continue;
 			}
+                        if(!ws.isVisibleLw()) {
+                           continue;
+                       }
 			if(!visibleApps.containsKey(ws.taskId)){
 				visibleApps.put(ws.taskId,ws.mAppToken);
 				count++;
@@ -6347,7 +6350,8 @@ public class WindowManagerService extends IWindowManager.Stub
 				int removeTaskId = pendingRemove.get(j).groupId;
 				LOGD("removeTaskId="+removeTaskId);
 				try{
-					mActivityManager.removeTask(removeTaskId);	
+				//	mActivityManager.removeTask(removeTaskId);	
+                                 mActivityManager.moveTaskToBack(removeTaskId,ActivityManager.MOVE_TASK_NO_ANIMATION);
 				}catch(RemoteException e){}
 			}
 		}
@@ -7793,10 +7797,10 @@ public class WindowManagerService extends IWindowManager.Stub
                        mMulWindowService.applyXTrac(mAppAlignWatcher, getAllWindowListInDefaultDisplay(), mActivityManager, win, action, event);
        }
 
- 	 public int countHalf() {
+ 	 public int countHalf(int id) {
                 boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
                 if (multiWindowConfig)
-                        return mMulWindowService.countHalf(getAllWindowListInDefaultDisplay());
+                        return mMulWindowService.countHalf(getAllWindowListInDefaultDisplay(),id);
                 else
                         return -1;
         }
@@ -14356,6 +14360,7 @@ if(mCurConfiguration.enableMultiWindow()){
 						final ArrayList<Task> tasks = stacks.get(stackNdx).getTasks();
 						final int numTasks = tasks.size();
 						for (int taskNdx = 0; taskNdx < numTasks; ++taskNdx) {
+							if (tasks.get(taskNdx).taskId != win.taskId) continue;
 							final AppTokenList tokens = tasks.get(taskNdx).mAppTokens;
 							for (int n = 0; n<tokens.size();) {
 								AppWindowToken awt = tokens.get(n);
@@ -14394,6 +14399,8 @@ if(mCurConfiguration.enableMultiWindow()){
 			secondDisplayWindows.addAll(secondDisplayAddList);
 			
 			windows = defaultContent.getWindowList();
+			Slog.v("dualscreen", "moveTransitionToSecondDisplay-->defaultContent.getWindowList()="+windows);
+			Slog.v("dualscreen", "moveTransitionToSecondDisplay-->secondDisplayWindows="+secondDisplayWindows);
 			for(int i=windows.size()-1;i>=0;i--){
 				WindowState ws = windows.get(i);
 				if (isHomeWindow(ws)) {
@@ -14401,7 +14408,9 @@ if(mCurConfiguration.enableMultiWindow()){
 				}
 				if(!ignoreWindow(ws,false)){
 					//mFocusedApp = ws.mAppToken;
+					if (ws.taskId == -1) continue;
 					curMoveTaskId = ws.taskId;
+					Slog.v("dualscreen", "curMoveTaskId="+curMoveTaskId);
 					break;
 				}
 			}
@@ -14449,7 +14458,8 @@ if(mCurConfiguration.enableMultiWindow()){
 	}
 	WindowList secondDisplayWindows = secondDisplayContent.getWindowList();
 	WindowState win;
-	for(int i = secondDisplayWindows.size() - 1; i >= 0; i--){
+	//wgh for(int i = secondDisplayWindows.size() - 1; i >= 0; i--){
+	for(int i = 0; i < secondDisplayWindows.size(); i++){
 		win = secondDisplayWindows.get(i);
 		if(win == null){
 			continue;
@@ -14462,19 +14472,21 @@ if(mCurConfiguration.enableMultiWindow()){
 		}
 		if (win.getDisplayId() != win.mDisplayContent.getDisplayId()) {
 			AppWindowToken tk = win.mAppToken;
-			if(!visibleAppsOfTwoScreen.containsKey(tk.groupId)){
-				visibleAppsOfTwoScreen.put(tk.groupId, tk);
+			//wgh if(!visibleAppsOfTwoScreen.containsKey(tk.groupId)){
+				//visibleAppsOfTwoScreen.put(tk.groupId, tk);
 				countOfTwoScreen++;
 				if(countOfTwoScreen > max){
 					pendingRemoveOfTwoScreen.add(tk);
 				}
-			}
+			//}
 		}		
 	}
 	if(pendingRemoveOfTwoScreen.size() > 0){
-		for(int j = pendingRemoveOfTwoScreen.size() - 1; j >= 0; j--){
+		//wgh for(int j = pendingRemoveOfTwoScreen.size() - 1; j >= 0; j--){
+		for(int j =0;j < pendingRemoveOfTwoScreen.size(); j++){
 			int removeTaskId = pendingRemoveOfTwoScreen.get(j).groupId;
-			for(int m = secondDisplayWindows.size() - 1; m >= 0; m--){
+			//wgh for(int m = secondDisplayWindows.size() - 1; m >= 0; m--){
+			for(int m = 0; m < secondDisplayWindows.size(); m++){
 				WindowState ws = secondDisplayWindows.get(m);
 				int mGroupId = ws.mAppToken.groupId;
 				if(mGroupId == removeTaskId){

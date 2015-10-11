@@ -2410,9 +2410,13 @@ public class PackageParser {
         final ApplicationInfo ai = owner.applicationInfo;
         final String pkgName = owner.applicationInfo.packageName;
 
-	if (mScanPkg != null) {
-	    pkgSupportPhone = mScanPkg.scanModePkg(pkgName);
-	}
+        if (mScanPkg != null) {
+            MultiWindowMode multiWindowMode = mScanPkg.scanModePkg(pkgName);
+            if(multiWindowMode != null) {
+                pkgSupportPhone = (multiWindowMode.mPhoneMode)?1:0;
+                owner.applicationInfo.halfScreenMode = multiWindowMode.mHalfScreenMode;
+            }
+        }
 
         TypedArray sa = res.obtainAttributes(attrs,
                 com.android.internal.R.styleable.AndroidManifestApplication);
@@ -2788,9 +2792,13 @@ public class PackageParser {
         TypedArray sa = res.obtainAttributes(attrs,
                 com.android.internal.R.styleable.AndroidManifestApplication);
 
-	if (mScanPkg != null) {
-	    pkgSupportPhone = mScanPkg.scanModePkg(owner.packageName);
-	}
+        if (mScanPkg != null) {
+            MultiWindowMode multiWindowMode = mScanPkg.scanModePkg(owner.packageName);
+            if(multiWindowMode != null) {
+                pkgSupportPhone = (multiWindowMode.mPhoneMode)?1:0;
+                owner.applicationInfo.halfScreenMode = multiWindowMode.mHalfScreenMode;
+            }
+        }
 
         if (sa.getBoolean(
                 com.android.internal.R.styleable.AndroidManifestApplication_hasCode, true)) {
@@ -5084,6 +5092,17 @@ public class PackageParser {
     }
 
     public interface ScanPkg {
-	public abstract int scanModePkg(String pkg);
+	    public abstract MultiWindowMode scanModePkg(String pkg);
     }
+
+    public static class MultiWindowMode {
+        public boolean mPhoneMode;
+        public boolean mHalfScreenMode;
+        public MultiWindowMode(){}
+        public MultiWindowMode(boolean phoneMode, boolean halfScreenMode) {
+            mPhoneMode = phoneMode;
+            mHalfScreenMode = halfScreenMode;
+        }
+    }
+
 }
