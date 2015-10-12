@@ -884,6 +884,18 @@ public final class ActivityStackSupervisor implements DisplayListener {
             throw new IllegalArgumentException("File descriptors passed in Intent");
         }
         boolean componentSpecified = intent.getComponent() != null;
+        
+        //Add by huangjc for wintask
+        if(mService.mContext.getResources().getConfiguration().enableMultiWindow()&&intent!=null&& startFlags==0){
+            Intent winintent=new Intent();
+            winintent.setAction("rk.android.wintask.SHOW");
+            if(intent.getComponent() != null){
+            winintent.putExtra("cmp", intent.getComponent().getPackageName());
+            //Log.d("wintask","start from Launcher,sendBroadcast now==cmp:"+intent.getComponent().getPackageName());
+
+            mService.mContext.sendBroadcast(winintent);
+           }
+         } //Add end
 
         // Don't modify the client's object!
         intent = new Intent(intent);

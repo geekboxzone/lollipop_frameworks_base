@@ -3052,18 +3052,18 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return -1;
            }
         }
-        //huangjc:F1 means TOOL_TYPE_STYLUS for BUTTON_SECONDARY
+         //huangjc:F1 means TOOL_TYPE_STYLUS for BUTTON_SECONDARY
         if (keyCode == KeyEvent.KEYCODE_F1&&!MultiWindowSettings.checkConfig(mContext) ) {
            if(!down){
             SystemProperties.set("sys.stylus.issecondary","true");
            }else if(down){
-              final long FKeyEventTime = event.getEventTime();
               final long FKeyDownTime = event.getDownTime();
+              final long FKeyEventTime = event.getEventTime();
               if((FKeyEventTime - FKeyDownTime)<300&& "true".equals(SystemProperties.get("sys.stylus.issecondary","true"))){
                 SystemProperties.set("sys.stylus.issecondary","false");
                mHandler.postDelayed(stylusrunnable, 500);
               }
-              if((FKeyEventTime - FKeyDownTime) > 300&&"true".equals(SystemProperties.get("sys.stylus.issecondary","true"))){
+              if((FKeyEventTime - FKeyDownTime) > 300&&"false".equals(SystemProperties.get("sys.stylus.issecondary","true"))){
                 Intent intentp = new Intent();
                 mHandler.removeCallbacks(stylusrunnable);
                 SystemProperties.set("sys.stylus.issecondary","true");
@@ -3071,12 +3071,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 intentp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 intentp.putExtra("IS_FULL_SCREEN_POSTIL", true);
                 mContext.startActivity(intentp);
-                SystemProperties.set("sys.stylus.issecondary","false");
                return -1;
               }
 
            }
-	}
+        }
         // huangjc:ALT+CTRL+A 
         if (keyCode == KeyEvent.KEYCODE_A &&!MultiWindowSettings.checkConfig(mContext)) {
            if(down && event.isAltPressed()&&event.isCtrlPressed()){

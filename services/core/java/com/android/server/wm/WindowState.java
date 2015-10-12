@@ -894,7 +894,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 		}else if(mAppWindowState != null){
 			win = mAppWindowState;
 		}
-		if(win != null){
+		if(win != null&& !isHalfMode()){
 			mPosX = win.mPosX + (int)((mFrame.left - win.mFrame.left)*win.mHScale);
 			mPosY = win.mPosY + (int)((mFrame.top - win.mFrame.top)*win.mVScale);
 			//LOGD("mFrame="+mFrame.toString()+" win="+this);

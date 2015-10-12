@@ -1486,6 +1486,7 @@ class WindowStateAnimator {
         height += attrs.surfaceInsets.top + attrs.surfaceInsets.bottom;
         left -= attrs.surfaceInsets.left;
         top -= attrs.surfaceInsets.top;
+int screenW = (w.mDecorFrame.right - w.mDecorFrame.left)/2 - 200;
 		float deltaX = (w.mFrame.left - w.mShownFrame.left)*w.mHScale;
 		float deltaY = (w.mFrame.top  - w.mShownFrame.top)*w.mVScale;
 		//MediaFloat can not be run here. it is a custom window that mAppToken == null;
@@ -1543,7 +1544,7 @@ class WindowStateAnimator {
 				}
 				//LOGD("  setSurfaceBound deltaX="+deltaX+" deltaY="+deltaY+"left="+left+" top="+top+" win="+w);
 				//LOGD("  setSurfaceBound mFrame="+w.mFrame+"w="+w+" w.mApp="+w.mAppWindowState);
-			}else if((w.mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) ){	
+			}else if((w.mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT && w.mAttrs.width == screenW) ){	
 								left = w.mPosX;
 								top = w.mPosY;						
 				//LOGD("setSurfaceBound  3 left="+left+" top="+top+"  w:"+w);

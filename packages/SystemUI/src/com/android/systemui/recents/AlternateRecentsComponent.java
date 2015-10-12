@@ -56,6 +56,7 @@ import com.android.systemui.recents.views.TaskViewTransform;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import android.util.Log;
 
 /**
  * Annotation for a method that is only called from the primary user's SystemUI process and will be
@@ -88,6 +89,8 @@ public class AlternateRecentsComponent implements ActivityOptions.OnAnimationSta
     final static String sToggleRecentsAction = "com.android.systemui.recents.SHOW_RECENTS";
     public final static String sRecentsPackage = "com.android.systemui";
     public final static String sRecentsActivity = "com.android.systemui.recents.RecentsActivity";
+    public final static String sRecentsPackageWin = "com.android.winstart";
+    public final static String sRecentsActivityWin = "com.android.winstart.RecentsActivityWin";
 
     /**
      * An implementation of ITaskStackListener, that allows us to listen for changes to the system
@@ -206,7 +209,9 @@ public class AlternateRecentsComponent implements ActivityOptions.OnAnimationSta
     /** Creates a new broadcast intent */
     static Intent createLocalBroadcastIntent(Context context, String action) {
         Intent intent = new Intent(action);
-        intent.setPackage(context.getPackageName());
+        //Add by huang for win recents
+        if(!context.getResources().getConfiguration().enableMultiWindow())
+           intent.setPackage(context.getPackageName());
         intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY_BEFORE_BOOT |
                 Intent.FLAG_RECEIVER_FOREGROUND);
         return intent;
@@ -261,7 +266,8 @@ public class AlternateRecentsComponent implements ActivityOptions.OnAnimationSta
     /** Hides the Recents. */
     @ProxyFromPrimaryToCurrentUser
     public void onHideRecents(boolean triggeredFromAltTab, boolean triggeredFromHomeKey) {
-        if (mSystemServicesProxy.isForegroundUserOwner()) {
+    	//Add by huang for win recents
+        if (mContext.getResources().getConfiguration().enableMultiWindow()||mSystemServicesProxy.isForegroundUserOwner()) {
             hideRecents(triggeredFromAltTab, triggeredFromHomeKey);
         } else {
             Intent intent = createLocalBroadcastIntent(mContext,
@@ -274,7 +280,8 @@ public class AlternateRecentsComponent implements ActivityOptions.OnAnimationSta
     void hideRecents(boolean triggeredFromAltTab, boolean triggeredFromHomeKey) {
         if (mBootCompleted) {
             ActivityManager.RunningTaskInfo topTask = mSystemServicesProxy.getTopMostTask();
-            if (topTask != null && mSystemServicesProxy.isRecentsTopMost(topTask, null)) {
+            //Add by huang for win recents
+            if (mContext.getResources().getConfiguration().enableMultiWindow()||(topTask != null && mSystemServicesProxy.isRecentsTopMost(topTask, null))) {
                 // Notify recents to hide itself
                 Intent intent = createLocalBroadcastIntent(mContext, ACTION_HIDE_RECENTS_ACTIVITY);
                 intent.putExtra(EXTRA_TRIGGERED_FROM_ALT_TAB, triggeredFromAltTab);
@@ -702,10 +709,18 @@ public class AlternateRecentsComponent implements ActivityOptions.OnAnimationSta
         mConfig.launchedHasConfigurationChanged = false;
 
         Intent intent = new Intent(sToggleRecentsAction);
-        intent.setClassName(sRecentsPackage, sRecentsActivity);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
-                | Intent.FLAG_ACTIVITY_TASK_ON_HOME);
+        //Add by huang for win recents
+        if(mContext.getResources().getConfiguration().enableMultiWindow()){
+          intent.setClassName(sRecentsPackageWin, sRecentsActivityWin);
+          intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                /*| Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+                | Intent.FLAG_ACTIVITY_TASK_ON_HOME*/);
+        }else{
+          intent.setClassName(sRecentsPackage, sRecentsActivity);
+	        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+	                | Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
+	                | Intent.FLAG_ACTIVITY_TASK_ON_HOME);
+        }
         if (opts != null) {
             mContext.startActivityAsUser(intent, opts.toBundle(), UserHandle.CURRENT);
         } else {

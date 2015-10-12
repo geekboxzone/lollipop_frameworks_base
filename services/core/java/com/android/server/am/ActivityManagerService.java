@@ -4480,14 +4480,6 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                     }
                 }
  	   }	
-       if(getTaskForActivity(token, true) >= 0){
-            Intent winintent=new Intent();
-            winintent.setAction("rk.android.wintask.FINISH");
-            if(getTasks(1,0).get(0).topActivity!=null)
-            winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
-            //Log.d("wintask","finish activity,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
-           // mContext.sendBroadcast(winintent);
-            }
             final long origId = Binder.clearCallingIdentity();
             try {
                 boolean res;
@@ -8695,12 +8687,13 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
              //       "removeTask()");
            //  Slog.v(TAG, "removeTask   taskid =" + taskId, 
            //add by huangjc wintask
-            Intent winintent=new Intent();
-            winintent.setAction("rk.android.wintask.FINISH");
-            if(getTasks(1,0).get(0).topActivity!=null)
-            winintent.putExtra("cmp", getTasks(1,0).get(0).topActivity.getPackageName());
-            Log.d("wintask","removeTask,sendBroadcast now===cmp:"+getTasks(1,0).get(0).topActivity.getPackageName()+"===activitytask:"+getTasks(1,0).size());
-            mContext.sendBroadcast(winintent);
+           if(mContext.getResources().getConfiguration().enableMultiWindow()&&mStackSupervisor.anyTaskForIdLocked(taskId).getTopActivity()!=null){
+              Intent winintent=new Intent();
+              winintent.setAction("rk.android.wintask.FINISH");
+              winintent.putExtra("cmp", mStackSupervisor.anyTaskForIdLocked(taskId).getTopActivity().packageName);
+              Log.d("wintask","finish activity,sendBroadcast now===cmp:"+mStackSupervisor.anyTaskForIdLocked(taskId).getTopActivity().packageName+"===activitytask:");
+               mContext.sendBroadcast(winintent);
+	   }
             long ident = Binder.clearCallingIdentity();
             try {
                 return removeTaskByIdLocked(taskId, true);
