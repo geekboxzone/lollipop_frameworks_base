@@ -9795,6 +9795,15 @@ public class WindowManagerService extends IWindowManager.Stub
             mActivityManager.updateConfiguration(null);
         } catch (RemoteException e) {
         }
+	 DisplayManager dism = new DisplayManager(mContext);
+	 Display[] displays = mDisplayManager.getDisplays();
+	 if (displays.length > 1) {
+	 	for (int i=0; i<displays.length; i++) {
+			if (displays[i].getDisplayId() != Display.DEFAULT_DISPLAY) {
+				handleDisplayAdded(displays[i].getDisplayId());
+			}
+	 	}
+	 }
     }
 
     private void displayReady(int displayId) {
@@ -14241,6 +14250,10 @@ if(mCurConfiguration.enableMultiWindow()){
                 displayContent.mDeferredRemoval = true;
                 return;
             }
+	     if(mCurConfiguration.enableDualScreen()) {
+	            Slog.i(TAG, "[handleDisplayRemovedLocked] : HDMI is plugin out, need Synchronization the sencond show");
+		      updateDisplayShowSynchronization();
+	      }
             if (DEBUG_DISPLAY) Slog.v(TAG, "Removing display=" + displayContent);
             mDisplayContents.delete(displayId);
             displayContent.close();
