@@ -9795,7 +9795,6 @@ public class WindowManagerService extends IWindowManager.Stub
             mActivityManager.updateConfiguration(null);
         } catch (RemoteException e) {
         }
-	 DisplayManager dism = new DisplayManager(mContext);
 	 Display[] displays = mDisplayManager.getDisplays();
 	 if (displays.length > 1) {
 	 	for (int i=0; i<displays.length; i++) {
