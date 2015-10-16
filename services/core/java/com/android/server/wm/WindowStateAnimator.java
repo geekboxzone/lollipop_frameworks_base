@@ -1314,15 +1314,31 @@ class WindowStateAnimator {
         if (displayContent == null) {
             return;
         }
-
         // Need to recompute a new system decor rect each time.
-        if ((w.mAttrs.flags & LayoutParams.FLAG_SCALED) != 0) {
+        if (((w.mAttrs.flags & LayoutParams.FLAG_SCALED) != 0) && (w.mDisplayContent.getDisplayId() == w.getDisplayId())) {
             // Currently can't do this cropping for scaled windows.  We'll
             // just keep the crop rect the same as the source surface.
             w.mSystemDecorRect.set(0, 0, w.mRequestedWidth, w.mRequestedHeight);
         } else if (!w.isDefaultDisplay() || w.mDisplayContent.getDisplayId() != w.getDisplayId()) {
             // On a different display there is no system decor.  Crop the window
             // by the screen boundaries.
+            if (mService.mCurConfiguration.enableMultiWindow()) {
+	            if (w.mHScale != 1.0f || w.mVScale !=1.0f || w.mScaleX != 1.0f || w.mScaleY != 1.0f) {
+				int showWidth = w.mDisplayContent.getDisplayInfo().logicalWidth;
+				int showHeight = w.mDisplayContent.getDisplayInfo().logicalHeight;
+				if (w.mAttachedWindow != null || w.taskId == -1) {
+					w.mScaleX = 1.0f;
+					w.mScaleY = 1.0f;
+					w.mFrame.set(0, 0, showWidth, showHeight);
+					w.mShownFrame.set(0, 0, showWidth, showHeight);
+				} else {
+					w.mActualScale = 1.0f;
+				}
+				w.mVScale = 1.0f;
+				w.mHScale = 1.0f;
+				w.mSurfaceFrame.set(0, 0, showWidth, showHeight);
+	            	}
+            	}
             final DisplayInfo displayInfo = displayContent.getDisplayInfo();
 		w.mCompatFrame.set(new Rect(0, 0, displayInfo.logicalWidth, displayInfo.logicalHeight));
 		w.mSystemDecorRect.set(0, 0, displayInfo.logicalWidth, displayInfo.logicalHeight);
