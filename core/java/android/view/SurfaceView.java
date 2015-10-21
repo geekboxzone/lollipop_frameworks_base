@@ -367,7 +367,7 @@ public class SurfaceView extends View {
             }
         }
 	if(getContext().getResources().getConfiguration().multiwindowflag
-+                                == Configuration.ENABLE_MULTI_WINDOW && mDrawBack){
+                                == Configuration.ENABLE_MULTI_WINDOW && mDrawBack){
 	   canvas.clipRect(new Rect(0, 0, getWidth(), getHeight()),  Region.Op.REPLACE);
            canvas.drawColor(0xFF000000);	//set the white color
         }

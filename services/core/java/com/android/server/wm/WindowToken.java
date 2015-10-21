@@ -27,12 +27,12 @@ import java.io.PrintWriter;
  * to display windows.  For nested windows, there is a WindowToken created for
  * the parent window to manage its children.
  */
-class WindowToken {
+public class WindowToken {
     // The window manager!
     final WindowManagerService service;
 
     // The actual token.
-    final IBinder token;
+    public final IBinder token;
 
     // The type of window this token is for, as per WindowManager.LayoutParams.
     final int windowType;
@@ -45,7 +45,7 @@ class WindowToken {
     String stringName;
 
     // If this is an AppWindowToken, this is non-null.
-    AppWindowToken appWindowToken;
+    public AppWindowToken appWindowToken;
 
     // All of the windows associated with this token.
     final WindowList windows = new WindowList();

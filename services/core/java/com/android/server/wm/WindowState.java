@@ -74,6 +74,9 @@ import android.view.SurfaceControl;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.android.multiwindow.wmservice.MultiWindowState;
+
 class WindowList extends ArrayList<WindowState> {
 }
 
@@ -89,17 +92,18 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			Log.d(TAG,"~~~~~~~~~~~~~~~~~~~~~~"+msg);
 		}
 	}
-    final WindowManagerService mService;
+    public final WindowManagerService mService;
     final WindowManagerPolicy mPolicy;
     final Context mContext;
     final Session mSession;
-    final IWindow mClient;
+    public final IWindow mClient;
     final int mAppOp;
+    MultiWindowState mMultiWindowState;
     // UserId and appId of the owner. Don't display windows of non-current user.
     final int mOwnerUid;
     final IWindowId mWindowId;
-    WindowToken mToken;
-    WindowToken mRootToken;
+    public  WindowToken mToken;
+    public WindowToken mRootToken;
     public AppWindowToken mAppToken;
     AppWindowToken mTargetAppToken;
 
@@ -133,8 +137,8 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
      * The window size that was requested by the application.  These are in
      * the application's coordinate space (without compatibility scale applied).
      */
-    int mRequestedWidth;
-    int mRequestedHeight;
+    public int mRequestedWidth;
+    public int mRequestedHeight;
     int mLastRequestedWidth;
     int mLastRequestedHeight;
 
@@ -241,7 +245,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 	public int taskId = -1;
 	public Rect mSurfaceFrame = new Rect();
 	boolean updating = false;
-	boolean mDisableMulti = false;
+	public boolean mDisableMulti = false;
 	boolean mForceAnim = false;
 	// attr.flag &= FLAG_SCALE !=0
 	public float mScaleX = 1;
@@ -252,7 +256,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
     final Matrix mTmpMatrix = new Matrix();
 
     // "Real" frame that the application sees, in display coordinate space.
-    final Rect mFrame = new Rect();
+    public final Rect mFrame = new Rect();
     final Rect mLastFrame = new Rect();
     // Frame that is scaled to the application's coordinate space when in
     // screen size compatibility mode.
@@ -281,7 +285,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
     // Equal to the decor frame if the IME (e.g. keyboard) is not present. Equal to the decor frame
     // minus the area occupied by the IME if the IME is present.
-    final Rect mContentFrame = new Rect();
+    public final Rect mContentFrame = new Rect();
 
     // Legacy stuff. Generally equal to the content frame expect when the IME for older apps
     // displays hint text.
@@ -366,7 +370,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
     boolean mHasSurface = false;
 
-    boolean mNotOnAppsDisplay = false;
+    public boolean mNotOnAppsDisplay = false;
     DisplayContent  mDisplayContent;
 
     /** When true this window can be displayed on screens owther than mOwnerUid's */
@@ -511,77 +515,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			mIsMcWindow = mAttrs.type == TYPE_MULTIWINDOW_CONTROLLER;
         }
 
-        WindowState appWin = this;
-        while (appWin.mAttachedWindow != null) {
-            appWin = appWin.mAttachedWindow;
-        }
-        WindowToken appToken = appWin.mToken;
-        while (appToken.appWindowToken == null) {
-            WindowToken parent = mService.mTokenMap.get(appToken.token);
-            if (parent == null || appToken == parent) {
-                break;
-            }
-            appToken = parent;
-        }
-        mRootToken = appToken;
-        mAppToken = appToken.appWindowToken;
-        if (mAppToken != null) {
-            final DisplayContent appDisplay = getDisplayContent();
-            mNotOnAppsDisplay = displayContent != appDisplay;
-        }
-	LOGD("----------------------mAttachedWindow:"+mAttachedWindow);
-		if(mAttachedWindow != null){
-			mHScale = mAttachedWindow.mHScale;
-			mVScale = mAttachedWindow.mVScale;
-			mPosX = mAttachedWindow.mPosX;
-			mPosY = mAttachedWindow.mPosY;
-			mActualScale = mAttachedWindow.mActualScale;
-			if(mAttachedWindow.mAppWindowState !=null){
-				mAppWindowState = mAttachedWindow.mAppWindowState;
-			}else{
-				mAppWindowState = mAttachedWindow;
-			}
-			mDisableMulti = mAttachedWindow.mDisableMulti;
-			mAttrs.align = mAttachedWindow.getAttrs().align;
-
-			LOGD(mAppWindowState+"----------------------mAttachedWindow:"+mAttrs.align );
-			LOGD(this+"----------------------mAttachedWindow:"+mAttachedWindow.getAttrs());
-			switchToPhoneMode();
-		}else{
-            ArrayList<WindowState> list = mService.getAllWindowListInDefaultDisplay();
-			for(int i= 0;i<list.size();i++){
-				WindowState ws = list.get(i);
-				if(ws.mAppToken == null){
-                	continue;
-				}
-				LOGD("WindowState("+i+")="+ws+" mAppToken="+mAppToken);
-				if(mAppToken!=null && ws.taskId== mAppToken.groupId){
-					WindowState win = ws.mAppToken.findMainWindow();
-					while(win!=null && win.mAppWindowState!=null){
-						win = win.mAppWindowState;
-					}
-					mAppWindowState = win;
-					if(win!=null){
-						break;
-					}else{
-						continue;
-					}
-				}
-			}
-			LOGD("createWindowState win="+a.getTitle().toString()+",mAppWindowState="+mAppWindowState);
-			if(mAppWindowState != null){
-				mHScale = mAppWindowState.mHScale;
-				mVScale = mAppWindowState.mVScale;
-				mActualScale = mAppWindowState.mActualScale;
-				mAttrs.align = mAppWindowState.getAttrs().align;
-				LOGD("createWindowState win="+mAttrs.align+",mAppWindowState="+mAppWindowState.getAttrs().align);
-				if(mAppWindowState.mDisableMulti == true){
-					//LOGD("win.getAttrs().multiFeatures != 0");
-					mDisableMulti = true;
-				}
-			}
-
-		}
+        mMultiWindowState = new MultiWindowState(this, displayContent, a);
 		if((mAttrs.multiFeatures &  WindowManager.LayoutParams.MULIT_FEATURE_DISABLE)!=0){
 			mDisableMulti = true;
 		}
@@ -628,10 +562,8 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 	}
 
  	public boolean isHalfMode() {
-               int w = (mDecorFrame.right - mDecorFrame.left)/2;
-               return (mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT &&
-                       mAttrs.width == w);
-       }
+            return mMultiWindowState.isHalfMode();
+        }
     @Override
     public int getOwningUid() {
         return mOwnerUid;
@@ -646,41 +578,10 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
     public void computeFrameLw(Rect pf, Rect df, Rect of, Rect cf, Rect vf, Rect dcf, Rect sf) {
         mHaveFrame = true;
         TaskStack stack = mAppToken != null ? getStack() : null;
-//(mAttrs.flags & WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0 &&
-		if( (mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
-			   //  mAttrs.flags = mAttrs.flags & ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-			   WindowState window1 = null;
-			  if(mAttachedWindow!=null){
-				   window1= mAttachedWindow;
-			  }else if(mAppWindowState != null){
-				  window1 = mAppWindowState;
-			  }
-			  if(window1 != null){
-				if(isHalfMode()) {
-                                       cf.left = window1.mContentFrame.left;
-                                        cf.right = window1.mContentFrame.right;
-                                        df.left = vf.left = window1.mVisibleFrame.left;
-                                        df.right = vf.right = window1.mVisibleFrame.right;
-                                        pf.left = window1.mContentFrame.left;
-                                       pf.right = window1.mContentFrame.right;
-                                }else if ((mRequestedWidth > window1.mRequestedWidth) &&
-                                               ((mAttrs.flags & WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0)) {
-                                       int x = (mRequestedWidth - window1.mRequestedWidth)/2 + 1;
-                                       cf.left = window1.mContentFrame.left - x;
-                                       cf.right = window1.mContentFrame.right + x;
-                                       df.left = vf.left = window1.mVisibleFrame.left - x;
-                                       df.right = vf.right = window1.mVisibleFrame.right + x;
-                                       pf.left = window1.mContentFrame.left - x;
-                                       pf.right = window1.mContentFrame.right + x;
-                                 } else {
-                                       cf.set(window1.mContentFrame);
-                                       vf.set(window1.mVisibleFrame);
-                                      pf.set(window1.mContentFrame);
-                                       df.set(vf);
-                               }
-			  }
-			 
-		  }
+
+        if(mMultiWindowState != null) {
+            mMultiWindowState.computeFrameLw1(pf, df, of, cf, vf, dcf, sf);
+        }
 
         if (stack != null && !stack.isFullscreen()) {
             getStackBounds(stack, mContainingFrame);
@@ -904,47 +805,11 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
                         displayInfo.logicalWidth, displayInfo.logicalHeight, false);
             }
         }
-	    WindowState win = null;
-		if(mAttachedWindow!=null){
-			win = mAttachedWindow;
-		}else if(mAppWindowState != null){
-			win = mAppWindowState;
-		}
-		if(win != null&& !isHalfMode()){
-			mPosX = win.mPosX + (int)((mFrame.left - win.mFrame.left)*win.mHScale);
-			mPosY = win.mPosY + (int)((mFrame.top - win.mFrame.top)*win.mVScale);
-			//LOGD("mFrame="+mFrame.toString()+" win="+this);
-		}
-//
-		if(mAttachedWindow == null && (mActualScale < 1.0f ) ||mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
-			LOGD("before mPOSXY="+mPosX+","+mPosY+"win="+this);
-			//if(mPosX < (int)(mService.mScreenRect.left*(1.0f-mHScale)+0.5f))
-			//	mPosX = (int)(mService.mScreenRect.left*(1.0f-mHScale)+0.5f);
-			if(mPosX < (int)(-mVisibleFrame.width()*mHScale*0.5))
-				mPosX = (int)(-mVisibleFrame.width()*mHScale*0.5);
-			if(mPosY < (int)(mService.mScreenRect.top*(1-mVScale)+0.5f))
-				mPosY = (int)(mService.mScreenRect.top*(1-mVScale)+0.5f);
-			//if(mPosX > mService.mScreenRect.right-mVisibleFrame.width()*mHScale- mService.mScreenRect.left*mHScale)
-			//	mPosX =(int)(mService.mScreenRect.right-mVisibleFrame.width()*mHScale - mService.mScreenRect.left*mHScale);
-			if(mPosX >(int)(mService.mScreenRect.right-mVisibleFrame.width()*mHScale*0.5))
-				mPosX = (int)(mService.mScreenRect.right-mVisibleFrame.width()*mHScale*0.5);
 
-			LOGD("========"+((int)(mService.mScreenRect.right-mVisibleFrame.width()*mHScale - mService.mScreenRect.left*mHScale))+","+(mVisibleFrame.width()*mHScale*0.5) );
-			//if(mPosY > mService.mScreenRect.bottom-mVisibleFrame.height()*mVScale - mService.mScreenRect.top*mVScale)
-			//	mPosY=(int)(mService.mScreenRect.bottom-mVisibleFrame.height()*mVScale - mService.mScreenRect.top*mVScale);
-			if(mPosY > (int)(mService.mScreenRect.bottom-mVisibleFrame.height()*mVScale *0.5))
-				mPosY = (int)(mService.mScreenRect.bottom-mVisibleFrame.height()*mVScale *0.5);
-			LOGD("========"+(mService.mScreenRect.bottom-mVisibleFrame.height()*mVScale - mService.mScreenRect.top*mVScale)+","+(mVisibleFrame.height()*mVScale *0.5));
+        if(mMultiWindowState != null) {
+            mMultiWindowState.computeFrameLw2();
+        }
 
-			LOGD("after mPosXY="+mPosX+","+mPosY +" win="+win);
-			LOGD("mService.mSysetmDecorRect="+mService.mScreenRect.toString()+" mVisible="+mVisibleFrame.toString());
-			LOGD("after mPosXY="+mPosX+","+mPosY +" win="+this);
-			if(win != null){
-				win.mPosX = mPosX - (int)((mFrame.left - win.mFrame.left)*win.mHScale);
-				win.mPosY = mPosY - (int)((mFrame.top - win.mFrame.top)*win.mVScale);
-			}
-		}
-	
 		mSurfaceFrame.right = mSurfaceFrame.left + (int)(mVisibleFrame.width()*mHScale+0.5f);
 		mSurfaceFrame.bottom = mSurfaceFrame.top + (int)((mVisibleFrame.height()+mVisibleInsets.bottom)*mVScale+0.5f);
 		if((mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) &&!mContentChanged){
@@ -1742,27 +1607,6 @@ private void shouldForceAnim(int align,int value){
         return displayContent == null ? null : displayContent.getWindowList();
     }
 
-   /**
-      * add by lly
-     */
-      void switchToPhoneMode(){
-	   if (mAttrs.type == WindowManager.LayoutParams.FIRST_SUB_WINDOW
-						&& !(mClient instanceof BaseIWindow)  ) {
-					   // To prevent deadlock simulate one-way call if win.mClient is a local object.
-					   mService.mH.post(new Runnable() {
-						   @Override
-						   public void run() {
-							   try {
-								   mClient.switchToPhoneMode(mPosX,mPosY);
-							   } catch (RemoteException e) {
-								   // Not a remote call, RemoteException won't be raised.
-							   }
-						   }
-					   });
-				   } 
-
-
-   }
     /**
      * Report a focus change.  Must be called with no locks held, and consistently
      * from the same serialized thread (such as dispatched from a handler).

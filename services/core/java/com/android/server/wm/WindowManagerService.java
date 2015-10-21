@@ -408,7 +408,7 @@ public class WindowManagerService extends IWindowManager.Stub
     /**
      * Mapping from a token IBinder to a WindowToken object.
      */
-    final HashMap<IBinder, WindowToken> mTokenMap = new HashMap<IBinder, WindowToken>();
+    public final HashMap<IBinder, WindowToken> mTokenMap = new HashMap<IBinder, WindowToken>();
 
     /**
      * List of window tokens that have finished starting their application,
@@ -559,7 +559,7 @@ public class WindowManagerService extends IWindowManager.Stub
     int mDeferredRotationPauseCount;
 
     int mSystemDecorLayer = 0;
-    final Rect mScreenRect = new Rect();
+    public final Rect mScreenRect = new Rect();
 
     boolean mTraversalScheduled = false;
     boolean mDisplayFrozen = false;
@@ -600,7 +600,7 @@ public class WindowManagerService extends IWindowManager.Stub
     final DisplayMetrics mTmpDisplayMetrics = new DisplayMetrics();
     final DisplayMetrics mCompatDisplayMetrics = new DisplayMetrics();
 
-    final H mH = new H();
+    public final H mH = new H();
 
     final Choreographer mChoreographer = Choreographer.getInstance();
 
@@ -9849,7 +9849,7 @@ public class WindowManagerService extends IWindowManager.Stub
     // Async Handler
     // -------------------------------------------------------------
 
-    final class H extends Handler {
+    public final class H extends Handler {
         public static final int REPORT_FOCUS_CHANGE = 2;
         public static final int REPORT_LOSING_FOCUS = 3;
         public static final int DO_TRAVERSAL = 4;
