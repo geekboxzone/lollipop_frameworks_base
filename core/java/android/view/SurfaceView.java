@@ -111,6 +111,7 @@ public class SurfaceView extends View {
     static final int KEEP_SCREEN_ON_MSG = 1;
     static final int GET_NEW_SURFACE_MSG = 2;
     static final int UPDATE_WINDOW_MSG = 3;
+	static final int DRAW_BACK_MSG = 4;
 
     int mWindowType = WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA;
 
@@ -129,6 +130,11 @@ public class SurfaceView extends View {
                 case UPDATE_WINDOW_MSG: {
                     updateWindow(false, false);
                 } break;
+		case DRAW_BACK_MSG:{
+	  	     Log.i(TAG, "DRAW_BACK_MSG   "+mRequestedVisible);
+		     mDrawBack= false;
+		     invalidate();
+		}break;
             }
         }
     };
@@ -140,7 +146,7 @@ public class SurfaceView extends View {
                         updateWindow(false, false);
                     }
             };
-
+   
     boolean mRequestedVisible = false;
     boolean mWindowVisibility = false;
     boolean mViewVisibility = false;
@@ -165,6 +171,7 @@ public class SurfaceView extends View {
     int mLastSurfaceWidth = -1, mLastSurfaceHeight = -1;
     boolean mUpdateWindowNeeded;
     boolean mReportDrawNeeded;
+	boolean mDrawBack;
     private Translator mTranslator;
 
     private final ViewTreeObserver.OnPreDrawListener mDrawListener =
@@ -201,6 +208,7 @@ public class SurfaceView extends View {
 
     private void init() {
         setWillNotDraw(true);
+        //setBackgroundColor(0xFF000000);
     }
 
     /**
@@ -236,6 +244,12 @@ public class SurfaceView extends View {
         mWindowVisibility = visibility == VISIBLE;
         mRequestedVisible = mWindowVisibility && mViewVisibility;
         updateWindow(false, false);
+
+	/*mDrawBack= true;
+ 	if (mHandler.hasMessages(DRAW_BACK_MSG))
+	    mHandler.removeMessages(DRAW_BACK_MSG);
+        mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);*/
+		Log.i(TAG, "onWindowVisibilityChanged"+mRequestedVisible);
     }
 
     @Override
@@ -278,7 +292,6 @@ public class SurfaceView extends View {
         }
         mSession = null;
         mLayout.token = null;
-
         super.onDetachedFromWindow();
     }
 
@@ -349,7 +362,12 @@ public class SurfaceView extends View {
                 canvas.drawColor(0, PorterDuff.Mode.CLEAR);
             }
         }
-        super.dispatchDraw(canvas);
+	Log.i(TAG, "dispatchDraw"+mDrawBack);
+	if(mDrawBack){
+	   canvas.clipRect(new Rect(0, 0, getWidth(), getHeight()),  Region.Op.REPLACE);
+           canvas.drawColor(0xFF000000);	//set the white color
+        }
+        super.dispatchDraw(canvas); 
     }
 
     /**
@@ -505,6 +523,11 @@ public class SurfaceView extends View {
 
                 int relayoutResult;
 
+                
+        mDrawBack= true;
+        if (mHandler.hasMessages(DRAW_BACK_MSG))
+            mHandler.removeMessages(DRAW_BACK_MSG);
+        mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);
                 mSurfaceLock.lock();
                 try {
                     mUpdateWindowNeeded = false;
@@ -692,14 +715,13 @@ public class SurfaceView extends View {
 		/**
 				* add by lly
 			   */
-			@Override
-			public void switchToPhoneMode(int width,int height){
-			 SurfaceView surfaceView = mSurfaceView.get();
-			 new Exception().printStackTrace();
-				if (surfaceView != null) {
-					surfaceView.mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
-					}
-			}
+	@Override
+	public void switchToPhoneMode(int width,int height){
+	   SurfaceView surfaceView = mSurfaceView.get();
+	   if (surfaceView != null) {
+		surfaceView.mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+	   }
+	}
 
         @Override
         public void resized(Rect frame, Rect overscanInsets, Rect contentInsets,

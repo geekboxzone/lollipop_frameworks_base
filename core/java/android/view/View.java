@@ -112,6 +112,8 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.android.multiwindow.core.MultiWindowView;
+
 /**
  * <p>
  * This class represents the basic building block for user interface components. A View
@@ -868,7 +870,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * that they are optional and should be skipped if the window has
      * requested system UI flags that ignore those insets for layout.
      */
-    static final int OPTIONAL_FITS_SYSTEM_WINDOWS = 0x00000800;
+    public static final int OPTIONAL_FITS_SYSTEM_WINDOWS = 0x00000800;
 
     /**
      * <p>This view doesn't show fading edges.</p>
@@ -6448,6 +6450,13 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * to implement handling their own insets.
      */
     protected boolean fitSystemWindows(Rect insets) {
+        // MultiWindow Process First
+        if(mContext.getResources().getConfiguration().multiwindowflag
+                == Configuration.ENABLE_MULTI_WINDOW) {
+            if(MultiWindowView.processFitsSystemWindow(mContext, this, insets)) {
+                return true;
+            }
+        }
         if ((mPrivateFlags3 & PFLAG3_APPLYING_INSETS) == 0) {
             if (insets == null) {
                 // Null insets by definition have already been consumed.
@@ -6586,10 +6595,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * that should propagate to those under it.
      */
     protected boolean computeFitSystemWindows(Rect inoutInsets, Rect outLocalInsets) {
-        if ((mViewFlags & OPTIONAL_FITS_SYSTEM_WINDOWS) == 0
+         if ((mAttachInfo != null) && MultiWindowView.computeFitSystemWindows(mContext,mViewFlags ,mAttachInfo.mSystemUiVisibility, mAttachInfo.mOverscanRequested,mAttachInfo.mViewRootImpl.mWindowAttributes.type
+                ))
+                || ((mViewFlags & OPTIONAL_FITS_SYSTEM_WINDOWS) == 0
                 || mAttachInfo == null
                 || ((mAttachInfo.mSystemUiVisibility & SYSTEM_UI_LAYOUT_FLAGS) == 0
-                        && !mAttachInfo.mOverscanRequested)) {
+                        && !mAttachInfo.mOverscanRequested))) {
             outLocalInsets.set(inoutInsets);
             inoutInsets.set(0, 0, 0, 0);
             return true;
@@ -18207,9 +18218,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     public void setSystemUiVisibility(int visibility) {
          if(this.getContext().getResources().getConfiguration().multiwindowflag
                 == Configuration.ENABLE_MULTI_WINDOW) {
-            if(!(this.getContext().getPackageName().contains("launcher"))) {
-               visibility &= ~(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-            }
+            visibility = MultiWindowView.filterSystemUiVisibility(mContext, visibility);
         }
         if (visibility != mSystemUiVisibility) {
             mSystemUiVisibility = visibility;

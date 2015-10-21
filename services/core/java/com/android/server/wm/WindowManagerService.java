@@ -4454,9 +4454,14 @@ public class WindowManagerService extends IWindowManager.Stub
             Slog.w(TAG, "Could not get dispatching timeout.", ex);
             inputDispatchingTimeoutNanos = DEFAULT_INPUT_DISPATCHING_TIMEOUT_NANOS;
         }
-		LOGD("addAppToken taskId:"+taskId);
-		shouldAppMoveBack(taskId);
-
+		String name = null;
+		try{
+			name = token.getAppPackageName();
+			System.out.println(token.getAppPackageName()+"addAppToken taskId:"+taskId);
+		}catch(RemoteException e){}
+		if(name != null && !"com.android.winstart.RecentsActivityWin".equals(name)){
+			shouldAppMoveBack(taskId);
+		}
         synchronized(mWindowMap) {
             AppWindowToken atoken = findAppWindowToken(token.asBinder());
             if (atoken != null) {
@@ -6322,7 +6327,7 @@ public class WindowManagerService extends IWindowManager.Stub
 				break;
 			}
 			if(ws.mAppToken == null){
-                continue;
+                	  continue;
 			}
 			WindowState win = ws.mAppToken.findMainWindow();
 			if(isHomeWindow(win)){
@@ -9394,6 +9399,12 @@ public class WindowManagerService extends IWindowManager.Stub
             return mHardKeyboardAvailable;
         }
     }
+
+	@Override
+	public boolean isHardKeyboardA() {
+		return isHardKeyboardAvailable();
+	}
+
 	public int getMultiWindowMode(){
         return Settings.System.getInt(mContext.getContentResolver(),
     					Settings.System.MULITI_WINDOW_MODE, Settings.System.MULITI_WINDOW_FULL_SCREEN_MODE);

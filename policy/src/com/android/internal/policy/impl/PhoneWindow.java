@@ -3372,13 +3372,12 @@ if(mDecorContentParent != null)
             if (hasFeature(FEATURE_OPTIONS_PANEL) && !hasWindowFocus && mPanelChordingKey != 0) {
                 closePanel(FEATURE_OPTIONS_PANEL);
             }
-	    if(mMultiWindowUtil != null) {
-               mMultiWindowUtil.onWindowFocusChanged(hasWindowFocus);
-             }
-
             final Callback cb = getCallback();
             if (cb != null && !isDestroyed() && mFeatureId < 0) {
                 cb.onWindowFocusChanged(hasWindowFocus);
+            }
+            if(mMultiWindowUtil != null) {
+                mMultiWindowUtil.onWindowFocusChanged(hasWindowFocus);
             }
         }
 

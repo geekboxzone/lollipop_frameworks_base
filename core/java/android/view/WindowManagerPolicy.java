@@ -412,7 +412,8 @@ public interface WindowManagerPolicy {
          */
         public boolean isDefaultDisplay();
 
-       public boolean winOnMul();
+        public boolean winOnMul();
+        public boolean isIgnoreWindow();
     }
 
     /**

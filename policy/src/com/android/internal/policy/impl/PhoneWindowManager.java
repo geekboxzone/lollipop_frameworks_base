@@ -3033,6 +3033,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             return -1;
            }
         }
+        
+         // huangjc:ignor GoolePinyin
+        if (keyCode == KeyEvent.KEYCODE_E || keyCode == KeyEvent.KEYCODE_U ||
+            keyCode == KeyEvent.KEYCODE_I || keyCode == KeyEvent.KEYCODE_N ) {
+           if(down && event.isAltPressed()){
+            // check inputmode
+             String InputMethodId=Settings.Secure.getStringForUser(
+                                 mContext.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD,0);
+             if("com.google.android.inputmethod.pinyin/.PinyinIME".equals(InputMethodId))
+               return -1;
+           }
+        }        
+
         // huangjc:Win + D
         if (keyCode == KeyEvent.KEYCODE_D ) {
            if(!down && event.isMetaPressed()){
@@ -4069,9 +4082,15 @@ public class PhoneWindowManager implements WindowManagerPolicy {
             offsetInputMethodWindowLw(mLastInputMethodWindow);
         }
 
-        final int fl = PolicyControl.getWindowFlags(win, attrs);
+        int fl = PolicyControl.getWindowFlags(win, attrs);
         final int sim = attrs.softInputMode;
-        final int sysUiFl = PolicyControl.getSystemUiVisibility(win, null);
+        int sysUiFl = PolicyControl.getSystemUiVisibility(win, null);
+	if(!MultiWindowSettings.checkConfig(mContext) && !win.isIgnoreWindow()) {
+		sysUiFl &= ~(
+			View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+			View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+			);
+	}
 
         final Rect pf = mTmpParentFrame;
         final Rect df = mTmpDisplayFrame;
@@ -4085,8 +4104,17 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         final boolean hasNavBar = (isDefaultDisplay && mHasNavigationBar
                 && mNavigationBar != null && mNavigationBar.isVisibleLw());
 
-        final int adjust = sim & SOFT_INPUT_MASK_ADJUST;
-
+        int adjust = sim & SOFT_INPUT_MASK_ADJUST;
+	
+	boolean isHardKeyboardAva = false;
+        if(!MultiWindowSettings.checkConfig(mContext)) {
+	   try {
+	     isHardKeyboardAva = WindowManagerGlobal.getWindowManagerService().isHardKeyboardA();
+	   } catch (RemoteException re) {}
+	   if (isHardKeyboardAva) {
+	      adjust = SOFT_INPUT_ADJUST_NOTHING;
+	  }
+	}
         if (isDefaultDisplay) {
             sf.set(mStableLeft, mStableTop, mStableRight, mStableBottom);
         } else {

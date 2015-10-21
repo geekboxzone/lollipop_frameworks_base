@@ -405,7 +405,7 @@ LOCAL_INTERMEDIATE_SOURCES := \
 LOCAL_NO_STANDARD_LIBRARIES := true
 LOCAL_JAVA_LIBRARIES := core-libart conscrypt okhttp core-junit bouncycastle ext
 #$_media_$_modify_$_Martin.Cheng@rock-chips.com
-LOCAL_STATIC_JAVA_LIBRARIES := libsubtitle
+LOCAL_STATIC_JAVA_LIBRARIES := libsubtitle multiwindowcore
 #$_media_$_modify_$_end
 LOCAL_MODULE := framework
 
@@ -420,7 +420,8 @@ framework_module := $(LOCAL_INSTALLED_MODULE)
 include $(CLEAR_VARS)
 LOCAL_MODULE :=
 LOCAL_MODULE_CLASS :=
-LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := libsubtitle:third-party/subtitle.jar
+LOCAL_PREBUILT_STATIC_JAVA_LIBRARIES := libsubtitle:third-party/subtitle.jar \
+                                        multiwindowcore:multiwindow/multiwindowcore.jar
 include $(BUILD_MULTI_PREBUILT)
 #$_media_$_modify_$_end
 

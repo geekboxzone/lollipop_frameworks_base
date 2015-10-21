@@ -101,8 +101,8 @@ import android.provider.Settings;
  * State and management of a single stack of activities.
  */
 final class ActivityStack {
-	static final boolean DEBUG_ZJY = false;
-
+    static final boolean DEBUG_ZJY = false;
+//static final boolean DEBUG_STATES = true;
     // Ticks during which we check progress while waiting for an app to launch.
     static final int LAUNCH_TICK = 500;
 
@@ -779,7 +779,7 @@ final class ActivityStack {
             mStackSupervisor.resumeTopActivitiesLocked();
             return;
         }
-        if (DEBUG_STATES) Slog.v(TAG, "Moving to PAUSING: " + prev);
+        if (DEBUG_STATES) Slog.v(TAG, "startPausingLastNoCallbackLocked Moving to PAUSING: " + prev);
         else if (DEBUG_PAUSE) Slog.v(TAG, "Start pausing: " + prev);
         mResumedActivity = null;
         mPausingActivity = prev;
@@ -979,7 +979,7 @@ final class ActivityStack {
         if (r != null) {
             mHandler.removeMessages(PAUSE_TIMEOUT_MSG, r);
 		boolean cond = false;
-		Slog.e(TAG, "activityPausedLocked enableDualScreen(): " + mService.mConfiguration.enableDualScreen());
+		//Slog.e(TAG, "activityPausedLocked enableDualScreen(): " + mService.mConfiguration.enableDualScreen());
 		if(mService.mConfiguration.enableMultiWindow()){
 			cond = r != null;
 		}else if (mService.mConfiguration.enableDualScreen()) {
@@ -1052,7 +1052,7 @@ final class ActivityStack {
     private void completePauseLocked(ActivityRecord r,boolean resumeNext) {
         //ActivityRecord prev = mPausingActivity;
         ActivityRecord prev = null;
-		Slog.e(TAG, " completePauseLocked enableDualScreen(): " + mService.mConfiguration.enableDualScreen() + ", resumeNext: " + resumeNext);
+		//Slog.e(TAG, " completePauseLocked enableDualScreen(): " + mService.mConfiguration.enableDualScreen() + ", resumeNext: " + resumeNext);
 		if(mService.mConfiguration.enableMultiWindow() && r != null) {
 			prev = r;
 		} else if (mService.mConfiguration.enableDualScreen() && r != null) {
@@ -1070,7 +1070,7 @@ final class ActivityStack {
             } else if (prev.app != null) {
                 if (DEBUG_PAUSE) Slog.v(TAG, "Enqueueing pending stop: " + prev);
 			   if(prev.difPkgTask)
-			   mService.moveTaskToBack(prev.task.taskId);
+			       mService.moveTaskToBack(prev.task.taskId);
                 if (prev.waitingVisible) {
                     prev.waitingVisible = false;
                     mStackSupervisor.mWaitingVisibleActivities.remove(prev);
@@ -1328,7 +1328,6 @@ final class ActivityStack {
             }
             mHandler.removeMessages(TRANSLUCENT_TIMEOUT_MSG);
         }
-
         // If the top activity is not fullscreen, then we need to
         // make sure any activities under it are now visible.
         boolean aboveTop = true;
@@ -1492,8 +1491,9 @@ final class ActivityStack {
                                 case INITIALIZING:
                                 case RESUMED:
                                       if (mService.mConfiguration.enableMultiWindow() && r.state == ActivityState.RESUMED &&!r.finishing) {
-                                                        if(DEBUG_VISBILITY)Slog.d(TAG,"we call startPausing before be added in StoppingActivities : "+r);
-                                                        startPausingLastNoCallbackLocked(r, mStackSupervisor.mUserLeaving, false);
+                                           if(DEBUG_ZJY)Slog.d(TAG,"we call startPausing before be added in StoppingActivities : "+r);
+                                            startPausingLastNoCallbackLocked(r, mStackSupervisor.mUserLeaving, false);
+											break;
                                       }
                                 case PAUSING:
                                 case PAUSED:

@@ -28,5 +28,6 @@ interface IApplicationToken
     long getLastLaunchTimeout();
     boolean isHomeActivity();
     boolean isSupportHalfScreen();
+    String getAppPackageName();
 }
 

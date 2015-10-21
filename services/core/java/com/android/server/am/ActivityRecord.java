@@ -356,6 +356,13 @@ final class ActivityRecord {
             return false;
         }
 
+       @Override public String getAppPackageName() throws RemoteException {
+            ActivityRecord activity = weakActivity.get();
+            if (activity != null ) {
+                return activity.realActivity.getClassName();
+            }
+            return null;
+        }
         @Override public void windowsGone() {
             ActivityRecord activity = weakActivity.get();
             if (activity != null) {

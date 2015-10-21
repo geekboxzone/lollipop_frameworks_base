@@ -40,6 +40,8 @@ import android.provider.Settings;
 import android.graphics.Point;
 import android.os.Process;
 
+import com.android.multiwindow.core.MultiWindowGlobal;
+
 /**
  * Provides low-level communication with the system window manager for
  * operations that are not associated with any particular context.
@@ -112,6 +114,7 @@ public final class WindowManagerGlobal {
     public static final int ADD_INVALID_DISPLAY = -9;
     public static final int ADD_INVALID_TYPE = -10;
 
+    private static MultiWindowGlobal mMultiWindowGlobal;
     private static WindowManagerGlobal sDefaultWindowManager;
     private static IWindowManager sWindowManagerService;
     private static IWindowSession sWindowSession;
@@ -137,6 +140,8 @@ public final class WindowManagerGlobal {
         synchronized (WindowManagerGlobal.class) {
             if (sDefaultWindowManager == null) {
                 sDefaultWindowManager = new WindowManagerGlobal();
+                if(mMultiWindowGlobal == null)
+                   mMultiWindowGlobal = new MultiWindowGlobal(sDefaultWindowManager);
             }
             return sDefaultWindowManager;
         }
@@ -234,136 +239,8 @@ public final class WindowManagerGlobal {
      	}	
 		//try{throw new RuntimeException(parentWindow+"   "+wparams);}catch(Exception e){e.printStackTrace();}
 	Configuration config = view.getContext().getResources().getConfiguration();
-
-	if(config != null && config.enableMultiWindow()){
-		if(wparams.gravity == 0){
-			wparams.gravity = Gravity.GRAVITY_BY_PARENT;
-		}
-		
-		if((wparams.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION ||
-			wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING
-			|| wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION)/*&&
-			wparams.align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT*/){
-			int count = mViews!=null?mViews.size():0;
-			if (wparams.align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT) {
-			boolean found = false;
-			wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
-			for(int i=0;i<count;i++){
-				LOGD("mParams.get("+i+")="+mParams.get(i)+" wparams="+wparams);
-				if(mParams.get(i)!=null &&  
-					(mParams.get(i).type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION||
-					mParams.get(i).type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING)&&
-					mParams.get(i).align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT && mParams.get(i).taskId == wparams.taskId && wparams.taskId!=-1){
-					found = true;
-					break;
-					
-				}//found views has half screnn window 
-				/*
-				else if(mParams.get(i)!=null &&  
-					(mParams.get(i).type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION||
-					mParams.get(i).type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING) &&
-					mParams.get(i).taskId == wparams.taskId && wparams.taskId!=-1){
-					//select live wallpaper width ==-2 height==-2,will cause display exception
-					if((mParams.get(i).flags&WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0||
-						(mParams.get(i).width==-1 && mParams.get(i).height==-1)){
-						wparams.width = mParams.get(i).width;
-						wparams.height = mParams.get(i).height;
-						wparams.x = mParams.get(i).x;
-						wparams.y = mParams.get(i).y;
-						if((mParams.get(i).flags &  WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0){
-							wparams.flags |=  WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
-						}else{
-							wparams.flags &= ~WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
-						}
-						wparams.align = mParams.get(i).align;
-					}
-					found = true;
-					break;
-				}	*/		
-			}	
-			//have not permission WRITE_SETTINGS
-				Log.d(TAG,found+"found="+wparams.getTitle()+"wparams="+wparams);
-
-			   if(parentWindow != null && wparams.align ==WindowManagerPolicy.WINDOW_ALIGN_RIGHT/* && wparams.taskId == -1*/
-				  && wparams.type == WindowManager.LayoutParams.TYPE_APPLICATION){
-				   found = true;
-				   Log.d(TAG,found+"1111found="+wparams.getTitle()+"wparams="+wparams);
-				}
-			  if( /*(wparams.flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0*/
-					(wparams.align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT || found) &&
-					wparams.mWindowInfo.mActualScale == 1.0f){
-					Log.d(TAG,"set the half wmparams");
-						
-				    int SCREEN_WEITH = display.getWidth(true);
-				    int SCREE_HEIGHT = display.getHeight(true);
-
-				    if (view.getContext().getApplicationInfo().halfScreenMode) {
-					boolean countB = true;
-					int countH = -1;
-					try {
-                        countH = getWindowManagerService().countHalf(wparams.taskId);
-					} catch (RemoteException re) {}
-					if (countH != -1) {
-						countB = (countH%2 == 0);
-					}
-					if (countB) {
-						wparams.x = 0;
-						wparams.y = 38*3;
-						wparams.width = SCREEN_WEITH/2;
-					} else {
-						wparams.x = SCREEN_WEITH/2;
-						wparams.y = 38*3;
-						wparams.width = SCREEN_WEITH/2;
-					}
-						updateAppLayout(wparams);
-				    } else {
-				    	wparams.width = SCREEN_WEITH/2-200;
-			      
-				    	wparams.x = SCREEN_WEITH/2-200;
-				    	wparams.y = 50;
-				  
-		            		if(/*!found && */wparams.height == -1) {
-						wparams.height = SCREE_HEIGHT -50;
-				     	}
-				    }
-				 
-				  Log.d(TAG,wparams.width+"change the def="+wparams.height);
-				// wparams.gravity = Gravity.NO_GRAVITY;
-
-				}else if(wparams.mWindowInfo.mActualScale !=1.0f){
-				    Log.d(TAG,"at mulitwindow mod clear the halfscreen flags");
-					wparams.flags &= ~WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
-				}
-			} else {
-				if (view.getContext().getApplicationInfo().halfScreenMode) {
-					boolean countB = true;
-					int SCREEN_WEITH = display.getWidth(true);
-                                    	int SCREE_HEIGHT = display.getHeight(true);
-
-					//wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
-					int countH = -1;
-					try {
-                        countH = getWindowManagerService().countHalf(wparams.taskId);
-                                        } catch (RemoteException re) {}
-					//Log.e(TAG, wparams.packageName+"-------------- sec count = " + countH);
-					if (countH != -1) {
-						wparams.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
-						countB = (countH%2 == 0);
-						if (countB) {
-                                                	wparams.x = 0;
-                                                	wparams.y = 38*3;
-                                                	wparams.width = SCREEN_WEITH/2;
-                                        	} else {
-                                                	wparams.x = SCREEN_WEITH/2;
-                                                	wparams.y = 38*3;
-                                                	wparams.width = SCREEN_WEITH/2;
-                                        	}
-						updateAppLayout(wparams);
-					}
-				}
-			}
-			}
-        }
+	  //Add by huangjc for multiwindowcore.jar
+    mMultiWindowGlobal.addView(view, wparams,display,parentWindow,config,mParams,mViews);
 
         ViewRootImpl root;
         View panelParentView = null;
@@ -439,24 +316,13 @@ public final class WindowManagerGlobal {
             throw new IllegalArgumentException("Params must be WindowManager.LayoutParams");
         }
 
-        final WindowManager.LayoutParams wparams = (WindowManager.LayoutParams)params;
+       /* final*/ WindowManager.LayoutParams wparams = (WindowManager.LayoutParams)params;
         
         view.setLayoutParams(wparams);
 
         synchronized (mLock) {
             int index = findViewLocked(view, true);
-
-			if(mParams.get(index) != null && mParams.get(index).align ==  WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
-				
-					wparams.width = mParams.get(index).width ;
-					wparams.height =mParams.get(index).height ;
-					wparams.x = mParams.get(index).x ;
-					wparams.y =mParams.get(index).y;
-					wparams.align = mParams.get(index).align ;
-
-				Log.d(TAG,wparams.width+ " updateViewLayout change the def="+wparams.height+" X " +wparams.x);
-
-		}
+            wparams = mMultiWindowGlobal.updateViewLayout(wparams,mParams,index);
             ViewRootImpl root = mRoots.get(index);
             mParams.remove(index);
             mParams.add(index, wparams);

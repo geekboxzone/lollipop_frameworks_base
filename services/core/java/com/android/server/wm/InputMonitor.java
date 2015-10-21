@@ -515,7 +515,7 @@ private boolean validWindowState(WindowState win){
 		long result = 0;
 		int policy = WindowManagerPolicy.MOTION_PASS_TO_USER;
 
-		LOGV(windowState.getAttrs().width+"MotionEvent event="+screenWidth+"    event"+(windowState.getAttrs()));
+		//LOGV(windowState.getAttrs()+"MotionEvent event="+screenWidth+"    event"+(windowState.getAttrs()));
 		if(windowState != null){
 			if(validWindowState(windowState)){
 				mCurFocusWindowState = windowState;

@@ -655,13 +655,29 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			  }else if(mAppWindowState != null){
 				  window1 = mAppWindowState;
 			  }
-			   
 			  if(window1 != null){
-			  	 LOGD("===============111======= computeFrameLw=================="+window1.mContentFrame+","+window1.mVisibleFrame +" win="+this);
-				 cf.set(window1.mContentFrame);
-				 vf.set(window1.mVisibleFrame);
-				 pf.set(window1.mContentFrame);
-			     df.set(vf);
+				if(isHalfMode()) {
+                                       cf.left = window1.mContentFrame.left;
+                                        cf.right = window1.mContentFrame.right;
+                                        df.left = vf.left = window1.mVisibleFrame.left;
+                                        df.right = vf.right = window1.mVisibleFrame.right;
+                                        pf.left = window1.mContentFrame.left;
+                                       pf.right = window1.mContentFrame.right;
+                                }else if ((mRequestedWidth > window1.mRequestedWidth) &&
+                                               ((mAttrs.flags & WindowManager.LayoutParams.FLAG_DIM_BEHIND) != 0)) {
+                                       int x = (mRequestedWidth - window1.mRequestedWidth)/2 + 1;
+                                       cf.left = window1.mContentFrame.left - x;
+                                       cf.right = window1.mContentFrame.right + x;
+                                       df.left = vf.left = window1.mVisibleFrame.left - x;
+                                       df.right = vf.right = window1.mVisibleFrame.right + x;
+                                       pf.left = window1.mContentFrame.left - x;
+                                       pf.right = window1.mContentFrame.right + x;
+                                 } else {
+                                       cf.set(window1.mContentFrame);
+                                       vf.set(window1.mVisibleFrame);
+                                      pf.set(window1.mContentFrame);
+                                       df.set(vf);
+                               }
 			  }
 			 
 		  }
@@ -1860,6 +1876,11 @@ private void shouldForceAnim(int align,int value){
 
     public float getSurfaceH() {
        return mWinAnimator.mSurfaceH;
+    }
+
+    @Override
+    public boolean isIgnoreWindow() {
+        return mService.ignoreWindow(this);
     }
 
     void dump(PrintWriter pw, String prefix, boolean dumpAll) {
