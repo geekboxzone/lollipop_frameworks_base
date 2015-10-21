@@ -131,9 +131,11 @@ public class SurfaceView extends View {
                     updateWindow(false, false);
                 } break;
 		case DRAW_BACK_MSG:{
-	  	     Log.i(TAG, "DRAW_BACK_MSG   "+mRequestedVisible);
+                   if( getContext().getResources().getConfiguration().multiwindowflag
+                               == Configuration.ENABLE_MULTI_WINDOW){
 		     mDrawBack= false;
 		     invalidate();
+	}
 		}break;
             }
         }
@@ -230,6 +232,8 @@ public class SurfaceView extends View {
         mLayout.setTitle("SurfaceView");
         mViewVisibility = getVisibility() == VISIBLE;
 
+        mDrawBack= true;
+        mHandler.sendEmptyMessage(DRAW_BACK_MSG);
         if (!mGlobalListenersAdded) {
             ViewTreeObserver observer = getViewTreeObserver();
             observer.addOnScrollChangedListener(mScrollChangedListener);
@@ -362,8 +366,8 @@ public class SurfaceView extends View {
                 canvas.drawColor(0, PorterDuff.Mode.CLEAR);
             }
         }
-	Log.i(TAG, "dispatchDraw"+mDrawBack);
-	if(mDrawBack){
+	if(getContext().getResources().getConfiguration().multiwindowflag
++                                == Configuration.ENABLE_MULTI_WINDOW && mDrawBack){
 	   canvas.clipRect(new Rect(0, 0, getWidth(), getHeight()),  Region.Op.REPLACE);
            canvas.drawColor(0xFF000000);	//set the white color
         }
