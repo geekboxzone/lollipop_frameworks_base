@@ -6595,7 +6595,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * that should propagate to those under it.
      */
     protected boolean computeFitSystemWindows(Rect inoutInsets, Rect outLocalInsets) {
-         if ((mAttachInfo != null) && MultiWindowView.computeFitSystemWindows(mContext,mViewFlags ,mAttachInfo.mSystemUiVisibility, mAttachInfo.mOverscanRequested,mAttachInfo.mViewRootImpl.mWindowAttributes.type
+         if ((mAttachInfo != null && MultiWindowView.computeFitSystemWindows(mContext,mViewFlags ,mAttachInfo.mSystemUiVisibility, mAttachInfo.mOverscanRequested,mAttachInfo.mViewRootImpl.mWindowAttributes.type
                 ))
                 || ((mViewFlags & OPTIONAL_FITS_SYSTEM_WINDOWS) == 0
                 || mAttachInfo == null

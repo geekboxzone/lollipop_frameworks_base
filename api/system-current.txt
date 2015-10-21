@@ -36367,6 +36367,7 @@ package android.view {
     field public static final int MEASURED_STATE_MASK = -16777216; // 0xff000000
     field public static final int MEASURED_STATE_TOO_SMALL = 16777216; // 0x1000000
     field public static final int NO_ID = -1; // 0xffffffff
+    field public static final int OPTIONAL_FITS_SYSTEM_WINDOWS = 2048; // 0x800
     field public static final int OVER_SCROLL_ALWAYS = 0; // 0x0
     field public static final int OVER_SCROLL_IF_CONTENT_SCROLLS = 1; // 0x1
     field public static final int OVER_SCROLL_NEVER = 2; // 0x2
