@@ -515,7 +515,78 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			mIsMcWindow = mAttrs.type == TYPE_MULTIWINDOW_CONTROLLER;
         }
 
-        mMultiWindowState = new MultiWindowState(this, displayContent, a);
+        WindowState appWin = this;
+	mMultiWindowState = new MultiWindowState(this);
+        while (appWin.mAttachedWindow != null) {
+            appWin = appWin.mAttachedWindow;
+        }
+        WindowToken appToken = appWin.mToken;
+        while (appToken.appWindowToken == null) {
+            WindowToken parent = mService.mTokenMap.get(appToken.token);
+            if (parent == null || appToken == parent) {
+                break;
+            }
+            appToken = parent;
+        }
+        mRootToken = appToken;
+        mAppToken = appToken.appWindowToken;
+        if (mAppToken != null) {
+            final DisplayContent appDisplay = getDisplayContent();
+            mNotOnAppsDisplay = displayContent != appDisplay;
+        }
+	LOGD("----------------------mAttachedWindow:"+mAttachedWindow);
+		if(mAttachedWindow != null){
+			mHScale = mAttachedWindow.mHScale;
+			mVScale = mAttachedWindow.mVScale;
+			mPosX = mAttachedWindow.mPosX;
+			mPosY = mAttachedWindow.mPosY;
+			mActualScale = mAttachedWindow.mActualScale;
+			if(mAttachedWindow.mAppWindowState !=null){
+				mAppWindowState = mAttachedWindow.mAppWindowState;
+			}else{
+				mAppWindowState = mAttachedWindow;
+			}
+			mDisableMulti = mAttachedWindow.mDisableMulti;
+			mAttrs.align = mAttachedWindow.getAttrs().align;
+
+			LOGD(mAppWindowState+"----------------------mAttachedWindow:"+mAttrs.align );
+			LOGD(this+"----------------------mAttachedWindow:"+mAttachedWindow.getAttrs());
+			mMultiWindowState.switchToPhoneMode();
+		}else{
+            ArrayList<WindowState> list = mService.getAllWindowListInDefaultDisplay();
+			for(int i= 0;i<list.size();i++){
+				WindowState ws = list.get(i);
+				if(ws.mAppToken == null){
+                	continue;
+				}
+				LOGD("WindowState("+i+")="+ws+" mAppToken="+mAppToken);
+				if(mAppToken!=null && ws.taskId== mAppToken.groupId){
+					WindowState win = ws.mAppToken.findMainWindow();
+					while(win!=null && win.mAppWindowState!=null){
+						win = win.mAppWindowState;
+					}
+					mAppWindowState = win;
+					if(win!=null){
+						break;
+					}else{
+						continue;
+					}
+				}
+			}
+			LOGD("createWindowState win="+a.getTitle().toString()+",mAppWindowState="+mAppWindowState);
+			if(mAppWindowState != null){
+				mHScale = mAppWindowState.mHScale;
+				mVScale = mAppWindowState.mVScale;
+				mActualScale = mAppWindowState.mActualScale;
+				mAttrs.align = mAppWindowState.getAttrs().align;
+				LOGD("createWindowState win="+mAttrs.align+",mAppWindowState="+mAppWindowState.getAttrs().align);
+				if(mAppWindowState.mDisableMulti == true){
+					//LOGD("win.getAttrs().multiFeatures != 0");
+					mDisableMulti = true;
+				}
+			}
+
+		}
 		if((mAttrs.multiFeatures &  WindowManager.LayoutParams.MULIT_FEATURE_DISABLE)!=0){
 			mDisableMulti = true;
 		}
