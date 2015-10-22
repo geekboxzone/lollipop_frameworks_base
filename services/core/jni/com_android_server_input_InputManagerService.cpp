@@ -196,6 +196,7 @@ public:
     void setInputWindows(JNIEnv* env, jobjectArray windowHandleObjArray);
 	void setDontFocusedHome(bool dontNeedFocusHome);
 	void setMultiWindowConfig(bool enable);
+	void setDualScreenConfig(bool enable);
     void setFocusedApplication(JNIEnv* env, jobject applicationHandleObj);
     void setInputDispatchMode(bool enabled, bool frozen);
     void setSystemUiVisibility(int32_t visibility);
@@ -719,6 +720,11 @@ void NativeInputManager::setDontFocusedHome(bool dontNeedFocusHome) {
 void NativeInputManager::setMultiWindowConfig(bool enable){
 	mInputManager->getDispatcher()->setMultiWindowConfig(enable);
 }
+
+void NativeInputManager::setDualScreenConfig(bool enable){
+	mInputManager->getDispatcher()->setDualScreenConfig(enable);
+}
+
 void NativeInputManager::setFocusedApplication(JNIEnv* env, jobject applicationHandleObj) {
     sp<InputApplicationHandle> applicationHandle =
             android_server_InputApplicationHandle_getHandle(env, applicationHandleObj);
@@ -1295,6 +1301,13 @@ static void nativeSetMultiWindowConfig(JNIEnv* env, jclass clazz,
 	im->setMultiWindowConfig(enable);
 
 }
+
+static void nativeSetDualScreenConfig(JNIEnv* env, jclass clazz,
+                jlong ptr, jboolean enable){
+	NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
+	im->setDualScreenConfig(enable);
+}
+
 static void nativeSetFocusedApplication(JNIEnv* env, jclass clazz,
         jlong ptr, jobject applicationHandleObj) {
     NativeInputManager* im = reinterpret_cast<NativeInputManager*>(ptr);
@@ -1530,6 +1543,8 @@ static JNINativeMethod gInputManagerMethods[] = {
             (void*) nativeSetDontFocusedHome }, 
     { "nativeSetMultiWindowConfig", "(JZ)V",
     		(void*) nativeSetMultiWindowConfig },
+    { "nativeSetDualScreenConfig", "(JZ)V",
+                (void*) nativeSetDualScreenConfig},
     { "nativeSetFocusedApplication", "(JLcom/android/server/input/InputApplicationHandle;)V",
             (void*) nativeSetFocusedApplication },
     { "nativeSetInputDispatchMode", "(JZZ)V",

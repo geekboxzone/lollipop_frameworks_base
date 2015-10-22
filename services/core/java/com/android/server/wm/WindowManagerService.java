@@ -4767,6 +4767,11 @@ public class WindowManagerService extends IWindowManager.Stub
                   }else{
                           mInputManager.setMultiWindowConfig(false);
                   }
+	if(mCurConfiguration.enableDualScreen()) {
+		mInputManager.setDualScreenConfig(true);
+	} else {
+		mInputManager.setDualScreenConfig(false);
+	}
     }
 
     @Override
@@ -14333,6 +14338,39 @@ if(mCurConfiguration.enableMultiWindow()){
 	Binder.restoreCallingIdentity(origId);
     }
 
+	public void moveWindowToSecondDisplay() {
+		int topId = -100;
+		int mCurAnimLayer = -100;
+		ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+		for(int i = mWindows.size()-1;i>=0;i--){
+			WindowState ws = mWindows.get(i);
+			AppWindowToken wtoken = ws.mAppToken;
+			if(wtoken == null){
+				continue;
+			}
+	
+			WindowState w = wtoken.findMainWindow();
+			if(isHomeWindow(w)){
+				break;
+			}
+	
+			if(ignoreWindow(w))continue;
+			if(w.mViewVisibility != View.VISIBLE){
+				continue;
+			}
+	
+			if (topId == -100 ||
+				(mCurAnimLayer < w.mWinAnimator.mAnimLayer)) {
+				mCurAnimLayer = w.mWinAnimator.mAnimLayer;
+				topId = w.taskId;
+			}
+		}
+		if (topId != -100) {
+			Settings.System.putInt(mContext.getContentResolver(), Settings.System.DUAL_SCREEN_ICON_USED, 1);
+			moveTransitionToSecondDisplay(topId, -1);
+		}
+	}
+	
     private void moveTransitionToSecondDisplay(int groupId,int transit) {
 	long origId = Binder.clearCallingIdentity();
 	int curMoveTaskId = -1;

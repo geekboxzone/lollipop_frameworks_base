@@ -294,4 +294,5 @@ interface IWindowManager
    boolean isTaskShowInExtendDisplay(IBinder token);
 
    void updateDisplayShowSynchronization();
+   void moveWindowToSecondDisplay();
 }

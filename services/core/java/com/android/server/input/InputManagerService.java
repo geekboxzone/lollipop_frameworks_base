@@ -181,6 +181,7 @@ public class InputManagerService extends IInputManager.Stub
     private static native void nativeSetInputWindows(long ptr, InputWindowHandle[] windowHandles);
 	private static native void nativeSetDontFocusedHome(long ptr, boolean dontNeedFocusHome);
 	private static native void nativeSetMultiWindowConfig(long ptr, boolean enable);
+	private static native void nativeSetDualScreenConfig(long ptr, boolean enable);
     private static native void nativeSetInputDispatchMode(long ptr, boolean enabled, boolean frozen);
     private static native void nativeSetSystemUiVisibility(long ptr, int visibility);
     private static native void nativeSetFocusedApplication(long ptr,
@@ -1201,6 +1202,11 @@ public class InputManagerService extends IInputManager.Stub
 	public void setMultiWindowConfig(boolean enable){
 		nativeSetMultiWindowConfig(mPtr, enable);
 	}
+	
+	public void setDualScreenConfig(boolean enable){
+		nativeSetDualScreenConfig(mPtr, enable);
+	}
+
     public void setFocusedApplication(InputApplicationHandle application) {
         nativeSetFocusedApplication(mPtr, application);
     }

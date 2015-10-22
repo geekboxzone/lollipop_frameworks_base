@@ -504,13 +504,26 @@ private boolean validWindowState(WindowState win){
      boolean isSideSlip = false;
      public long interceptMotionBeforeDispatching(
      		InputWindowHandle focus,MotionEvent event,int policyFlags){
+     		int action = event.getAction();	
+		int screenWidth = mService.getDefaultDisplayInfoLocked().logicalWidth;
+		if (mService.mCurConfiguration.dualscreenflag == Configuration.ENABLE_DUAL_SCREEN && action == MotionEvent.ACTION_HOVER_MOVE) {
+			x1 = (int)event.getX();
+			y1 = (int)event.getY();
+			if (x1 + 15 > screenWidth) {
+				if(!mService.isWorked("com.android.Listappinfo.ManderService")){
+					LOGV("start com.android.Listappinfo.ManderService");
+					Intent intent = new Intent();
+					intent.setClassName("com.android.Listappinfo", "com.android.Listappinfo.ManderService");
+					mService.mContext.startService(intent);
+					return -1;
+				}
+			}
+		}
      	 if(mService.mCurConfiguration.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
 			return 0;
 		}
 			  
 		WindowState windowState = focus != null ? (WindowState) focus.windowState : null;		
-		int action = event.getAction();		
-		int screenWidth = mService.getDefaultDisplayInfoLocked().logicalWidth;
 		boolean used = mInputMonitorController.isMultiWindowUsed(mService.mContext);
 		long result = 0;
 		int policy = WindowManagerPolicy.MOTION_PASS_TO_USER;

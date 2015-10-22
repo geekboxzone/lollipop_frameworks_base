@@ -284,9 +284,9 @@ public class NavigationBarView extends LinearLayout {
         return mCurrentView.findViewById(R.id.sub);
     }
 
-    /*public View getAddButton() {
+    public View getAddButton() {
         return mCurrentView.findViewById(R.id.add);
-    }*/
+    }
 
     public View getScreenshotButton(){
         return mCurrentView.findViewById(R.id.screenshot);
@@ -411,19 +411,19 @@ public class NavigationBarView extends LinearLayout {
         if ("true".equals(isEnableShowVoiceIcon)) {
             if(getSubButton()!=null) 
 				getSubButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
-            /*if(getSubButton()!=null) 
-				getAddButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);*/
+            if(getSubButton()!=null) 
+				getAddButton().setVisibility(disableHome       ? View.INVISIBLE : View.VISIBLE);
             if((mContext.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) && ((mContext.getResources().getConfiguration().screenHeightDp < 600)|| (mContext.getResources().getConfiguration().screenWidthDp < 600))) {
                                         if(getSubButton()!=null)
                                         getSubButton().setVisibility(View.GONE);
-                                        /*if(getAddButton()!=null)
-                                        getAddButton().setVisibility(View.GONE);*/
+                                        if(getAddButton()!=null)
+                                        getAddButton().setVisibility(View.GONE);
             }
          } else {
             if(getSubButton()!=null) 
 				getSubButton().setVisibility(View.GONE);
-            /*if(getSubButton()!=null) 
-				getAddButton().setVisibility(View.GONE);*/
+            if(getSubButton()!=null) 
+				getAddButton().setVisibility(View.GONE);
         }
 
         mBarTransitions.applyBackButtonQuiescentAlpha(mBarTransitions.getMode(), true /*animate*/);
