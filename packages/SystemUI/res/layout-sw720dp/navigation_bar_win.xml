@@ -116,7 +116,7 @@
                 />
              <LinearLayout 
                android:orientation="vertical" 
-               android:layout_width="620dp"
+               android:layout_width="580dp"
                android:layout_height="match_parent">
             <HorizontalScrollView 
                        android:id="@+id/mAppsScrollView"
