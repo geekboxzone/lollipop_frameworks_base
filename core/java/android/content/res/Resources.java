@@ -1844,17 +1844,6 @@ public class Resources {
                 keyboardHidden = Configuration.KEYBOARDHIDDEN_SOFT;
             }
 
-
-		//mMetrics.changeWidthHeight();
-	    if (false && this.mPackageName != null && this.mPackageName.contains("tencent")) {
-		Slog.i(TAG, "----------- Resources.java this.mPackageName.contains tencent");
-		mMetrics.changeWidthHeight();
-	    	mConfiguration.orientation = Configuration.ORIENTATION_PORTRAIT;
-	    	mConfiguration.densityDpi = 480;
-	    	mConfiguration.smallestScreenWidthDp = 360;
-	    	mConfiguration.screenWidthDp = 360;
-	    	mConfiguration.screenHeightDp = 567;
-	    }
             mAssets.setConfiguration(mConfiguration.mcc, mConfiguration.mnc,
                     locale, mConfiguration.orientation,
                     mConfiguration.touchscreen,
@@ -2003,15 +1992,6 @@ public class Resources {
     public DisplayMetrics getDisplayMetrics() {
         if (DEBUG_CONFIG) Slog.v(TAG, "Returning DisplayMetrics: " + mMetrics.widthPixels
                 + "x" + mMetrics.heightPixels + " " + mMetrics.density);
-	if (false && this.mPackageName != null && this.mPackageName.contains("tencent")) {
-
-	} else {
-		//mMetrics.changeWidthHeight();
-	}
-	if (false && Process.myUid() == 10058) {
-		mMetrics.widthPixels = 824;
-		mMetrics.heightPixels = 824;
-	}
         return mMetrics;
     }
 
