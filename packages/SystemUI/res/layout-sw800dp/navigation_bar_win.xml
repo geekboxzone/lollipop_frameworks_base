@@ -108,7 +108,7 @@
                 />
              <LinearLayout 
                android:orientation="vertical" 
-               android:layout_width="860dp"
+               android:layout_width="760dp"
                android:layout_height="match_parent">
             <HorizontalScrollView 
                        android:id="@+id/mAppsScrollView"
@@ -151,6 +151,16 @@
                 android:visibility="invisible"
                 systemui:keyCode="25"
                 />
+                <com.android.systemui.statusbar.policy.KeyButtonView
+                android:id="@+id/displaycopy" android:paddingStart="0dp" android:paddingEnd="0dp"
+                android:layout_width="100dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                android:scaleType="centerInside"
+                android:src="@drawable/display_copy"
+                android:visibility="invisible"
+                />
                 <FrameLayout
                 android:layout_width="48dp"
                 android:layout_height="match_parent"
@@ -176,16 +186,6 @@
                     android:visibility="invisible"
                     android:contentDescription="@string/accessibility_ime_switch_button" />
             </FrameLayout>
-			<com.android.systemui.statusbar.policy.KeyButtonView
-                android:id="@+id/displaycopy" android:paddingStart="10dp" android:paddingEnd="0dp"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:contentDescription="@string/accessibility_recent"
-                android:scaleType="centerInside"
-                android:src="@drawable/display_copy"
-                android:visibility="invisible"
-                />
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/back"
                 android:layout_width="90dp" android:paddingStart="10dp" android:paddingEnd="0dp"
                 android:layout_height="match_parent"
@@ -380,7 +380,7 @@
                 />
              <LinearLayout 
                android:orientation="vertical" 
-               android:layout_width="600dp"
+               android:layout_width="500dp"
                android:layout_height="match_parent">
             <HorizontalScrollView 
                        android:id="@+id/mAppsScrollView"
@@ -442,7 +442,7 @@
                 systemui:keyCode="25"
                 />
 			<com.android.systemui.statusbar.policy.KeyButtonView
-                android:id="@+id/displaycopy" android:paddingStart="10dp" android:paddingEnd="0dp"
+                android:id="@+id/displaycopy" android:paddingStart="0dp" android:paddingEnd="0dp"
                 android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:layout_weight="0"

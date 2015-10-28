@@ -1578,6 +1578,9 @@ final Object mScreenshotLock = new Object();
 			if(enable){
 				mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
 			}else{
+                            if(mContext.getResources().getConfiguration().enableMultiWindow())
+                                mNavigationBarView.getDisplaycopyButton().setVisibility(View.INVISIBLE);
+                            else
 				mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
 			}
 			
@@ -2204,6 +2207,9 @@ private String appclosename = null;
 		if(enable){
 			mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
 		} else {
+                    if(mContext.getResources().getConfiguration().enableMultiWindow())
+                        mNavigationBarView.getDisplaycopyButton().setVisibility(View.INVISIBLE);
+                    else
 			mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
 		}
 	}
@@ -2216,6 +2222,9 @@ private String appclosename = null;
 		if(enable){
 			mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
 		} else {
+                     if(mContext.getResources().getConfiguration().enableMultiWindow())
+                        mNavigationBarView.getDisplaycopyButton().setVisibility(View.INVISIBLE);
+                     else
 			mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
 		}
 	}
