@@ -7199,10 +7199,11 @@ public class WindowManagerService extends IWindowManager.Stub
     @Override
     public Bitmap screenshotApplications(IBinder appToken, int displayId, int width,
             int height, boolean force565) {
-        /*if (!checkCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
+        if (!mCurConfiguration.enableMultiWindow() &&
+			!checkCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
                 "screenshotApplications()")) {
             throw new SecurityException("Requires READ_FRAME_BUFFER permission");
-        }*/
+        }
 		LOGD("================screenshotApplications==================appToken:"+appToken);
         final DisplayContent displayContent = getDisplayContentLocked(displayId);
         if (displayContent == null) {

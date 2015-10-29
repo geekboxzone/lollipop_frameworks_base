@@ -529,7 +529,8 @@ public abstract class ContentProvider implements ComponentCallbacks2 {
         final Uri userUri = (mSingleUser && !UserHandle.isSameUser(mMyUid, uid))
                 ? maybeAddUserId(uri, callingUserId) : uri;
         if (context.checkUriPermission(userUri, pid, uid, Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                callerToken) == PERMISSION_GRANTED ||true) {
+                callerToken) == PERMISSION_GRANTED ||
+			(context.getResources().getConfiguration().enableMultiWindow())) {
             return;
         }
 

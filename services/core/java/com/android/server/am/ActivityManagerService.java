@@ -3502,7 +3502,7 @@ public final class ActivityManagerService extends ActivityManagerNative
             int startFlags, ProfilerInfo profilerInfo, Bundle options) {
             //add by huangjc: win task style
 
-       if(intent!=null/* && "android.intent.action.MAIN".equals(intent.getAction()) && intent.hasCategory(
+       if(mConfiguration.enableMultiWindow() && intent!=null/* && "android.intent.action.MAIN".equals(intent.getAction()) && intent.hasCategory(
 Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             Intent winintent=new Intent();
             winintent.setAction("rk.android.wintask.SHOW");
@@ -8297,8 +8297,9 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         boolean allowed = checkPermission(android.Manifest.permission.REAL_GET_TASKS,
                 callingPid, callingUid) == PackageManager.PERMISSION_GRANTED;
         if (!allowed) {
-           // if (checkPermission(android.Manifest.permission.GET_TASKS,
-            //        callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
+            if (mConfiguration.enableMultiWindow() ||
+			    checkPermission(android.Manifest.permission.GET_TASKS,
+                    		callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
                 // Temporary compatibility: some existing apps on the system image may
                 // still be requesting the old permission and not switched to the new
                 // one; if so, we'll still allow them full access.  This means we need
@@ -8311,7 +8312,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                     }
                 } catch (RemoteException e) {
                 }
-           // }
+            }
         }
         if (!allowed) {
             Slog.w(TAG, caller + ": caller " + callingUid
@@ -8420,8 +8421,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     @Override
     public ActivityManager.TaskThumbnail getTaskThumbnail(int id) {
         synchronized (this) {
-            //enforceCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
-            //        "getTaskThumbnails()");
+            if (!mConfiguration.enableMultiWindow()) {
+		    enforceCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
+                    		"getTaskThumbnails()");
+	    }
             TaskRecord tr = mStackSupervisor.anyTaskForIdLocked(id);
             if (tr != null) {
                 return tr.getTaskThumbnailLocked();
@@ -8683,8 +8686,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     @Override
     public boolean removeTask(int taskId) {
         synchronized (this) {
-            //enforceCallingPermission(android.Manifest.permission.REMOVE_TASKS,
-             //       "removeTask()");
+            if (!mConfiguration.enableMultiWindow()) {
+		    enforceCallingPermission(android.Manifest.permission.REMOVE_TASKS,
+				    "removeTask()");
+	    }
            //  Slog.v(TAG, "removeTask   taskid =" + taskId, 
            //add by huangjc wintask
            if(mContext.getResources().getConfiguration().enableMultiWindow()&&mStackSupervisor.anyTaskForIdLocked(taskId).getTopActivity()!=null){
@@ -8708,8 +8713,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
      */
     @Override
     public void moveTaskToFront(int taskId, int flags, Bundle options) {
-        ////enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
-           //     "moveTaskToFront()");
+            if (!mConfiguration.enableMultiWindow()) {
+		    enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
+			       "moveTaskToFront()");
+	    }
 
         if (DEBUG_STACK) Slog.d(TAG, "moveTaskToFront: moving taskId=" + taskId);
         synchronized(this) {
@@ -8751,8 +8758,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     }
     @Override
     public void moveTaskToBack(int taskId, int flag) {
-        //enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
-          //      "moveTaskToBack()");
+        if (!mConfiguration.enableMultiWindow()) {
+		enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
+				"moveTaskToBack()");
+	}
 
         synchronized(this) {
             TaskRecord tr = mStackSupervisor.anyTaskForIdLocked(taskId);
