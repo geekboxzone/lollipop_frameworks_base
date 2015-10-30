@@ -14635,10 +14635,10 @@ if(mCurConfiguration.enableMultiWindow()){
     }
 
     public void updateDisplayShowSynchronization(){
-	long origId = Binder.clearCallingIdentity();
 	int flag = Settings.System.getInt(
 		mContext.getContentResolver(), Settings.System.DUAL_SCREEN_ICON_USED, 0);
 	if (flag == 0)	return;
+	long origId = Binder.clearCallingIdentity();
 	Settings.System.putInt(mContext.getContentResolver(),
 		Settings.System.DUAL_SCREEN_ICON_USED, 0);
 	int curMoveTaskId = -1;
