@@ -610,7 +610,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
             mDecorContentParent.setMenuPrepared();
         }
 
-              Log.d(TAG,st.createdPanelView+ "  00000=====preparePanel ======  =======");
         if (st.createdPanelView == null) {
             // Init the panel state's menu--return false if init failed
             if (st.menu == null || st.refreshMenuContent) {
@@ -682,7 +681,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         st.isPrepared = true;
         st.isHandled = false;
         mPreparedPanel = st;
-
         return true;
     }
 
@@ -756,7 +754,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
     private void openPanel(final PanelFeatureState st, KeyEvent event) {
         // System.out.println("Open panel: isOpen=" + st.isOpen);
-
         // Already open, return
         if (st.isOpen || isDestroyed()) {
             return;
@@ -1054,8 +1051,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 
             boolean playSoundEffect = false;
 
-if(mDecorContentParent != null)
-  
             if (featureId == FEATURE_OPTIONS_PANEL && mDecorContentParent != null &&
                     mDecorContentParent.canShowOverflowMenu() &&
                     !ViewConfiguration.get(getContext()).hasPermanentMenuKey()) {
@@ -3798,7 +3793,7 @@ if(mDecorContentParent != null)
 
         int layoutResource;
         int features = getLocalFeatures();
-        boolean isAdd = true;
+        boolean isAdd = !isHomeWindow();//true;
        //  System.out.println("Features: 0x" + Integer.toHexString(features));
         if ((features & (1 << FEATURE_SWIPE_TO_DISMISS)) != 0) {
             layoutResource = R.layout.screen_swipe_dismiss;
