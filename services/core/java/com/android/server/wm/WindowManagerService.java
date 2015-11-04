@@ -14471,7 +14471,11 @@ if(mCurConfiguration.enableMultiWindow()){
 				if(!ignoreWindow(ws,false)){
 					//mFocusedApp = ws.mAppToken;
 					if (ws.taskId == -1) continue;
-					curMoveTaskId = ws.taskId;
+					if (ws.taskId == -1 && ws.mAttachedWindow != null) {
+						curMoveTaskId = ws.mAttachedWindow.taskId;
+					} else {
+						curMoveTaskId = ws.taskId;
+					}
 					Slog.v("dualscreen", "curMoveTaskId="+curMoveTaskId);
 					break;
 				}
