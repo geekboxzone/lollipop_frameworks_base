@@ -14469,8 +14469,6 @@ if(mCurConfiguration.enableMultiWindow()){
 					break;
 				}
 				if(!ignoreWindow(ws,false)){
-					//mFocusedApp = ws.mAppToken;
-					if (ws.taskId == -1) continue;
 					if (ws.taskId == -1 && ws.mAttachedWindow != null) {
 						curMoveTaskId = ws.mAttachedWindow.taskId;
 					} else {
