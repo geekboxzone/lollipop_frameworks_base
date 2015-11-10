@@ -691,6 +691,12 @@ public final class ViewRootImpl implements ViewParent,
 
     /** Whether the window is in local focus mode or not */
     private boolean isInLocalFocusMode() {
+        //$_rockchip_$_modify_by_huangjc
+        //in multiwindow mode,for IMM,we no need to to judge whether the window is 
+        //in local focus mode.if true,IMM sometimes will be fail for no focus.
+        if(mContext.getResources().getConfiguration().enableMultiWindow())
+            return false;
+        //$_rockchip_$_end
         return (mWindowAttributes.flags & WindowManager.LayoutParams.FLAG_LOCAL_FOCUS_MODE) != 0;
     }
 

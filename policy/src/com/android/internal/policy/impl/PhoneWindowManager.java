@@ -4508,6 +4508,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                         vf.set(cf);
                     }
                 }
+		if ((fl & FLAG_FULLSCREEN) != 0 &&
+                                (!MultiWindowSettings.checkConfig(mContext)||(sysUiFl & View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW)!=0)) {
+                        df.top = pf.top = 0;
+                }
             }
         }
 

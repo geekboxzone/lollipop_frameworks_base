@@ -45,10 +45,18 @@ android:fitsSystemWindows="true"
             android:orientation="horizontal"
             android:layout_alignParentRight="true"
             > 
+           <ImageView android:id="@+id/dualscreen_icon"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:src="@android:drawable/dualscreen"
+                                android:visibility = "invisible"
+                />
             <ImageView android:id="@+id/min_icon"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_gravity="center_vertical"
+                android:layout_marginLeft="30dip"
                  android:src="@android:drawable/circlemenu_narrow"
                 />
             <!-- 2dip between the icon and the title text, if icon is present. -->

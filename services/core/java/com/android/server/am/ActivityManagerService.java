@@ -8297,9 +8297,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
         boolean allowed = checkPermission(android.Manifest.permission.REAL_GET_TASKS,
                 callingPid, callingUid) == PackageManager.PERMISSION_GRANTED;
         if (!allowed) {
-            if (mConfiguration.enableMultiWindow() ||
-			    checkPermission(android.Manifest.permission.GET_TASKS,
-                    		callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
+            if (mConfiguration.enableMultiWindow() ||checkPermission(android.Manifest.permission.GET_TASKS,
+                    callingPid, callingUid) == PackageManager.PERMISSION_GRANTED) {
                 // Temporary compatibility: some existing apps on the system image may
                 // still be requesting the old permission and not switched to the new
                 // one; if so, we'll still allow them full access.  This means we need
@@ -8422,8 +8421,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     public ActivityManager.TaskThumbnail getTaskThumbnail(int id) {
         synchronized (this) {
             if (!mConfiguration.enableMultiWindow()) {
-		    enforceCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
-                    		"getTaskThumbnails()");
+            	enforceCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
+                    	"getTaskThumbnails()");
 	    }
             TaskRecord tr = mStackSupervisor.anyTaskForIdLocked(id);
             if (tr != null) {
@@ -8717,7 +8716,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
 		    enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
 			       "moveTaskToFront()");
 	    }
-
+         
         if (DEBUG_STACK) Slog.d(TAG, "moveTaskToFront: moving taskId=" + taskId);
         synchronized(this) {
             moveTaskToFrontLocked(taskId, flags, options);
@@ -8758,11 +8757,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     }
     @Override
     public void moveTaskToBack(int taskId, int flag) {
-        if (!mConfiguration.enableMultiWindow()) {
+        if (!mConfiguration.enableMultiWindow()) { 
 		enforceCallingPermission(android.Manifest.permission.REORDER_TASKS,
-				"moveTaskToBack()");
+                	"moveTaskToBack()");
 	}
-
         synchronized(this) {
             TaskRecord tr = mStackSupervisor.anyTaskForIdLocked(taskId);
             if (tr != null) {
@@ -9122,7 +9120,6 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
 
     // =========================================================
     // CONTENT PROVIDERS
-    // =========================================================
 
     private final List<ProviderInfo> generateApplicationProvidersLocked(ProcessRecord app) {
         List<ProviderInfo> providers = null;

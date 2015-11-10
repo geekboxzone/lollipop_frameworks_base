@@ -1941,7 +1941,8 @@ public final class ActivityStackSupervisor implements DisplayListener {
                                     "bringingFoundTaskToFront");
                             if ((launchFlags &
                                     (FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_TASK_ON_HOME))
-                                    == (FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_TASK_ON_HOME)) {
+                                    == (FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_TASK_ON_HOME) 
+                                    && !mService.mConfiguration.enableMultiWindow()) {
                                 // Caller wants to appear on home activity.
                                 intentActivity.task.setTaskToReturnTo(HOME_ACTIVITY_TYPE);
                             }

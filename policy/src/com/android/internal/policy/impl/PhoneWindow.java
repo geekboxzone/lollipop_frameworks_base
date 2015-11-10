@@ -2279,7 +2279,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         /* package */int mDefaultOpacity = PixelFormat.OPAQUE;
 
         /** The feature ID of the panel, or -1 if this is the application's DecorView */
-        private final int mFeatureId;
+        public final int mFeatureId;
 
         private final Rect mDrawingBounds = new Rect();
 
@@ -2483,7 +2483,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 			return super.dispatchPointerEvent(ev,block);
 		}
 		if(mMultiWindowUtil != null){
-			mMultiWindowUtil.dispatchPointerEvent(ev,block);
+			mMultiWindowUtil.dispatchPointerEvent(ev,block,this);
 		}
 		if(config.dualscreenflag== Configuration.ENABLE_DUAL_SCREEN){
                        LOGWINDOW(" mDisplayDector.onTouchEvent  ");
@@ -3867,6 +3867,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		LOGD(getAttributes()+"======================!"+getContainer());
 		
 		if (mMultiWindowUtil != null) {
+			isAdd = isHomeWindow();
 			mMaxMinGuard = mMultiWindowUtil.generateLayout(decor, isAdd, context, in, mLayoutInflater, config);
 		}
 		

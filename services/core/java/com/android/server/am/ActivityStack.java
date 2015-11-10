@@ -1069,8 +1069,8 @@ final class ActivityStack {
                 prev = finishCurrentActivityLocked(prev, FINISH_AFTER_VISIBLE, false);
             } else if (prev.app != null) {
                 if (DEBUG_PAUSE) Slog.v(TAG, "Enqueueing pending stop: " + prev);
-			   if(prev.difPkgTask)
-			       mService.moveTaskToBack(prev.task.taskId);
+		//if(prev.difPkgTask)
+		//    mService.moveTaskToBack(prev.task.taskId);
                 if (prev.waitingVisible) {
                     prev.waitingVisible = false;
                     mStackSupervisor.mWaitingVisibleActivities.remove(prev);
@@ -3040,6 +3040,17 @@ final class ActivityStack {
             return false;
         }
 
+     //Add by huangjc for wintask
+        if(mService.mContext.getResources().getConfiguration().enableMultiWindow()&&"crashed".equals(reason)){
+            Intent winintent=new Intent();
+            winintent.setAction("rk.android.wintask.FINISH");
+            if(r.intent.getComponent() != null){
+            winintent.putExtra("cmp", r.intent.getComponent().getPackageName());
+
+            mService.mContext.sendBroadcast(winintent);
+           }
+         } //Add end 
+
         r.makeFinishing();
         final TaskRecord task = r.task;
         EventLog.writeEvent(EventLogTags.AM_FINISH_ACTIVITY,
@@ -3973,7 +3984,7 @@ final class ActivityStack {
         }
 	for (int taskNdx = numTasks - 1; taskNdx >= 1; --taskNdx) {
             final TaskRecord task = mTaskHistory.get(taskNdx);
-			Slog.i(TAG,task.getTaskToReturnTo()+ "================   " +task +" numTs: "+task.mTopOfLauncher);
+			Slog.i(TAG,task.mTopOfLauncher+ "================   " +task +" numTs: "+numTs);
 			if(!task.mTopOfLauncher){
 				numTs --;
 			}
@@ -3994,7 +4005,7 @@ final class ActivityStack {
                 return false;
             }
             final int taskToReturnTo = tr.getTaskToReturnTo();
-			Slog.i(TAG,taskToReturnTo+ "move task to back resumeHomeStackTask   " +tr);
+			Slog.i(TAG,tr.isOverHomeStack()+ "move task to back resumeHomeStackTask   " +tr);
             tr.setTaskToReturnTo(APPLICATION_ACTIVITY_TYPE);
             succed = mStackSupervisor.resumeHomeStackTask(taskToReturnTo, null, "moveTaskToBack");
 			if(mService.mConfiguration.enableMultiWindow()){

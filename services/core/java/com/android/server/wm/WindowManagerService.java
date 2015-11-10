@@ -918,7 +918,6 @@ public class WindowManagerService extends IWindowManager.Stub
         mDisplayManagerInternal = LocalServices.getService(DisplayManagerInternal.class);
         mDisplaySettings = new DisplaySettings();
         mDisplaySettings.readSettingsLocked();
-		mMulWindowService = new MulWindowService(this,mContext, mPolicy);
 
         LocalServices.addService(WindowManagerPolicy.class, mPolicy);
 
@@ -973,6 +972,7 @@ public class WindowManagerService extends IWindowManager.Stub
         mAppTransition = new AppTransition(context, mH);
 
         mActivityManager = ActivityManagerNative.getDefault();
+	mMulWindowService = new MulWindowService(this,mContext, mPolicy,mActivityManager);
         mBatteryStats = BatteryStatsService.getService();
         mAppOps = (AppOpsManager)context.getSystemService(Context.APP_OPS_SERVICE);
         AppOpsManager.OnOpChangedInternalListener opListener =
@@ -6054,6 +6054,9 @@ public class WindowManagerService extends IWindowManager.Stub
 					Settings.System.putInt(mContext.getContentResolver(),
 								Settings.System.MULITI_WINDOW_MODE, 0);
 				}
+			}else{
+				Settings.System.putInt(mContext.getContentResolver(),
+					Settings.System.MULITI_WINDOW_MODE, Settings.System.MULITI_WINDOW_FOUR_SCREEN_MODE);
 			}
 			for (int i=mWindows.size()-1; i>=0; i--) {
                             WindowState ws = mWindows.get(i);
@@ -6099,7 +6102,7 @@ public class WindowManagerService extends IWindowManager.Stub
             if(isHomeWindow(ws)){
                 break;
             }
-			if((ws.stepOfFourScreen != -1 && ws.mViewVisibility == View.VISIBLE)){
+			if((ws.stepOfFourScreen != -1 && ws.mViewVisibility == View.VISIBLE && ws.mActualScale != 1.0)){
 				isMultiWindow = true;
 				break;
 			}
@@ -7199,12 +7202,10 @@ public class WindowManagerService extends IWindowManager.Stub
     @Override
     public Bitmap screenshotApplications(IBinder appToken, int displayId, int width,
             int height, boolean force565) {
-        if (!mCurConfiguration.enableMultiWindow() &&
-			!checkCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
+        if (!mCurConfiguration.enableMultiWindow() && !checkCallingPermission(android.Manifest.permission.READ_FRAME_BUFFER,
                 "screenshotApplications()")) {
             throw new SecurityException("Requires READ_FRAME_BUFFER permission");
         }
-		LOGD("================screenshotApplications==================appToken:"+appToken);
         final DisplayContent displayContent = getDisplayContentLocked(displayId);
         if (displayContent == null) {
             if (DEBUG_SCREENSHOT) Slog.i(TAG, "Screenshot of " + appToken
@@ -7831,8 +7832,8 @@ public class WindowManagerService extends IWindowManager.Stub
 
 		}
 
-		public void applyPositionForFourScreenWindow(WindowState win){
-			mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked());
+		public void applyPositionForFourScreenWindow(WindowState win,boolean isStart){
+			mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart);
 			
 			if(true){
 				if(mAppAlignWatcher.get(win)!=null){
@@ -8107,7 +8108,7 @@ public class WindowManagerService extends IWindowManager.Stub
 					}
 					tempGroupId = wtoken.groupId;
 				if(tempGroupId == taskId){
-					applyPositionForFourScreenWindow(ws);
+					applyPositionForFourScreenWindow(ws,false);
 				}
 					
 			}
@@ -9467,8 +9468,8 @@ public class WindowManagerService extends IWindowManager.Stub
 						}
 						LOGD("--------moveDownTaskToOtherStep-----------step:"+step+",win:"+win+",win.taskId:"+win.taskId+",taskId:"+taskId);
 						win.stepOfFourScreen = step;
-						applyPositionForFourScreenWindow(win);
-						}
+						applyPositionForFourScreenWindow(win,false);
+					}
 				}
 			}
 		}

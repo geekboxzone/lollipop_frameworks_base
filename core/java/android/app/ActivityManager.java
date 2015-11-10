@@ -1404,6 +1404,13 @@ public class ActivityManager {
         }
     }
 
+	 public void moveTaskToBack(int taskId, int flags) {
+        try {
+            ActivityManagerNative.getDefault().moveTaskToBack(taskId, flags);
+        } catch (RemoteException e) {
+            // System dead, we will be dead too soon!
+        }
+    }
     /**
      * Information you can retrieve about a particular Service that is
      * currently running in the system.

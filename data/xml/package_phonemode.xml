@@ -17,6 +17,7 @@
     <app package="com.gamedo.ZombieTerminator.bd" phonemode="false" halfscreen="false"/>
 
     <app package="com.tencent.mm" phonemode="true" halfscreen="false"/>
+    <app package="com.tencent.minihd.qq" phonemode="false" halfscreen="true"/>
     <app package="com.yongqv.XXL2048" phonemode="true" halfscreen="false"/>
   <app package="cn.wps.moffice_eng" phonemode="false" halfscreen="false"/>
 
@@ -24,7 +25,15 @@
 <app package="com.microsoft.office.word" phonemode="false"  halfscreen="true"/>
 <app package="com.microsoft.office.powerpoint" phonemode="false"  halfscreen="true"/>
     <app package="com.android.calculator2" phonemode="false" halfscreen="true"/>
+<app package="com.mx.browser" phonemode="false" halfscreen="true"/>
 
+
+     <app package="cn.kuwo.kwmusichd" phonemode="false" halfscreen="false"/>
+    <app package="com.olivephone.edit" phonemode="false" halfscreen="false"/>
+    <app package="com.tencent.mtt" phonemode="false" halfscreen="false"/>
+    <app package="com.browser2345" phonemode="false" halfscreen="false"/>
+    <app package="com.infraware.office.link.china" phonemode="false" halfscreen="false"/>
+    <app package="cn.wps.moffice_i18n" phonemode="false" halfscreen="false"/>
     <app package="com.tencent.qqpimsecure" phonemode="false" halfscreen="false"/>
     <app package="com.sinyee.babybus.bad2good" phonemode="false" halfscreen="false"/>
     <app package="com.sinyee.babybus.dayandnight" phonemode="false" halfscreen="false"/>

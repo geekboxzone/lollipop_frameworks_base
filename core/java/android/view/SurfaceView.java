@@ -132,7 +132,7 @@ public class SurfaceView extends View {
                 } break;
 		case DRAW_BACK_MSG:{
                    if( getContext().getResources().getConfiguration().multiwindowflag
-                               == Configuration.ENABLE_MULTI_WINDOW){
+                               == Configuration.ENABLE_MULTI_WINDOW ){
 		     mDrawBack= false;
 		     invalidate();
 	}
@@ -233,7 +233,9 @@ public class SurfaceView extends View {
         mViewVisibility = getVisibility() == VISIBLE;
 
         mDrawBack= true;
-        mHandler.sendEmptyMessage(DRAW_BACK_MSG);
+	invalidate();
+	 mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);
+                    if (DEBUG) Log.i(TAG, "onAttachedToWindow ");
         if (!mGlobalListenersAdded) {
             ViewTreeObserver observer = getViewTreeObserver();
             observer.addOnScrollChangedListener(mScrollChangedListener);
@@ -249,11 +251,6 @@ public class SurfaceView extends View {
         mRequestedVisible = mWindowVisibility && mViewVisibility;
         updateWindow(false, false);
 
-	/*mDrawBack= true;
- 	if (mHandler.hasMessages(DRAW_BACK_MSG))
-	    mHandler.removeMessages(DRAW_BACK_MSG);
-        mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);*/
-		Log.i(TAG, "onWindowVisibilityChanged"+mRequestedVisible);
     }
 
     @Override
@@ -366,8 +363,9 @@ public class SurfaceView extends View {
                 canvas.drawColor(0, PorterDuff.Mode.CLEAR);
             }
         }
-	if(getContext().getResources().getConfiguration().multiwindowflag
-                                == Configuration.ENABLE_MULTI_WINDOW && mDrawBack){
+                    if (DEBUG) Log.i(TAG, "dispatch draw "+mDrawBack );
+	if(getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW
+                                && !"cn.wps.moffice_eng".equals(getContext().getPackageName()) && mDrawBack){
 	   canvas.clipRect(new Rect(0, 0, getWidth(), getHeight()),  Region.Op.REPLACE);
            canvas.drawColor(0xFF000000);	//set the white color
         }
@@ -528,10 +526,11 @@ public class SurfaceView extends View {
                 int relayoutResult;
 
                 
-        mDrawBack= true;
-        if (mHandler.hasMessages(DRAW_BACK_MSG))
-            mHandler.removeMessages(DRAW_BACK_MSG);
-        mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);
+     //   mDrawBack= true;
+	//invalidate();
+     //   if (mHandler.hasMessages(DRAW_BACK_MSG))
+         //   mHandler.removeMessages(DRAW_BACK_MSG);
+      //  mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);
                 mSurfaceLock.lock();
                 try {
                     mUpdateWindowNeeded = false;

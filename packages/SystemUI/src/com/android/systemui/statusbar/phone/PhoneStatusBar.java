@@ -1744,7 +1744,29 @@ final Object mScreenshotLock = new Object();
          }
           return null;
 	}
-	public int getCurrentApps(String packageName){
+     public boolean checkForRecent(String packageName){
+            ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+            PackageManager pm = mContext.getApplicationContext().getPackageManager();
+        List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(30,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+        if(!appTask.isEmpty()){
+                for(int i = 0;i<appTask.size();i++){
+                                ActivityManager.RecentTaskInfo info = appTask.get(i);
+                                Intent intent  = new Intent(info.baseIntent);
+                                if(info.origActivity != null) intent.setComponent(info.origActivity);
+                                ResolveInfo resolveInfo = pm.resolveActivity( intent,0);
+
+                    String packName = null;
+                    if(resolveInfo != null)
+                       packName = resolveInfo.activityInfo.packageName;
+                                if(packageName.equals(packName)){
+                                        LOGD(info.id+"wintask ===check "+packageName +"is in RecentTasks with another id: " +info.affiliatedTaskId+" ");
+                                        return true;
+                                }
+                   }
+         }
+          return false;
+       }
+	public int moveAppTask(String packageName,boolean isMoveBack){
         ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
 		PackageManager pm = mContext.getApplicationContext().getPackageManager();
         List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(30,ActivityManager.RECENT_WITH_EXCLUDED|ActivityManager.RECENT_IGNORE_UNAVAILABLE);
@@ -1761,7 +1783,8 @@ final Object mScreenshotLock = new Object();
 	               packName = resolveInfo.activityInfo.packageName;
 				if(packageName.equals(packName)){
 					LOGD(info.id+"wintask ====getCurrentApps:"+packageName +" " +info.affiliatedTaskId);
-					am.moveTaskToFront(info.id,ActivityManager.MOVE_TASK_WITH_HOME,null);
+					if(!isMoveBack)am.moveTaskToFront(info.id,ActivityManager.MOVE_TASK_WITH_HOME,null);
+					else am.moveTaskToBack(info.id,ActivityManager.MOVE_TASK_WITH_HOME);
 					return info.id;
 				}
 		   }
@@ -1851,13 +1874,15 @@ final Object mScreenshotLock = new Object();
                         if(set.hasNext()){
 				String packageName=(String) hash.get("packagename");//get from map 
 				LOGD("wintask === i ="+i+" ======hash.get packagename :"+packageName+"===pkName:"+pkName);
+				if("com.android.documentsui".equals(pkName))
+                                   pkName = "com.android.providers.downloads.ui";
 				if(packageName.equals(pkName)||(getCurrentApps!=null&&packageName.equals(getCurrentApps)&&isWinShow)){
 				LOGD("wintask ====map already has:"+packageName);
 				if(isWinShow){
 					if(mAppsGridView !=null)
 		                                   mAppsGridView.setSelection(i);
 				}else {                        
-					if(!pkName.equals(getCurrentApps)){
+					if(!pkName.equals(getCurrentApps) &&!checkForRecent(pkName)){
 					LOGD("wintask ==finsh app,update list now");
 					appslist.remove(i);  
                                         listadapter.notifyDataSetChanged();
@@ -2079,15 +2104,16 @@ private String appclosename = null;
 				   PackageManager pm = mContext.getApplicationContext().getPackageManager();
 				   Intent intent=new Intent(); 
 				   intent =pm.getLaunchIntentForPackage(packageName);
-				   if(intent!=null&&!mRightMouseClick&&getCurrentApps(packageName) != -1){
+				   if(intent!=null&&!mRightMouseClick&&moveAppTask(packageName,false) != -1){
 
-				}else
-				if(intent!=null&&!mRightMouseClick){
-					intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP );
-					mContext.startActivity(intent);
-				}
-				mRightMouseClick = false;
-				//doStartApplicationWithPackageName(packageName);
+				    }else if(intent!=null&&!mRightMouseClick){
+						intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP );
+						mContext.startActivity(intent);
+					}
+					mRightMouseClick = false;
+					//doStartApplicationWithPackageName(packageName);
+				}else {
+					moveAppTask(packageName,true);
 					}
 				}
              	}
@@ -6509,40 +6535,42 @@ private String appclosename = null;
 					}
 
 	};
-private String lastInputMethodId = null;
+	private String lastInputMethodId = null;
 	private ContentObserver mExtkeyboardObserver = new ContentObserver(new Handler()){
-		     @Override
-		     public void onChange(boolean selfChange) {
+		@Override
+		public void onChange(boolean selfChange) {
 		     if(!mContext.getResources().getConfiguration().enableMultiWindow())
 			 	return;
-	            final boolean isshow = 0 != Settings.System.getInt(
-	                   mContext.getContentResolver(), Settings.System.EXTER_KEYBOARD_CONFIG, 0);
-	                  InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-					  String InputMethodId = Settings.Secure.getStringForUser(
+	             final boolean isshow = 0 != Settings.System.getInt(
+	             mContext.getContentResolver(), Settings.System.EXTER_KEYBOARD_CONFIG, 0);
+	             InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+		     String InputMethodId = Settings.Secure.getStringForUser(
                                                        mContext.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD,0);
-					  if(!"com.google.android.inputmethod.pinyin/.PinyinIME".equals(InputMethodId))
-					  lastInputMethodId = InputMethodId;
+		     if(!"com.google.android.inputmethod.pinyin/.PinyinIME".equals(InputMethodId)){
+                           lastInputMethodId = InputMethodId;
+                      } else {
+                            return;
+                      }
 					  
-					   List<InputMethodInfo> infos = imm.getInputMethodList();
-					    String id = null;
-					    for (InputMethodInfo info : infos) {
-					        if ("com.google.android.inputmethod.pinyin/.PinyinIME".equals(info.getId())){
-					            id = info.getId();
-					        }
-					    }
-					    if (id == null) {
-					        return;
-					    }
-					if(isshow){
-						LOGD("=======EXTER_KEYBOARD_CONFIG is open ========id:"+id);
-						  imm.setInputMethod(null,id);
-					}else{
-						LOGD("=======EXTER_KEYBOARD_CONFIG is close ========lastInputMethodId"+lastInputMethodId);
-						if(lastInputMethodId!=null&&!lastInputMethodId.equals("0"))
-							imm.setInputMethod(null,lastInputMethodId);
-					}
-				
+		      List<InputMethodInfo> infos = imm.getInputMethodList();
+		      String id = null;
+		      for (InputMethodInfo info : infos) {
+			  if ("com.google.android.inputmethod.pinyin/.PinyinIME".equals(info.getId())){
+			    id = info.getId();
+		         }
+		     }
+		     if (id == null) {
+			return;
+		     }
+		     if(isshow){
+			LOGD("=======EXTER_KEYBOARD_CONFIG is open ========id:"+id);
+			imm.setInputMethod(null,id);
+		     }else{
+			LOGD("=======EXTER_KEYBOARD_CONFIG is close ========lastInputMethodId"+lastInputMethodId);
+			if(lastInputMethodId!=null&&!lastInputMethodId.equals("0"))
+				imm.setInputMethod(null,lastInputMethodId);
 			}
+		}
 
 	};
 	
