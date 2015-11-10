@@ -3867,7 +3867,6 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 		LOGD(getAttributes()+"======================!"+getContainer());
 		
 		if (mMultiWindowUtil != null) {
-			isAdd = isHomeWindow();
 			mMaxMinGuard = mMultiWindowUtil.generateLayout(decor, isAdd, context, in, mLayoutInflater, config);
 		}
 		
