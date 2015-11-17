@@ -315,7 +315,6 @@ public final class WindowManagerGlobal {
         if (!(params instanceof WindowManager.LayoutParams)) {
             throw new IllegalArgumentException("Params must be WindowManager.LayoutParams");
         }
-
        /* final*/ WindowManager.LayoutParams wparams = (WindowManager.LayoutParams)params;
         
         view.setLayoutParams(wparams);

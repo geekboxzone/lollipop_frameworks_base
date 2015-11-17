@@ -539,7 +539,7 @@ private boolean validWindowState(WindowState win){
 		mService.applyXTrac(windowState, action, event);
 
                 if(mService.isMultiWindowMode() || (windowState.getAttrs() != null && windowState.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
-							&&windowState.getAttrs().width != screenWidth/2)){
+							)){
 			if(event.getPointerCount() == 1 && windowState != null){
 			    WindowState ws = null;
 			    if(windowState.mAppWindowState != null){

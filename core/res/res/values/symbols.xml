@@ -1640,6 +1640,8 @@
   <java-symbol type="drawable" name="circlemenu_settop" />
   <java-symbol type="drawable" name="circlemenu_settoped" />
   <java-symbol type="drawable" name="win_title_bg" />
+  <java-symbol type="drawable" name="win_background_transparent" />
+  <java-symbol type="drawable" name="btn_default_transparent_normal" />
   <java-symbol type="drawable" name="dualscreen" />
   
   <java-symbol type="id" name="dualscreen_icon" />

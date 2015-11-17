@@ -551,7 +551,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
 			LOGD(mAppWindowState+"----------------------mAttachedWindow:"+mAttrs.align );
 			LOGD(this+"----------------------mAttachedWindow:"+mAttachedWindow.getAttrs());
-			mMultiWindowState.switchToPhoneMode();
+			//mMultiWindowState.switchToPhoneMode();
 		}else{
             ArrayList<WindowState> list = mService.getAllWindowListInDefaultDisplay();
 			for(int i= 0;i<list.size();i++){
@@ -1430,6 +1430,10 @@ private void shouldForceAnim(int align,int value){
 
         mInputWindowHandle.inputChannel = null;
     }
+	public void switchToPhoneMode(int wight ,int height){
+
+	mMultiWindowState.switchToPhoneMode();
+		}
 
     private class DeathRecipient implements IBinder.DeathRecipient {
         @Override

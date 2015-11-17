@@ -3769,8 +3769,11 @@ public class WindowManagerService extends IWindowManager.Stub
 			}
 			
 			if(attrs != null && ws != null && ws.getAttrs()!= null&&  ws.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+				LOGD(win.getAttrs()+"========relayoutWindow=========="+ws);
                 win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 				attrs.align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+				//win.getAttrs().width = (mScreenRect.right-mScreenRect.left)/2;
+				//attrs.width = (mScreenRect.right-mScreenRect.left)/2;
 			}
             WindowStateAnimator winAnimator = win.mWinAnimator;
             if (viewVisibility != View.GONE && (win.mRequestedWidth != requestedWidth
@@ -6041,7 +6044,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     }
                 }
 //TODO  is error
-  final boolean isHomeStackTask = false;
+ 		final boolean isHomeStackTask = false;
 		if(mCurConfiguration.enableMultiWindow()){
 			if(!hasHomeWindow()){
 				Settings.System.putInt(mContext.getContentResolver(),
@@ -6075,7 +6078,7 @@ public class WindowManagerService extends IWindowManager.Stub
 					}
 				    }
 			       }
-			     //setMultiWindowModeWindow(ws);
+			     setMultiWindowModeWindow(ws);
 			     }	
 			  }
 		  }
@@ -7945,7 +7948,22 @@ public class WindowManagerService extends IWindowManager.Stub
 	
 		@Override
 		public int getAppWindowStepOfFourScreen(WindowState ws) {
-			// TODO Auto-generated method stub
+			ws.mHScale = 1.0f;
+			ws.mVScale = 1.0f;
+			ws.mActualScale = 1.0f;
+			AppWindowToken wtoken = ws.mAppToken;		 
+			ws.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;				 
+			if(wtoken != null){
+				for(int j=0;j<wtoken.allAppWindows.size();j++){
+					WindowState win = wtoken.allAppWindows.get(j);
+					win.mHScale = 1.0f;
+					win.mVScale = 1.0f;
+					win.mActualScale = 1.0f;
+					win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					//win.getAttrs().width = (mScreenRect.right-mScreenRect.left)/2;
+					win.switchToPhoneMode(win.getAttrs().width,-1);
+				}
+			}
 			return 0;
 		}
 	
@@ -14462,8 +14480,8 @@ if(mCurConfiguration.enableMultiWindow()){
 			secondDisplayWindows.addAll(secondDisplayAddList);
 			
 			windows = defaultContent.getWindowList();
-			Slog.v("dualscreen", "moveTransitionToSecondDisplay-->defaultContent.getWindowList()="+windows);
-			Slog.v("dualscreen", "moveTransitionToSecondDisplay-->secondDisplayWindows="+secondDisplayWindows);
+			//Slog.v("dualscreen", "moveTransitionToSecondDisplay-->defaultContent.getWindowList()="+windows);
+			//Slog.v("dualscreen", "moveTransitionToSecondDisplay-->secondDisplayWindows="+secondDisplayWindows);
 			for(int i=windows.size()-1;i>=0;i--){
 				WindowState ws = windows.get(i);
 				if (isHomeWindow(ws)) {

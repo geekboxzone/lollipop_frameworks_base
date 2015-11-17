@@ -101,6 +101,7 @@ public class SurfaceView extends View {
             = new WindowManager.LayoutParams();
     IWindowSession mSession;
     MyWindow mWindow;
+	View myView;
     final Rect mVisibleInsets = new Rect();
     final Rect mWinFrame = new Rect();
     final Rect mOverscanInsets = new Rect();
@@ -112,7 +113,7 @@ public class SurfaceView extends View {
     static final int GET_NEW_SURFACE_MSG = 2;
     static final int UPDATE_WINDOW_MSG = 3;
 	static final int DRAW_BACK_MSG = 4;
-
+    
     int mWindowType = WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA;
 
     boolean mIsCreating = false;
@@ -128,7 +129,9 @@ public class SurfaceView extends View {
                     handleGetNewSurface();
                 } break;
                 case UPDATE_WINDOW_MSG: {
-                    updateWindow(false, false);
+					//getHolder().setFixedSize(640,688);
+			
+                    updateWindow(true, false);
                 } break;
 		case DRAW_BACK_MSG:{
                    if( getContext().getResources().getConfiguration().multiwindowflag
@@ -136,6 +139,18 @@ public class SurfaceView extends View {
 		     mDrawBack= false;
 		     invalidate();
 	}
+		}break;
+		case 5:{
+			mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					WindowManager.LayoutParams wmparams = mLayout;
+					//mRequestedWidth =mRequestedWidth/2;
+					//int myWidth = mLayout.width = mRequestedWidth/2;
+					//if (myWidth <= 0) mLayout.width = getWidth()/2;
+					//System.out.println(myWidth+"=== ==== === =switchToPhoneMode====================");
+					//setFrame(getLeft(),getTop(),getRight()/2,getBottom());
+					//mLayout = wmparams;
+					updateWindow(true,false);
+
 		}break;
             }
         }
@@ -210,6 +225,7 @@ public class SurfaceView extends View {
 
     private void init() {
         setWillNotDraw(true);
+		myView = this;
         //setBackgroundColor(0xFF000000);
     }
 
@@ -458,6 +474,11 @@ public class SurfaceView extends View {
 
         int myWidth = mRequestedWidth;
         if (myWidth <= 0) myWidth = getWidth();
+		/*if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT && myWidth ==1280){
+			myWidth =  640;
+		}else{
+			myWidth = 1280;
+		}*/
         int myHeight = mRequestedHeight;
         if (myHeight <= 0) myHeight = getHeight();
 
@@ -491,6 +512,12 @@ public class SurfaceView extends View {
                 mLayout.x = mLeft;
                 mLayout.y = mTop;
                 mLayout.width = getWidth();
+				/*if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT && myWidth ==640){
+					mLayout.width =  640;
+				}else{
+					mLayout.width =  1280;
+				}*/
+				Log.i(TAG, "   updateWindow mRequestedWidth: "+mRequestedWidth +",myWidth:"+myWidth + "mLayout.width :"+mLayout.width);
                 mLayout.height = getHeight();
                 if (mTranslator != null) {
                     mTranslator.translateLayoutParamsInAppWindowToScreen(mLayout);
@@ -525,12 +552,7 @@ public class SurfaceView extends View {
 
                 int relayoutResult;
 
-                
-     //   mDrawBack= true;
-	//invalidate();
-     //   if (mHandler.hasMessages(DRAW_BACK_MSG))
-         //   mHandler.removeMessages(DRAW_BACK_MSG);
-      //  mHandler.sendEmptyMessageDelayed(DRAW_BACK_MSG,800);
+              //  new RuntimeException(mWidth+"="+mLayout).printStackTrace();
                 mSurfaceLock.lock();
                 try {
                     mUpdateWindowNeeded = false;
@@ -722,7 +744,9 @@ public class SurfaceView extends View {
 	public void switchToPhoneMode(int width,int height){
 	   SurfaceView surfaceView = mSurfaceView.get();
 	   if (surfaceView != null) {
-		surfaceView.mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+		
+		  surfaceView.mHandler.sendEmptyMessageDelayed(5,500);
+		  
 	   }
 	}
 
