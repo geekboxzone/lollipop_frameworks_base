@@ -573,7 +573,6 @@ public class SurfaceView extends View {
                     if ((relayoutResult & WindowManagerGlobal.RELAYOUT_RES_FIRST_TIME) != 0) {
                         mReportDrawNeeded = true;
                     }
-					mWinFrame.set(0, 0 ,1280, 791);
 
                     if (DEBUG) Log.i(TAG, "New surface: " + mNewSurface
                             + ", vis=" + visible + ", frame=" + mWinFrame);
@@ -665,7 +664,7 @@ public class SurfaceView extends View {
                 }
             } catch (RemoteException ex) {
             }
-            if (true) Log.v(
+            if (DEBUG) Log.v(
                 TAG, "Layout: x=" + mLayout.x + " y=" + mLayout.y +
                 " w=" + mLayout.width + " h=" + mLayout.height +
                 ", frame=" + mSurfaceFrame);
