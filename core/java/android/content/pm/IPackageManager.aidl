@@ -459,4 +459,6 @@ interface IPackageManager {
 
     int getPackagePerformanceMode(String pkgName);
     void setPackagePerformanceMode(String pkgName, int mode);
+
+    boolean setAppMultiWindowMode(String pkgName, boolean phonemode, boolean halfscreenmode);
 }

@@ -6044,6 +6044,7 @@ public class WindowManagerService extends IWindowManager.Stub
                     }
                 }
 //TODO  is error
+//new RuntimeException().printStackTrace();
  		final boolean isHomeStackTask = false;
 		if(mCurConfiguration.enableMultiWindow()){
 			if(!hasHomeWindow()){
@@ -6078,7 +6079,8 @@ public class WindowManagerService extends IWindowManager.Stub
 					}
 				    }
 			       }
-			     setMultiWindowModeWindow(ws);
+				   if(mMulWindowService.findSamePositionOfFourScreenMode(ws,false) != null)applyPositionForFourScreenWindow(ws,true,false);
+			     //setMultiWindowModeWindow(ws);
 			     }	
 			  }
 		  }
@@ -7536,15 +7538,6 @@ public class WindowManagerService extends IWindowManager.Stub
 		}
                  return false;
     }
-	public boolean isHalfWindow(WindowState win){
-		if((win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0){
-			Settings.System.putInt(mContext.getContentResolver(),
-						Settings.System.MULITI_WINDOW_MODE, 2);
-		
-			return true;
-		}
-		return false;
-	}
 
 	 public boolean isSessionHomeWindow(Session session, IWindow client){
 	 	synchronized(mWindowMap) {
@@ -7835,8 +7828,8 @@ public class WindowManagerService extends IWindowManager.Stub
 
 		}
 
-		public void applyPositionForFourScreenWindow(WindowState win,boolean isStart){
-			mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart);
+		public void applyPositionForFourScreenWindow(WindowState win,boolean isStart,boolean isMove){
+			mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart,isMove);
 			
 			if(true){
 				if(mAppAlignWatcher.get(win)!=null){
@@ -7922,6 +7915,12 @@ public class WindowManagerService extends IWindowManager.Stub
 			}catch(RemoteException ex){}
 		}
 	}
+	public  void moveTaskToBack(int taskId){
+		Message m = mH.obtainMessage(H.MULTIWINDOW_MOVE_BACK_ACTION);
+		m.arg1 = taskId;
+		mH.sendMessageDelayed(m,1000);
+
+	}
 	@Override
 		public ArrayList<WindowState> getAllWindowInDefaultDisplay() {
 			// TODO Auto-generated method stub
@@ -7961,8 +7960,20 @@ public class WindowManagerService extends IWindowManager.Stub
 					win.mActualScale = 1.0f;
 					win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 					//win.getAttrs().width = (mScreenRect.right-mScreenRect.left)/2;
-					win.switchToPhoneMode(win.getAttrs().width,-1);
+					win.switchToPhoneMode(win.getAttrs().width/2,-1);
 				}
+			}
+			WindowState appWindowState = null;
+			if (ws.mAppWindowState != null) {
+				appWindowState = ws.mAppWindowState;
+			} else if (ws.mAttachedWindow != null) {
+				appWindowState = ws.mAttachedWindow;
+			}
+			if(appWindowState != null){
+				appWindowState.mHScale = 1.0f;
+				appWindowState.mVScale = 1.0f;
+				appWindowState.mActualScale = 1.0f;
+				appWindowState.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 			}
 			return 0;
 		}
@@ -8126,7 +8137,7 @@ public class WindowManagerService extends IWindowManager.Stub
 					}
 					tempGroupId = wtoken.groupId;
 				if(tempGroupId == taskId){
-					applyPositionForFourScreenWindow(ws,false);
+					applyPositionForFourScreenWindow(ws,false,false);
 				}
 					
 			}
@@ -8217,6 +8228,9 @@ public class WindowManagerService extends IWindowManager.Stub
 					}else{
 						posX = 0;
 						posY = 0;
+					}
+					if(win.isSurfaceViewHalfMode()){
+						win.switchToPhoneMode(-1,-1);	
 					}
 					float xOffset = win.mSystemDecorRect.left;
 					float yOffset = win.mSystemDecorRect.top;
@@ -9486,7 +9500,7 @@ public class WindowManagerService extends IWindowManager.Stub
 						}
 						LOGD("--------moveDownTaskToOtherStep-----------step:"+step+",win:"+win+",win.taskId:"+win.taskId+",taskId:"+taskId);
 						win.stepOfFourScreen = step;
-						applyPositionForFourScreenWindow(win,false);
+						applyPositionForFourScreenWindow(win,false,false);
 					}
 				}
 			}
@@ -9920,7 +9934,8 @@ public class WindowManagerService extends IWindowManager.Stub
         public static final int WALLPAPER_DRAW_PENDING_TIMEOUT = 39;
 		public static final int MULTIWINDOW_FREEZING_DISPLAY_ACTION = 40;
 		public static final int SET_MULTIWINDOW_MODE_ACTION = 41;
-	public static final int DO_TASK_DISPLAY_CHANGED = 42;
+		public static final int DO_TASK_DISPLAY_CHANGED = 42;
+		public static final int MULTIWINDOW_MOVE_BACK_ACTION = 43;
         @Override
         public void handleMessage(Message msg) {
             if (DEBUG_WINDOW_TRACE) {
@@ -10483,6 +10498,13 @@ public class WindowManagerService extends IWindowManager.Stub
 				case DO_TASK_DISPLAY_CHANGED:
 					synchronized (mWindowMap) {
 						moveTransitionToSecondDisplay(msg.arg1,msg.arg2);
+					}
+					break;
+				case MULTIWINDOW_MOVE_BACK_ACTION:
+					try {
+						mActivityManager.moveTaskToBack(msg.arg1,
+							ActivityManager.MOVE_TASK_WITH_HOME);
+					} catch (RemoteException e) {
 					}
 					break;
             }

@@ -953,8 +953,12 @@
     <string name="quick_settings_reset_confirmation_button">Hide</string>
       <string name="quick_settings_cutimage_device_label">cut image</string>
     <string name="accessibility_desc_app_bar">App Bar.</string>
-     <string name="popuwindow_close_app">close app</string>
-    <string name="popuwindow_lock_app">unlock app</string>
+     <string name="popuwindow_close_app">CLOSE APP</string>
+    <string name="popuwindow_lock_app">UNLOCK</string>
     
       <string name="config_multi_dialog_title">Please select</string>
+    <string name="navbar_popupmenu_windowmode">APP MODE</string>
+    <string name="navbar_popupmenu_pad_mode">PAD</string>
+    <string name="navbar_popupmenu_phone_mode">PHONE</string>
+    <string name="navbar_popupmenu_splite_mode">SPLITE</string>
 </resources>

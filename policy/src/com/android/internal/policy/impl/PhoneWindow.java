@@ -3890,11 +3890,9 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         // Remaining setup -- of background and title -- that only applies
         // to top-level windows.
         if (getContainer() == null) {
-            Drawable background = null;		
+            Drawable background = null;
 	        if (mBackgroundResource != 0) {
 	                background = getContext().getDrawable(mBackgroundResource);
-	         } else if(config.multiwindowflag == Configuration.ENABLE_MULTI_WINDOW){
-			background = new android.graphics.drawable.ColorDrawable(0xFF000000);
 	         }else {
 	                background = mBackgroundDrawable;
 	         }

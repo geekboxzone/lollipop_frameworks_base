@@ -1796,6 +1796,16 @@ final class ApplicationPackageManager extends PackageManager {
         }
     }
 
+    @Override
+    public boolean setAppMultiWindowMode(String pkgName, boolean phonemode, boolean halfscreenmode) {
+        try {
+            return mPM.setAppMultiWindowMode(pkgName, phonemode, halfscreenmode);
+        } catch (RemoteException e) {
+            // Should never happen!
+        }
+        return false;
+    }
+
     private final ContextImpl mContext;
     private final IPackageManager mPM;
 

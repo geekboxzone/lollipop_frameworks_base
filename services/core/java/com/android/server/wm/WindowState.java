@@ -551,7 +551,8 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
 			LOGD(mAppWindowState+"----------------------mAttachedWindow:"+mAttrs.align );
 			LOGD(this+"----------------------mAttachedWindow:"+mAttachedWindow.getAttrs());
-			//mMultiWindowState.switchToPhoneMode();
+			if(mAppWindowState.isHalfMode())
+				mMultiWindowState.switchToPhoneMode(getAttrs().width/2,-1);
 		}else{
             ArrayList<WindowState> list = mService.getAllWindowListInDefaultDisplay();
 			for(int i= 0;i<list.size();i++){
@@ -634,7 +635,13 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
  	public boolean isHalfMode() {
             return mMultiWindowState.isHalfMode();
-        }
+    }
+	public boolean isSurfaceViewHalfMode(){
+   		if(isHalfMode() && getAttrs().taskId == -1){
+			return true;
+		}
+		return false;
+	}
     @Override
     public int getOwningUid() {
         return mOwnerUid;
@@ -1430,10 +1437,9 @@ private void shouldForceAnim(int align,int value){
 
         mInputWindowHandle.inputChannel = null;
     }
-	public void switchToPhoneMode(int wight ,int height){
-
-	mMultiWindowState.switchToPhoneMode();
-		}
+	public void switchToPhoneMode(int width ,int height){
+		mMultiWindowState.switchToPhoneMode(width,height);
+	}
 
     private class DeathRecipient implements IBinder.DeathRecipient {
         @Override

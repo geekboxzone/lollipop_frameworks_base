@@ -225,6 +225,8 @@ import dalvik.system.VMRuntime;
 
 import libcore.io.IoUtils;
 import libcore.util.EmptyArray;
+import java.io.FileWriter;
+import java.io.BufferedWriter;
 
 import com.android.server.pm.PreScanHelper;
 import com.android.server.pm.PreScanHelper.PreScanPackageItem;
@@ -1375,7 +1377,7 @@ public class PackageManagerService extends IPackageManager.Stub
         mSystemPermissions = systemConfig.getSystemPermissions();
         mAvailableFeatures = systemConfig.getAvailableFeatures();
 
-	checkAppSupportPhonemode(null);
+	getAppMultiWindowMode(null);
 
         boolean matchHome = false;
         synchronized (mInstallLock) {
@@ -14030,22 +14032,34 @@ public class PackageManagerService extends IPackageManager.Stub
     }
 
     public MultiWindowMode scanModePkg(String pkg) {
-		return checkAppSupportPhonemode(pkg);
+		return getAppMultiWindowMode(pkg);
     }
 
-    private HashMap<String,MultiWindowMode> phoneModeList;// = new ArrayList<String>();
-    public MultiWindowMode checkAppSupportPhonemode(String pkgName) {
-       MultiWindowMode multiWindowMode = null;
-       File configureDir = Environment.getRootDirectory();
-       File phoneModeWhiteList = new File(configureDir, "etc/package_phonemode.xml");
-       if (phoneModeList == null && phoneModeWhiteList.exists()) {
-            phoneModeList = new HashMap<String,MultiWindowMode>();
-            phoneModeList.clear();
+
+
+
+    private HashMap<String, MultiWindowMode> mAppWindowModeMap;// = new ArrayList<String>();
+    private final static String TAG_MULTIWINDOW = "multiwindow_mode";
+    public MultiWindowMode getAppMultiWindowMode(String pkgName) {
+        MultiWindowMode multiWindowMode = null;
+		Log.e(TAG_MULTIWINDOW, "MultiWindow - initConfigFile dosen't exist: ");
+        File appWindowModeConfigFile = new File(Environment.getDataDirectory(), "system/package_phonemode.xml");
+        if(!appWindowModeConfigFile.exists()) {
+            Log.e(TAG_MULTIWINDOW, "MultiWindow - appWindowModeConfigFile dosen't exist, get it from init config file");
+            File initConfigFile = new File(Environment.getRootDirectory(), "etc/package_phonemode.xml");
+            if(initConfigFile.exists()) {
+                FileUtils.copyFile(initConfigFile, appWindowModeConfigFile);
+            } else {
+                Log.e(TAG_MULTIWINDOW, "MultiWindow - initConfigFile dosen't exist: " + initConfigFile.getPath());
+            }
+        }
+        if (mAppWindowModeMap == null && appWindowModeConfigFile.exists()) {
+            mAppWindowModeMap = new HashMap<String,MultiWindowMode>();
+            mAppWindowModeMap.clear();
             try {
-                FileInputStream stream = new FileInputStream(phoneModeWhiteList);
+                FileInputStream stream = new FileInputStream(appWindowModeConfigFile);
                 XmlPullParser parser = Xml.newPullParser();
                 parser.setInput(stream, null);
-
                 int type;
                 do {
                     type = parser.next();
@@ -14053,31 +14067,79 @@ public class PackageManagerService extends IPackageManager.Stub
                         String tag = parser.getName();
                         if ("app".equals(tag)) {
                             if (parser.getAttributeCount() > 0) {
-                                String pkgname = parser.getAttributeValue(0);//null, "package");
+                                String pkgname = parser.getAttributeValue(0);
                                 String pkgmode = parser.getAttributeValue(1);
                                 String pkghalfscreen = parser.getAttributeValue(2);
-                                if(pkgname != null)
-                                    phoneModeList.put(pkgname,new MultiWindowMode(
+                                if(pkgname != null) {
+                                    mAppWindowModeMap.put(pkgname, new MultiWindowMode(
+                                            pkgname,
                                             Boolean.parseBoolean(pkgmode),
                                             Boolean.parseBoolean(pkghalfscreen)));
+                                }
                             }
                         }
                     }
                 } while (type != XmlPullParser.END_DOCUMENT);
             } catch (NullPointerException e) {
-                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+                Slog.w(TAG_MULTIWINDOW, "failed parsing " + appWindowModeConfigFile, e);
             } catch (NumberFormatException e) {
-                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+                Slog.w(TAG_MULTIWINDOW, "failed parsing " + appWindowModeConfigFile, e);
             } catch (XmlPullParserException e) {
-                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+                Slog.w(TAG_MULTIWINDOW, "failed parsing " + appWindowModeConfigFile, e);
             } catch (IOException e) {
-                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+                Slog.w(TAG_MULTIWINDOW, "failed parsing " + appWindowModeConfigFile, e);
             } catch (IndexOutOfBoundsException e) {
-                Slog.w(TAG, "failed parsing " + phoneModeWhiteList, e);
+                Slog.w(TAG_MULTIWINDOW, "failed parsing " + appWindowModeConfigFile, e);
             }
         }
-        if(pkgName == null || phoneModeList == null) return null;
-        multiWindowMode = phoneModeList.get(pkgName);
+        if(pkgName == null || mAppWindowModeMap == null) return null;
+        multiWindowMode = mAppWindowModeMap.get(pkgName);
         return multiWindowMode;
+    }
+
+    public boolean setAppMultiWindowMode(String pkgName, boolean phonemode, boolean halfscreenmode) {
+        if(pkgName == null) {
+            return false;
+        }
+        MultiWindowMode mode = new MultiWindowMode(pkgName, phonemode, halfscreenmode);
+        try {
+            File configFile = new File(Environment.getDataDirectory(), "system/package_phonemode.xml");
+            File configFileTmp = new File(Environment.getDataDirectory(), "system/package_phonemode_tmp.xml");
+            configFileTmp.createNewFile();
+//        StringBuffer sb= new StringBuffer("");
+            FileReader reader = new FileReader(configFile);
+            BufferedReader br = new BufferedReader(reader);
+            FileWriter writer = new FileWriter(configFileTmp);
+            BufferedWriter bw = new BufferedWriter(writer);
+            String str = null;
+            boolean isFound = false;
+            while ((str = br.readLine()) != null) {
+                if (str.contains(pkgName)) {
+                    str = mode.toXMLString();
+                    isFound = true;
+                } else if (!isFound && str.contains("</office-package>")) {
+                    str = mode.toXMLString() + "\n";
+                    str += "</office-package>";
+                }
+                bw.write(str + "\n");
+            }
+            bw.flush();
+            br.close();
+            reader.close();
+            bw.close();
+            writer.close();
+            configFile.delete();
+            configFileTmp.renameTo(configFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ApplicationInfo appinfo = getApplicationInfo(pkgName, 0, UserHandle.myUserId());
+        if(appinfo!=null) {
+            appinfo.phoneMode = phonemode;
+            appinfo.halfScreenMode = halfscreenmode;
+        }
+        return true;
     }
 }

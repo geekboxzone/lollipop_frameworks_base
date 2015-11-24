@@ -824,4 +824,12 @@ public class MockPackageManager extends PackageManager {
     public void setPackagePerformanceMode(String pkgName, int mode) {
         throw new UnsupportedOperationException();
     }
+	
+    /**
+	     * @hide
+	     */
+	 @Override
+    public boolean setAppMultiWindowMode(String pkgName, boolean phonemode, boolean halfscreenmode) {
+     throw new UnsupportedOperationException();
+	 	}
 }

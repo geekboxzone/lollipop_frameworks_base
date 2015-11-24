@@ -101,7 +101,6 @@ public class SurfaceView extends View {
             = new WindowManager.LayoutParams();
     IWindowSession mSession;
     MyWindow mWindow;
-	View myView;
     final Rect mVisibleInsets = new Rect();
     final Rect mWinFrame = new Rect();
     final Rect mOverscanInsets = new Rect();
@@ -113,7 +112,8 @@ public class SurfaceView extends View {
     static final int GET_NEW_SURFACE_MSG = 2;
     static final int UPDATE_WINDOW_MSG = 3;
 	static final int DRAW_BACK_MSG = 4;
-    
+    static final int SWITCH_PHONE_MSG = 5;
+	
     int mWindowType = WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA;
 
     boolean mIsCreating = false;
@@ -129,9 +129,7 @@ public class SurfaceView extends View {
                     handleGetNewSurface();
                 } break;
                 case UPDATE_WINDOW_MSG: {
-					//getHolder().setFixedSize(640,688);
-			
-                    updateWindow(true, false);
+                    updateWindow(false, false);
                 } break;
 		case DRAW_BACK_MSG:{
                    if( getContext().getResources().getConfiguration().multiwindowflag
@@ -140,15 +138,14 @@ public class SurfaceView extends View {
 		     invalidate();
 	}
 		}break;
-		case 5:{
-			mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+		case SWITCH_PHONE_MSG:{
 					WindowManager.LayoutParams wmparams = mLayout;
-					//mRequestedWidth =mRequestedWidth/2;
-					//int myWidth = mLayout.width = mRequestedWidth/2;
-					//if (myWidth <= 0) mLayout.width = getWidth()/2;
-					//System.out.println(myWidth+"=== ==== === =switchToPhoneMode====================");
-					//setFrame(getLeft(),getTop(),getRight()/2,getBottom());
-					//mLayout = wmparams;
+					int width = msg.arg1;
+					if(width != -1){
+						mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					}else{
+						mLayout.align = -1;
+					}
 					updateWindow(true,false);
 
 		}break;
@@ -225,7 +222,6 @@ public class SurfaceView extends View {
 
     private void init() {
         setWillNotDraw(true);
-		myView = this;
         //setBackgroundColor(0xFF000000);
     }
 
@@ -471,17 +467,20 @@ public class SurfaceView extends View {
         if (mTranslator != null) {
             mSurface.setCompatibilityTranslator(mTranslator);
         }
-
+		Display display = getDisplay();
         int myWidth = mRequestedWidth;
         if (myWidth <= 0) myWidth = getWidth();
-		/*if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT && myWidth ==1280){
-			myWidth =  640;
-		}else{
-			myWidth = 1280;
-		}*/
         int myHeight = mRequestedHeight;
         if (myHeight <= 0) myHeight = getHeight();
-
+		if ( "cn.wps.moffice_eng".equals(getContext().getPackageName()) &&
+			getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW) {
+			if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT ){		
+				myWidth =  (myWidth == display.getWidth()) ?myWidth/2:myWidth;
+			}else{
+				myWidth = display.getWidth();
+				myHeight = 800;
+			}
+		}
         getLocationInWindow(mLocation);
         final boolean creating = mWindow == null;
         final boolean formatChanged = mFormat != mRequestedFormat;
@@ -512,13 +511,17 @@ public class SurfaceView extends View {
                 mLayout.x = mLeft;
                 mLayout.y = mTop;
                 mLayout.width = getWidth();
-				/*if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT && myWidth ==640){
-					mLayout.width =  640;
-				}else{
-					mLayout.width =  1280;
-				}*/
-				Log.i(TAG, "   updateWindow mRequestedWidth: "+mRequestedWidth +",myWidth:"+myWidth + "mLayout.width :"+mLayout.width);
                 mLayout.height = getHeight();
+				if (DEBUG)Log.i(TAG, "   updateWindow mRequestedWidth: "+mRequestedWidth +",myHeight:"+myHeight + "mLayout.width :"+mLayout.height);
+				if ( "cn.wps.moffice_eng".equals(getContext().getPackageName())&&
+						getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW) {
+					if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+						mLayout.width =  myWidth;
+					}else{
+						mLayout.width =  display.getWidth();
+						mLayout.height = 800;
+					}
+				}
                 if (mTranslator != null) {
                     mTranslator.translateLayoutParamsInAppWindowToScreen(mLayout);
                 }
@@ -538,7 +541,7 @@ public class SurfaceView extends View {
                 mLayout.privateFlags |= WindowManager.LayoutParams.PRIVATE_FLAG_NO_MOVE_ANIMATION;
 
                 if (mWindow == null) {
-                    Display display = getDisplay();
+                  
                     mWindow = new MyWindow(this);
                     mLayout.type = mWindowType;
                     mLayout.gravity = Gravity.START|Gravity.TOP;
@@ -561,7 +564,6 @@ public class SurfaceView extends View {
                     mDrawingStopped = !visible;
 
                     if (DEBUG) Log.i(TAG, "Cur surface: " + mSurface);
-
                     relayoutResult = mSession.relayout(
                         mWindow, mWindow.mSeq, mLayout, mWidth, mHeight,
                             visible ? VISIBLE : GONE,
@@ -571,6 +573,7 @@ public class SurfaceView extends View {
                     if ((relayoutResult & WindowManagerGlobal.RELAYOUT_RES_FIRST_TIME) != 0) {
                         mReportDrawNeeded = true;
                     }
+					mWinFrame.set(0, 0 ,1280, 791);
 
                     if (DEBUG) Log.i(TAG, "New surface: " + mNewSurface
                             + ", vis=" + visible + ", frame=" + mWinFrame);
@@ -662,7 +665,7 @@ public class SurfaceView extends View {
                 }
             } catch (RemoteException ex) {
             }
-            if (DEBUG) Log.v(
+            if (true) Log.v(
                 TAG, "Layout: x=" + mLayout.x + " y=" + mLayout.y +
                 " w=" + mLayout.width + " h=" + mLayout.height +
                 ", frame=" + mSurfaceFrame);
@@ -744,9 +747,9 @@ public class SurfaceView extends View {
 	public void switchToPhoneMode(int width,int height){
 	   SurfaceView surfaceView = mSurfaceView.get();
 	   if (surfaceView != null) {
-		
-		  surfaceView.mHandler.sendEmptyMessageDelayed(5,500);
-		  
+		  Message msg = surfaceView.mHandler.obtainMessage(SWITCH_PHONE_MSG);
+		  msg.arg1 = width;
+		  surfaceView.mHandler.sendMessage(msg);
 	   }
 	}
 

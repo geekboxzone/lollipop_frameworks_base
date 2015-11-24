@@ -3080,9 +3080,10 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 Intent intentp = new Intent();
                 mHandler.removeCallbacks(stylusrunnable);
                 SystemProperties.set("sys.stylus.issecondary","true");
-                intentp.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
-                intentp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intentp.putExtra("IS_FULL_SCREEN_POSTIL", true);
+                //intentp.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
+                intentp.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
+		intentp.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //intentp.putExtra("IS_FULL_SCREEN_POSTIL", true);
                 mContext.startActivity(intentp);
                return -1;
               }

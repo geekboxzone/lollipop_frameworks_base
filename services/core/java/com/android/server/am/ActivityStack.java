@@ -1069,8 +1069,8 @@ final class ActivityStack {
                 prev = finishCurrentActivityLocked(prev, FINISH_AFTER_VISIBLE, false);
             } else if (prev.app != null) {
                 if (DEBUG_PAUSE) Slog.v(TAG, "Enqueueing pending stop: " + prev);
-		//if(prev.difPkgTask)
-		//    mService.moveTaskToBack(prev.task.taskId);
+		    //if(prev.difPkgTask)
+		     // mService.moveTaskToBack(prev.task.taskId);
                 if (prev.waitingVisible) {
                     prev.waitingVisible = false;
                     mStackSupervisor.mWaitingVisibleActivities.remove(prev);

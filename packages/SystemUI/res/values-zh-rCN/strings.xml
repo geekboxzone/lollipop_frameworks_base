@@ -392,4 +392,8 @@
     <string name="popuwindow_close_app">关闭应用</string>
     <string name="popuwindow_lock_app">解除锁定</string>
     <string name="config_multi_dialog_title">请选择</string>
+    <string name="navbar_popupmenu_windowmode">窗口模式</string>
+    <string name="navbar_popupmenu_pad_mode">平板</string>
+    <string name="navbar_popupmenu_phone_mode">手机</string>
+    <string name="navbar_popupmenu_splite_mode">二分屏</string>
 </resources>

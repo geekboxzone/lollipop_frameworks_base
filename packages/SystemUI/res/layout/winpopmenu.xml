@@ -2,31 +2,94 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    
-    android:orientation="horizontal" >
-    
-     <Button
-            android:id="@+id/popuptext"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:gravity="bottom"
+        android:background="@android:drawable/dialog_holo_light_frame"
+        android:layout_gravity="center_horizontal|bottom"
+        android:clickable="false"
+        android:layout_marginRight="-10dp">
+        <TextView
+            android:id="@+id/popuptext_windowmode"
             android:layout_width="match_parent"
-            android:layout_height="fill_parent"
-            android:background="@drawable/bg_item_taskbar_black"
-            android:textColor="@android:color/white"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:textSize="16sp"
+            android:text="@string/navbar_popupmenu_windowmode"
+            android:gravity="center"
+            android:clickable="true"
+            android:textColor="@android:color/black"
+            android:background="@drawable/navbar_popup_menuitem" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="@android:color/darker_gray"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp" />
+        <TextView
+            android:id="@+id/popuptext_close_app"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp"
+            android:text="@string/popuwindow_close_app"
             android:textSize="16sp"
             android:gravity="center"
-            
-             />
-             <!--ImageView
-              android:id="@+id/popupicon"
-                       android:layout_width="32dp"
-                       android:layout_height="32dp"
-                       android:layout_gravity="center_vertical"
-                       
-                       android:src="@drawable/pubtn_close"
-                       />
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="0dp"
-    android:layout_height="0dp"
-    android:cacheColorHint="#00000000" 
-	android:id="@+id/winpoplistView"
-/-->
+            android:clickable="true"
+            android:textColor="@android:color/black"
+            android:background="@drawable/navbar_popup_menuitem" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/submenu_mode"
+        android:visibility="invisible"
+        android:background="@android:drawable/dialog_holo_light_frame"
+        android:layout_gravity="top"
+        android:layout_marginBottom="20dp">
+        <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:id="@+id/multiwindow_mode">
+            <RadioButton android:id="@+id/radio_pad_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:text="@string/navbar_popupmenu_pad_mode" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@android:color/darker_gray"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp" />
+            <RadioButton android:id="@+id/radio_phone_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:text="@string/navbar_popupmenu_phone_mode" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@android:color/darker_gray"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp" />
+            <RadioButton android:id="@+id/radio_splite_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textSize="16sp"
+                android:textColor="@android:color/black"
+                android:text="@string/navbar_popupmenu_splite_mode" />
+        </RadioGroup>
+    </LinearLayout>
 </LinearLayout>

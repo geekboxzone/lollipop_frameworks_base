@@ -4120,4 +4120,13 @@ public abstract class PackageManager {
      * @hide
      */
     public abstract void setPackagePerformanceMode(String pkgName, int mode);
+
+    /**
+     * set app window mode in multiwindow
+     * @param pkgName
+     * @param phonemode
+     * @param halfscreenmode
+     * @return
+     */
+    public abstract boolean setAppMultiWindowMode(String pkgName, boolean phonemode, boolean halfscreenmode);
 }

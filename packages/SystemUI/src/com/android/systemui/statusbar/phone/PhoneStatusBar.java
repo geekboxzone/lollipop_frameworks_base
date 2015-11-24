@@ -51,6 +51,7 @@ import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
@@ -58,6 +59,7 @@ import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.inputmethodservice.InputMethodService;
@@ -123,7 +125,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.os.SystemProperties;
-import android.content.res.Configuration;
+
 import com.android.internal.statusbar.StatusBarIcon;
 import com.android.keyguard.KeyguardHostView.OnDismissAction;
 import com.android.keyguard.ViewMediatorCallback;
@@ -184,7 +186,6 @@ import com.android.systemui.statusbar.stack.StackScrollAlgorithm;
 import com.android.systemui.statusbar.stack.StackScrollState.ViewState;
 import com.android.systemui.volume.VolumeComponent;
 import com.android.systemui.statusbar.circlemenu.FourScreenCircleMenuView;
-import com.android.systemui.statusbar.circlemenu.FourScreenMenuWindow;
 import com.android.systemui.statusbar.minwindow.MinWindow;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -194,60 +195,46 @@ import java.util.HashMap;
 import android.content.ServiceConnection;
 import android.content.ComponentName;
 import android.os.Messenger;
-import android.content.BroadcastReceiver;
-import android.content.Intent;
-import android.content.IntentFilter;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.io.File;
 import java.util.List;
 import android.widget.Toast;
 import android.widget.ImageView.ScaleType;
-import android.provider.Settings;
-import android.os.Environment;
-import android.os.Handler;
-import android.util.Log;
+
 import java.util.Map;
-import android.os.SystemProperties;
-import android.content.res.Configuration;
-import android.view.WindowManagerImpl;
+
 import com.android.systemui.statusbar.circlemenu.CircleMenuView;
 import com.android.systemui.statusbar.fourscreen.FourScreenBackWindow;
-import java.util.HashMap; 
 
-import android.app.ActivityManager;
-import android.app.ActivityManagerNative;
-import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
-import android.widget.SimpleAdapter; 
-import android.widget.AdapterView.OnItemLongClickListener; 
+import android.widget.SimpleAdapter;
 import android.widget.SimpleAdapter.ViewBinder;
 import android.widget.GridView;
 import android.widget.HorizontalScrollView;
-import android.content.pm.ApplicationInfo; 
- 
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageItemInfo;
-import java.util.HashSet;
+
 import java.util.Iterator;
-import java.util.Set;
+
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.Dialog;
 import android.app.AlertDialog;
 import android.widget.ListView;
 import android.widget.Button;
 import android.view.InputDevice;
-import android.app.AppGlobals;
 
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodInfo;
 import android.content.DialogInterface;
-
+import android.widget.RadioGroup;
+import android.widget.PopupMenu;
+import android.view.MenuInflater;
+import com.android.systemui.screenshot.blur.*;
+import android.app.WallpaperManager;
 
 public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener,CircleMenuView.BtnClickCallBack {
@@ -391,6 +378,7 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     ImageView mScreenshot;
 
 	//huangjc win bar
+    WallpaperManager mWallpaperManager;
 	Dialog popupWindow;
 	Dialog mLockpopupWindow;
 	GridView mAppsGridView;
@@ -935,6 +923,52 @@ final Object mScreenshotLock = new Object();
 		        }	     
 		 }           
 	}; 
+	//Listen ACTION_WALLPAPER_CHANGED Broadcast    
+     private BroadcastReceiver wallpaperReceiver = new BroadcastReceiver() {
+          @Override
+          public void onReceive(Context context, Intent intent) {
+               if(intent.getAction().equals(Intent.ACTION_WALLPAPER_CHANGED)){
+                  if(mContext.getResources().getConfiguration().enableMultiWindow()){
+                     //updateTopBlur();
+                     updateBottomBlur();
+                  }
+               }
+          }
+     };
+      public void updateTopBlur(){
+        mDisplay.getRealMetrics(mDisplayMetrics);
+        int[] dims = {mDisplayMetrics.widthPixels, mDisplayMetrics.heightPixels};
+        mStatusBarView.setBackgroundColor(Color.TRANSPARENT);
+        int barHeight = mContext.getResources().getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);
+                Bitmap WallpaperA = null;
+        try {
+                WallpaperA = ScreenshotAPI.makeHomeBlur(mWallpaperManager.getBitmap(),dims[0],dims[1]);
+            } catch (RuntimeException e) {
+                Log.e(TAG,"RuntimeException"+e);
+            } catch (OutOfMemoryError e) {
+                Log.e(TAG,"OutOfMemoryError"+e);
+            }
+        Bitmap blur = ScreenshotAPI.makeTopBlur(WallpaperA,barHeight);
+        mStatusBarView.setBackground(new BitmapDrawable(mContext.getResources(),blur));
+        WallpaperA = null;
+     }
+     public void updateBottomBlur(){
+        mDisplay.getRealMetrics(mDisplayMetrics);
+        int[] dims = {mDisplayMetrics.widthPixels, mDisplayMetrics.heightPixels};
+        mNavigationBarView.setBackgroundColor(Color.TRANSPARENT);
+        int barHeight = mContext.getResources().getDimensionPixelSize(com.android.internal.R.dimen.navigation_bar_height);
+                Bitmap WallpaperB = null;
+        try {
+                WallpaperB = ScreenshotAPI.makeHomeBlur(mWallpaperManager.getBitmap(),dims[0],dims[1]);
+            } catch (RuntimeException e) {
+                Log.e(TAG,"RuntimeException"+e);
+            } catch (OutOfMemoryError e) {
+                Log.e(TAG,"OutOfMemoryError"+e);
+            }
+        Bitmap blur = ScreenshotAPI.makeBottomBlur(WallpaperB,barHeight);
+        mNavigationBarView.setBackground(new BitmapDrawable(mContext.getResources(),blur));
+        WallpaperB = null;
+     }
     private BroadcastReceiver receiver=new BroadcastReceiver() {
 		
 		                @Override
@@ -976,6 +1010,8 @@ final Object mScreenshotLock = new Object();
     packagefilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
     packagefilter.addDataScheme("package");
         context.registerReceiver(packagereceiver, packagefilter);	
+        
+    mContext.registerReceiver(wallpaperReceiver, new IntentFilter(Intent.ACTION_WALLPAPER_CHANGED));
 
         Resources res = context.getResources();
 
@@ -1744,6 +1780,34 @@ final Object mScreenshotLock = new Object();
          }
           return null;
 	}
+
+    public ApplicationInfo getCurrentAppInfoSkipLauncher(String pkgname) {
+        ApplicationInfo appinfo = null;
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        PackageManager pm = mContext.getApplicationContext().getPackageManager();
+        List<ActivityManager.RecentTaskInfo> appTask = am.getRecentTasks(50,
+                ActivityManager.RECENT_WITH_EXCLUDED | ActivityManager.RECENT_IGNORE_UNAVAILABLE);
+        if(!appTask.isEmpty()){
+            try {
+                for(ActivityManager.RecentTaskInfo info : appTask) {
+                    Intent intent = new Intent(info.baseIntent);
+                    if(info.origActivity != null) intent.setComponent(info.origActivity);
+                    ResolveInfo resolveInfo = pm.resolveActivity(intent, 0);
+                    if(resolveInfo != null) {
+                        appinfo = resolveInfo.activityInfo.applicationInfo;
+                        String getpkgname = resolveInfo.activityInfo.packageName;
+                        if(isCurrentHomeActivity(getpkgname, null) || !getpkgname.equals(pkgname)) {
+                            continue;
+                        }
+                    }
+                    return appinfo;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
      public boolean checkForRecent(String packageName){
             ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
             PackageManager pm = mContext.getApplicationContext().getPackageManager();
@@ -1861,7 +1925,7 @@ final Object mScreenshotLock = new Object();
 			return;
 			}
 			
-                   String getCurrentApps = getCurrentApps();	
+                   String getCurrentApps = getCurrentApps();
 		if(appslist.size() >0){
            Iterator<HashMap<String,Object>> it= appslist.iterator();
                 HashMap<String,Object> hash;
@@ -1967,71 +2031,129 @@ private boolean mIsButton1Lock = false;
 private boolean mIsButton2Lock = false;
 
 private boolean	mRightMouseClick = false;
-private String appclosename = null;
-	public void showPopuWindow(int x,String name) {  
-        ////if (popupWindow == null) { 
-        appclosename = name;
-         if (popupWindow != null)  
-			popupWindow.dismiss();
-		    WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-            LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);  
+private String popupAppName = null;
+	public void showPopuWindow(int x,String name) {
+        popupAppName = name;
+        if (popupWindow != null) {
+            popupWindow.dismiss();
+        }
+        WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
   
-            View popupview = layoutInflater.inflate(R.layout.winpopmenu, null);  
-           // ImageView mPopupIcon = (ImageView) popupview.findViewById(R.id.popupicon);
-			Button mPopupText = (Button) popupview.findViewById(R.id.popuptext);
-			mPopupText.setText(R.string.popuwindow_close_app);
-			mPopupText.setClickable(true);
-			mPopupText.setOnClickListener(new Button.OnClickListener(){//
-            public void onClick(View v) {    
-                 //Toast.makeText(mContext,"close the app", 1000).show();
-                 if(appclosename!=null){
-				 	removeAppTask(appclosename);
-				    isWinShow = false;
-			         UpdateAppsList(appclosename);
-				  }
-						   if (popupWindow != null) {  
-						   	LOGD("wintask ==showPopuWindow dismiss==");
-							   popupWindow.dismiss();
-							   mIsShowCloseApp = false;
-						   }     
-            }    
-  
-        });     
-            popupWindow = new Dialog(mContext,R.style.FullHeightDialog);
-		   popupWindow.getWindow().setGravity(Gravity.LEFT/* | Gravity.BOTTOM*/);
-			wmDParams = popupWindow.getWindow().getAttributes();
-			wmDParams.width = 250;		
-			wmDParams.height =100;
-      if(mDisplayMetrics.densityDpi > 240){
-			wmDParams.x = x-45;
-			wmDParams.y = wm.getDefaultDisplay().getHeight()-810;
-			}else if(mDisplayMetrics.densityDpi > 160){
-			wmDParams.x = x-30;
-			wmDParams.y = wm.getDefaultDisplay().getHeight()-400;
-			}else{
-			wmDParams.x = x-25;
-      wmDParams.y = wm.getDefaultDisplay().getHeight()-200;
-      }
-			wmDParams.format = 1;
-			popupWindow.setContentView(popupview);
-			popupWindow.getWindow().setAttributes(wmDParams);
-			popupWindow.getWindow().setType(2002);
-            popupWindow.setCanceledOnTouchOutside(true); 
+        View popupview = layoutInflater.inflate(R.layout.winpopmenu, null);
+        // ImageView mPopupIcon = (ImageView) popupview.findViewById(R.id.popupicon);
+        TextView popuptext_close_app = (TextView) popupview.findViewById(R.id.popuptext_close_app);
+        popuptext_close_app.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Toast.makeText(mContext,"close the app", 1000).show();
+                if (popupAppName != null) {
+                    removeAppTask(popupAppName);
+                    isWinShow = false;
+                    UpdateAppsList(popupAppName);
+                }
+                if (popupWindow != null) {
+                    LOGD("wintask ==showPopuWindow dismiss==");
+                    popupWindow.dismiss();
+                    mIsShowCloseApp = false;
+                }
+            }
+        });
+        TextView popuptext_windowmode = (TextView) popupview.findViewById(R.id.popuptext_windowmode);
+        final View submenu_mode = popupview.findViewById(R.id.submenu_mode);
+        final RadioGroup radio_multiwindow_mode = (RadioGroup)popupview.findViewById(R.id.multiwindow_mode);
+        popuptext_windowmode.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                if(submenu_mode.getVisibility() == View.INVISIBLE) {
+                    submenu_mode.setVisibility(View.VISIBLE);
+                    ApplicationInfo cur_appinfo = getCurrentAppInfoSkipLauncher(popupAppName);
+                    if(cur_appinfo != null) {
+                        boolean phonemode = cur_appinfo.phoneMode;
+                        boolean halfscreenmode = cur_appinfo.halfScreenMode;
+                        if(!phonemode && !halfscreenmode) {
+                            radio_multiwindow_mode.check(R.id.radio_pad_mode);
+                        } else if(phonemode && !halfscreenmode) {
+                            radio_multiwindow_mode.check(R.id.radio_phone_mode);
+                        } else if(!phonemode && halfscreenmode) {
+                            radio_multiwindow_mode.check(R.id.radio_splite_mode);
+                        }
+                        radio_multiwindow_mode.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                                switch (checkedId) {
+                                    case R.id.radio_pad_mode:
+                                        setCurrentAppMultiWindowMode(popupAppName,false, false);
+                                        break;
+                                    case R.id.radio_phone_mode:
+                                        setCurrentAppMultiWindowMode(popupAppName, true, false);
+                                        break;
+                                    case R.id.radio_splite_mode:
+                                        setCurrentAppMultiWindowMode(popupAppName, false, true);
+                                        break;
+                                    default:
+                                }
+                                if (popupWindow != null) {
+                                    LOGD("wintask ==showPopuWindow dismiss==");
+                                    popupWindow.dismiss();
+                                    mIsShowCloseApp = false;
+                                }
+                            }
+                        });
+                    }
+                } else {
+                    submenu_mode.setVisibility(View.INVISIBLE);
+                }
+            }
+        });
 
-		    popupWindow.show();
-	        mIsShowCloseApp = true;
-		}
+        popupWindow = new Dialog(mContext,R.style.FullHeightDialog);
+        popupWindow.getWindow().setGravity(Gravity.LEFT/* | Gravity.BOTTOM*/);
+        wmDParams = popupWindow.getWindow().getAttributes();
+        wmDParams.width = 250;
+        wmDParams.height =100;
+        if(mDisplayMetrics.densityDpi > 240) {
+			wmDParams.x = x-75;
+			wmDParams.y = wm.getDefaultDisplay().getHeight()-810;
+        } else if (mDisplayMetrics.densityDpi > 160) {
+            wmDParams.x = x-60;
+            wmDParams.y = wm.getDefaultDisplay().getHeight()-400;
+        } else {
+            wmDParams.x = x-45;
+            wmDParams.y = wm.getDefaultDisplay().getHeight()-200;
+        }
+        wmDParams.format = 1;
+        popupWindow.setContentView(popupview);
+        popupWindow.getWindow().setAttributes(wmDParams);
+        popupWindow.getWindow().setType(2002);
+        popupWindow.setCanceledOnTouchOutside(true);
+
+        popupWindow.show();
+        mIsShowCloseApp = true;
+    }
+
+    private void setCurrentAppMultiWindowMode(String pkgname, boolean phonemode, boolean halfscreen) {
+        boolean isLauncher = isCurrentHomeActivity(pkgname, null);
+        if (pkgname != null && !isLauncher) {
+            // Change PackageManager config
+            PackageManager pm = mContext.getPackageManager();
+            pm.setAppMultiWindowMode(pkgname, phonemode, halfscreen);
+            // Close current app
+            removeAppTask(pkgname);
+            isWinShow = false;
+            UpdateAppsList(pkgname);
+        }
+    }
 
     public void showLockPopuWindow(int x,String name) {  
       if(mContext.getResources().getConfiguration().enableMultiWindow()){    
-        appclosename = name;
+        popupAppName = name;
          if (mLockpopupWindow != null)  
 			mLockpopupWindow.dismiss();
 		    WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
             LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);  
   
             View popupview = layoutInflater.inflate(R.layout.winpopmenu, null);  
-			Button mPopupText = (Button) popupview.findViewById(R.id.popuptext);
+			Button mPopupText = (Button) popupview.findViewById(R.id.popuptext_close_app);
 			mPopupText.setText(R.string.popuwindow_lock_app);
 			mPopupText.setTextSize(12);
 			mPopupText.setClickable(true);
@@ -2110,11 +2232,12 @@ private String appclosename = null;
 						intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_SINGLE_TOP );
 						mContext.startActivity(intent);
 					}
-					mRightMouseClick = false;
 					//doStartApplicationWithPackageName(packageName);
 				}else {
+                                       if(!mRightMouseClick)
 					moveAppTask(packageName,true);
 					}
+					mRightMouseClick = false;
 				}
              	}
 			 };
@@ -2126,7 +2249,7 @@ private String appclosename = null;
 				String packageName=(String)long_map.get("packagename"); 
 				int[] location = new  int[2] ;
                 view.getLocationOnScreen(location);
-				showPopuWindow(location [0]+10,packageName);
+				showPopuWindow(location[0] + 10, packageName);
 				return true;
 				}
 			 };
@@ -2322,9 +2445,10 @@ private String appclosename = null;
                   break;
                case 3:
                   Intent intent3 = new Intent();
-                intent3.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
-                intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent3.putExtra("IS_FULL_SCREEN_POSTIL", true);
+                //intent3.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
+                 intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
+		intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                //intent3.putExtra("IS_FULL_SCREEN_POSTIL", true);
                 mContext.startActivity(intent3);
                   break;
                default:
@@ -4326,6 +4450,7 @@ private String appclosename = null;
     public void createAndAddWindows() {
 		wm = (WindowManager) mContext.getSystemService(
 				Context.WINDOW_SERVICE);
+        mWallpaperManager = (WallpaperManager) mContext.getSystemService(Context.WALLPAPER_SERVICE);
         addMultiModeWindow();
         addStatusBarWindow();
 		addHalfScreenWindowController();

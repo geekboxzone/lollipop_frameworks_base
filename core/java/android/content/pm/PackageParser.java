@@ -5096,12 +5096,29 @@ public class PackageParser {
     }
 
     public static class MultiWindowMode {
+        public String mPackageName;
         public boolean mPhoneMode;
         public boolean mHalfScreenMode;
         public MultiWindowMode(){}
-        public MultiWindowMode(boolean phoneMode, boolean halfScreenMode) {
+        public MultiWindowMode(String pkgname, boolean phoneMode, boolean halfScreenMode) {
+            mPackageName = pkgname;
             mPhoneMode = phoneMode;
             mHalfScreenMode = halfScreenMode;
+        }
+
+        @Override
+        public String toString() {
+            return "{" + "mPackageName=" + mPackageName + ","
+                    + "mPhoneMode=" + mPhoneMode + ","
+                    + "mHalfScreenMode=" + mHalfScreenMode + "}";
+        }
+
+        public String toXMLString() {
+            return "    <"
+                    + "app package=\"" + mPackageName +"\""
+                    + " phonemode=\"" + mPhoneMode + "\""
+                    + " halfscreen=\"" + mHalfScreenMode + "\""
+                    + "/>";
         }
     }
 

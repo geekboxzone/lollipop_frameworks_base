@@ -353,7 +353,8 @@ public final class WindowManagerGlobal {
 				mParams.get(i).taskId == wparams.taskId && wparams.taskId != -1){
 				mParams.get(i).windowAnimations = wparams.windowAnimations;
 				mParams.get(i).width = wparams.width;
-				mParams.get(i).height = wparams.height;
+				if (!mViews.get(i).getContext().getApplicationInfo().halfScreenMode) 
+					mParams.get(i).height = wparams.height;
 				mParams.get(i).x = wparams.x;
 				mParams.get(i).y = wparams.y;
 				mParams.get(i).align = wparams.align;
