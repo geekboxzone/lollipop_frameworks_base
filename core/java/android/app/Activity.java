@@ -2398,9 +2398,9 @@ public class Activity extends ContextThemeWrapper
 
 	if ((keyCode == KeyEvent.KEYCODE_TV_KEYMOUSE_MODE_SWITCH)) {
 		if ("on".equals(mstate)) {
-			Toast.makeText(Activity.this, "Enter into mouse mode, click again to quit", Toast.LENGTH_LONG).show();
+			Toast.makeText(Activity.this, "Mouse mode", Toast.LENGTH_LONG).show();
 		} else if ("off".equals(mstate)) {
-			Toast.makeText(Activity.this, "Restore to default button mode", Toast.LENGTH_LONG).show();
+			Toast.makeText(Activity.this, "Button mode", Toast.LENGTH_LONG).show();
 		}
 	}
 
