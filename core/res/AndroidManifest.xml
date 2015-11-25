@@ -2385,7 +2385,7 @@
     <permission android:name="android.permission.ACCESS_SURFACE_FLINGER"
         android:label="@string/permlab_accessSurfaceFlinger"
         android:description="@string/permdesc_accessSurfaceFlinger"
-        android:protectionLevel="signature" />
+        android:protectionLevel="normal" />
 
     <!-- @SystemApi Allows an application to take screen shots and more generally
          get access to the frame buffer data.
