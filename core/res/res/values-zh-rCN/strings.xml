@@ -1881,4 +1881,5 @@
 	<string name="reboot_confirm" product="default">您的机器将重启.</string>
 	<!-- label for item that reboot in phone options dialog -->
 	<string name="global_action_reboot">重新启动</string> 
+    <string name="reboot2linux">"重启到Linux系统"</string>
 </resources>

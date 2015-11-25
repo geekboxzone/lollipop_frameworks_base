@@ -77,6 +77,9 @@ import android.widget.ImageView.ScaleType;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -291,6 +294,34 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 						return true; 
 					}
 				});
+                // reboot2linux
+                try{
+                    File f=new File("/dev/block/platform/ff0f0000.rksdmmc/by-name/linuxroot");
+                    if(f.exists()){
+                        mItems.add(
+                            new SinglePressAction(
+                                    com.android.internal.R.drawable.ic_lock_ubuntu,
+                                    R.string.reboot2linux) {
+
+                                public void onPress() {
+                                    mWindowManagerFuncs.rebootLinuxOS(false);
+                                }
+
+                                public boolean onLongPress() {
+                                    return true;
+                                }
+
+                                public boolean showDuringKeyguard() {
+                                    return true;
+                                }
+
+                                public boolean showBeforeProvisioning() {
+                                    return true;
+                                }
+                            });
+                    }
+                } catch(Exception e) {
+                }
 
             } else if (GLOBAL_ACTION_KEY_AIRPLANE.equals(actionKey)) {
                 mItems.add(mAirplaneModeOn);

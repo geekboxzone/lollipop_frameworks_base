@@ -49,6 +49,11 @@ import com.android.server.pm.PackageManagerService;
 
 import android.util.Log;
 import android.view.WindowManager;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public final class ShutdownThread extends Thread {
     // constants
@@ -68,6 +73,7 @@ public final class ShutdownThread extends Thread {
     
     private static boolean mReboot;
     private static boolean mRebootSafeMode;
+    private static boolean mReboot2Linux;
     private static String mRebootReason;
 
     // Provides shutdown assurance in case the system_server is killed
@@ -108,6 +114,7 @@ public final class ShutdownThread extends Thread {
     public static void shutdown(final Context context, boolean confirm) {
         mReboot = false;
         mRebootSafeMode = false;
+        mReboot2Linux = false;
         shutdownInner(context, confirm);
     }
 
@@ -191,6 +198,16 @@ public final class ShutdownThread extends Thread {
     public static void reboot(final Context context, String reason, boolean confirm) {
         mReboot = true;
         mRebootSafeMode = false;
+        mReboot2Linux = false;
+        mRebootReason = reason;
+        shutdownInner(context, confirm);
+    }
+
+    public static void rebootLinuxOS(final Context context, String reason, boolean confirm) {
+        SystemProperties.set("ctl.start", "reboot2linux");
+        mReboot = true;
+        mRebootSafeMode = false;
+        mReboot2Linux = true;
         mRebootReason = reason;
         shutdownInner(context, confirm);
     }
@@ -205,6 +222,7 @@ public final class ShutdownThread extends Thread {
     public static void rebootSafeMode(final Context context, boolean confirm) {
         mReboot = true;
         mRebootSafeMode = true;
+        mReboot2Linux = false;
         mRebootReason = null;
         shutdownInner(context, confirm);
     }
@@ -221,8 +239,13 @@ public final class ShutdownThread extends Thread {
         // throw up an indeterminate system dialog to indicate radio is
         // shutting down.
         ProgressDialog pd = new ProgressDialog(context);
-        pd.setTitle(context.getText((mReboot ? com.android.internal.R.string.reboot : com.android.internal.R.string.power_off)));		
-        pd.setMessage(context.getText((mReboot ? com.android.internal.R.string.reboot_progress : com.android.internal.R.string.shutdown_progress)));
+        if (mReboot) {
+            pd.setTitle(context.getText((mReboot2Linux ? com.android.internal.R.string.reboot2linux : com.android.internal.R.string.reboot)));
+            pd.setMessage(context.getText((mReboot2Linux ? com.android.internal.R.string.reboot2linux_progress : com.android.internal.R.string.reboot_progress)));
+        } else {
+            pd.setTitle(context.getText(com.android.internal.R.string.power_off));
+            pd.setMessage(context.getText(com.android.internal.R.string.shutdown_progress));
+        }
         pd.setIndeterminate(true);
         pd.setCancelable(false);
         pd.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);

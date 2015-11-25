@@ -5303,4 +5303,6 @@
 
     <string name="actionbar_share">Share</string>
     <string name="actionbar_web_search">Search</string>
+    <string name="reboot2linux">Reboot to Linux OS</string>
+    <string name="reboot2linux_progress" >System switching...</string>
 </resources>

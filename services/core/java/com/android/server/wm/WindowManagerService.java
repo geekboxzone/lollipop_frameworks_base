@@ -6792,6 +6792,11 @@ public class WindowManagerService extends IWindowManager.Stub
         ShutdownThread.rebootSafeMode(mContext, confirm);
     }
 
+    @Override
+    public void rebootLinuxOS(boolean confirm) {
+		ShutdownThread.rebootLinuxOS(mContext, "",confirm);
+    }
+
     public void setCurrentProfileIds(final int[] currentProfileIds) {
         synchronized (mWindowMap) {
             mCurrentProfileIds = currentProfileIds;
