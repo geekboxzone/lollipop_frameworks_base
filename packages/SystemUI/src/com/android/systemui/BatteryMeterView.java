@@ -32,6 +32,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.util.AttributeSet;
 import android.view.View;
+import android.os.SystemProperties;
 
 import com.android.systemui.statusbar.policy.BatteryController;
 
@@ -72,6 +73,7 @@ public class BatteryMeterView extends View implements DemoMode,
     private final Path mShapePath = new Path();
     private final Path mClipPath = new Path();
     private final Path mTextPath = new Path();
+    private final boolean hasNoBattery = "true".equals(SystemProperties.get("ro.factory.without_battery", "false"));
 
     private BatteryController mBatteryController;
     private boolean mPowerSaveEnabled;
@@ -93,6 +95,7 @@ public class BatteryMeterView extends View implements DemoMode,
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            if(hasNoBattery) return;
             final String action = intent.getAction();
             if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
                 if (testmode && ! intent.getBooleanExtra("testmode", false)) return;
@@ -155,6 +158,7 @@ public class BatteryMeterView extends View implements DemoMode,
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
 
+        if(hasNoBattery) return;
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_BATTERY_CHANGED);
         filter.addAction(ACTION_LEVEL_TEST);
@@ -172,6 +176,7 @@ public class BatteryMeterView extends View implements DemoMode,
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
 
+        if(hasNoBattery) return;
         getContext().unregisterReceiver(mTracker);
         if(null != mBatteryController){
             mBatteryController.removeStateChangedCallback(this);

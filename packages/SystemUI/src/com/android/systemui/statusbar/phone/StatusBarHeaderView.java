@@ -37,6 +37,7 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.os.SystemProperties;
 
 import com.android.keyguard.KeyguardStatusView;
 import com.android.systemui.BatteryMeterView;
@@ -121,6 +122,8 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
 
     private float mCurrentT;
     private boolean mShowingDetail;
+
+    private final boolean hasNoBattery = "true".equals(SystemProperties.get("ro.factory.without_battery", "false")); 
 
     public StatusBarHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -416,6 +419,7 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
 
     @Override
     public void onBatteryLevelChanged(int level, boolean pluggedIn, boolean charging) {
+        if(hasNoBattery) return;
         String percentage = NumberFormat.getPercentInstance().format((double) level / 100.0);
         mBatteryLevel.setText(percentage);
     }

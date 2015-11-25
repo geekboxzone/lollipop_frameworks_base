@@ -21,6 +21,7 @@ import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.res.Resources;
 import android.view.View;
+import android.os.SystemProperties;
 
 import com.android.systemui.R;
 
@@ -35,6 +36,7 @@ public final class PhoneStatusBarTransitions extends BarTransitions {
     private View mLeftSide, mStatusIcons, mSignalCluster, mBattery, mClock;
     private Animator mCurrentAnimation;
 
+    private final boolean hasNoBattery = "true".equals(SystemProperties.get("ro.factory.without_battery", "false"));
     public PhoneStatusBarTransitions(PhoneStatusBarView view) {
         super(view, R.drawable.status_background);
         mView = view;
@@ -103,7 +105,7 @@ public final class PhoneStatusBarTransitions extends BarTransitions {
             mLeftSide.setAlpha(newAlpha);
             mStatusIcons.setAlpha(newAlpha);
             mSignalCluster.setAlpha(newAlpha);
-            mBattery.setAlpha(newAlphaBC);
+            if(!hasNoBattery) mBattery.setAlpha(newAlphaBC);
             mClock.setAlpha(newAlphaBC);
         }
     }
