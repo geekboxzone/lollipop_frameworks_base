@@ -56,6 +56,12 @@
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 />
+              <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/soft_poweroff"
+                    android:layout_width="84dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sysbar_poweroff"
+                    android:layout_weight="0"
+                    />
              <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
                 android:layout_width="84dp"
                 android:layout_height="match_parent"
@@ -68,9 +74,9 @@
              />
 
             <Space 
-                android:layout_width="match_parent"
+                android:layout_width="190dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="0"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView
                 android:id="@+id/sub"
@@ -264,6 +270,12 @@
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
                 />
+            <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/soft_poweroff"
+                    android:layout_width="78dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sysbar_poweroff"
+                    android:layout_weight="0"
+                    />
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
                 android:layout_width="78dp"
                 android:layout_height="match_parent"

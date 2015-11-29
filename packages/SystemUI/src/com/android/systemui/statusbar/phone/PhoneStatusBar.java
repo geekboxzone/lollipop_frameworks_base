@@ -1688,6 +1688,7 @@ final Object mScreenshotLock = new Object();
          }else{
            mNavigationBarView.getHidebarButton().setVisibility(View.INVISIBLE);
          }
+        mNavigationBarView.getPowerButton().setOnTouchListener(mPowerPreloadOnTouchListener);
         //$_rbox_$_modify_$_huangjc,add add/remove bar button
         mNavigationBarView.getHidebarButton().setOnTouchListener(mHidebarPreloadOnTouchListener);
     
@@ -2727,6 +2728,26 @@ private String popupAppName = null;
              return false;
          }
      };
+
+     private View.OnTouchListener mPowerPreloadOnTouchListener = new View.OnTouchListener() {
+
+		@Override
+		public boolean onTouch(View v, MotionEvent event) {
+			// TODO Auto-generated method stub
+			int action = event.getAction() & MotionEvent.ACTION_MASK;
+            if (action == MotionEvent.ACTION_DOWN) {
+        		Intent i = new Intent();
+                i.setAction("com.geekbox.poweroff");
+        		mContext.sendBroadcast(i);
+            } else if (action == MotionEvent.ACTION_CANCEL) {
+
+            } else if (action == MotionEvent.ACTION_UP) {
+
+            }
+			return false;
+		}
+	};
+
       //$_rbox_$_modify_$_huangjc,add add/remove bar button	
       private View.OnTouchListener mHidebarPreloadOnTouchListener = new View.OnTouchListener() {
 

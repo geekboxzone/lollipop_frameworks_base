@@ -293,6 +293,9 @@ public class NavigationBarView extends LinearLayout {
     public View getScreenshotButton(){
         return mCurrentView.findViewById(R.id.screenshot);
     } 
+	public View getPowerButton(){
+		return mCurrentView.findViewById(R.id.soft_poweroff);
+	}
      //$_rbox_$_modify_$_huangjc add bar/remove button
      public View getHidebarButton(){
                return mCurrentView.findViewById(R.id.hide_bar);
