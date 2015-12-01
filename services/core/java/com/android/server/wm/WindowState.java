@@ -634,7 +634,10 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 	}
 
  	public boolean isHalfMode() {
-            return mMultiWindowState.isHalfMode();
+            return mMultiWindowState.isHalfMode(null);
+    }
+	public boolean isHalfOrPhoneMode() {
+            return mMultiWindowState.isHalfOrPhoneMode();
     }
 	public boolean isSurfaceViewHalfMode(){
    		if(isHalfMode() && getAttrs().taskId == -1){
@@ -759,7 +762,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 		if(mAttrs.gravity == Gravity.GRAVITY_BY_PARENT){
 			//for activity,dialog,activity width dialog theme
 			if((mAttrs.width == -1 && mAttrs.height== -1)||
-				(mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+				isHalfOrPhoneMode()){
 				mAttrs.gravity = Gravity.LEFT|Gravity.CENTER;
 			}else if(mAppWindowState!=null&&
 				(mAppWindowState.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
@@ -844,8 +847,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
                 Math.max(mFrame.right - mStableFrame.right, 0),
                 Math.max(mFrame.bottom - mStableFrame.bottom, 0));
 
-	    if(mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
-			){
+	    if(isHalfOrPhoneMode()){
 			if(mContentInsets.top<mSystemDecorRect.top)mContentInsets.top = mSystemDecorRect.top;
 			if(mVisibleInsets.top<mSystemDecorRect.top)mVisibleInsets.top = mSystemDecorRect.top;
 		}
@@ -890,7 +892,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
 		mSurfaceFrame.right = mSurfaceFrame.left + (int)(mVisibleFrame.width()*mHScale+0.5f);
 		mSurfaceFrame.bottom = mSurfaceFrame.top + (int)((mVisibleFrame.height()+mVisibleInsets.bottom)*mVScale+0.5f);
-		if((mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT) &&!mContentChanged){
+		if((isHalfOrPhoneMode()) &&!mContentChanged){
 			int value = 0;
 			switch(mAttrs.align){
 				case WindowManagerPolicy.WINDOW_ALIGN_LEFT:
@@ -1124,7 +1126,7 @@ private void shouldForceAnim(int align,int value){
             mGlobalScale = mInvGlobalScale = 1;
         }
 		if(mService.mCurConfiguration.enableMultiWindow()){
-			if((mHScale<1.0f && mVScale <1.0f)||(mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+			if((mHScale<1.0f && mVScale <1.0f)||isHalfOrPhoneMode()){
 				//LOGD("preLayout add the multi-half flag win="+this);
 				mSystemUiVisibility |= View.SYSTEM_UI_FLAG_MULTI_HALF_WINDOW;
 			}else{
@@ -1604,7 +1606,7 @@ private void shouldForceAnim(int align,int value){
 
     @Override
     public boolean winOnMul() {
-       return mActualScale != 1.0 || mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+       return mActualScale != 1.0 || mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT || mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT;
     }
 
     public void setShowToOwnerOnlyLocked(boolean showToOwnerOnly) {

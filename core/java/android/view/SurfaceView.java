@@ -142,7 +142,7 @@ public class SurfaceView extends View {
 					WindowManager.LayoutParams wmparams = mLayout;
 					int width = msg.arg1;
 					if(width != -1){
-						mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+						mLayout.align = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
 					}else{
 						mLayout.align = -1;
 					}
@@ -317,6 +317,7 @@ public class SurfaceView extends View {
                 ? resolveSizeAndState(mRequestedHeight, heightMeasureSpec, 0)
                 : getDefaultSize(0, heightMeasureSpec);
         setMeasuredDimension(width, height);
+		
     }
 
     /** @hide */
@@ -474,11 +475,11 @@ public class SurfaceView extends View {
         if (myHeight <= 0) myHeight = getHeight();
 		if ( "cn.wps.moffice_eng".equals(getContext().getPackageName()) &&
 			getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW) {
-			if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT ){		
+			if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT ){		
 				myWidth =  (myWidth == display.getWidth()) ?myWidth/2:myWidth;
 			}else{
 				myWidth = display.getWidth();
-				myHeight = 800;
+				myHeight = display.getHeight();
 			}
 		}
         getLocationInWindow(mLocation);
@@ -515,11 +516,11 @@ public class SurfaceView extends View {
 				if (DEBUG)Log.i(TAG, "   updateWindow mRequestedWidth: "+mRequestedWidth +",myHeight:"+myHeight + "mLayout.width :"+mLayout.height);
 				if ( "cn.wps.moffice_eng".equals(getContext().getPackageName())&&
 						getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW) {
-					if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+					if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT){
 						mLayout.width =  myWidth;
 					}else{
 						mLayout.width =  display.getWidth();
-						mLayout.height = 800;
+						mLayout.height = display.getHeight();;
 					}
 				}
                 if (mTranslator != null) {
@@ -555,7 +556,7 @@ public class SurfaceView extends View {
 
                 int relayoutResult;
 
-              //  new RuntimeException(mWidth+"="+mLayout).printStackTrace();
+                //new RuntimeException(mWidth+"="+mLayout).printStackTrace();
                 mSurfaceLock.lock();
                 try {
                     mUpdateWindowNeeded = false;

@@ -2825,7 +2825,8 @@ public final class ViewRootImpl implements ViewParent,
 			mWindowAttributes.type == WindowManager.LayoutParams.TYPE_APPLICATION)&&
 			(mWindowAttributes.width == ViewGroup.LayoutParams.MATCH_PARENT &&
 			mWindowAttributes.height == ViewGroup.LayoutParams.MATCH_PARENT) ||
-			(mWindowAttributes.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+			(mWindowAttributes.align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
+			||mWindowAttributes.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT)){
 			isValid = true;
 		}
 		return isValid;
@@ -5577,7 +5578,7 @@ public final class ViewRootImpl implements ViewParent,
                 viewVisibility, insetsPending ? WindowManagerGlobal.RELAYOUT_INSETS_PENDING : 0,
                 mWinFrame, mPendingOverscanInsets, mPendingContentInsets, mPendingVisibleInsets,
                 mPendingStableInsets, mPendingConfiguration, mSurface);
-        //Log.d(TAG, "<<<<<< BACK FROM relayout");
+        Log.d(TAG, mView.getMeasuredWidth() +"<<<<<< BACK FROM relayout"+params);
         if (restore) {
             params.restore();
         }

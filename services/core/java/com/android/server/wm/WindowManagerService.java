@@ -3361,7 +3361,7 @@ public class WindowManagerService extends IWindowManager.Stub
 					if(wtoken == null){
             			continue;
 					}
-					if(win.stepOfFourScreen == -1 &&  (win.getAttrs().align != WindowManagerPolicy.WINDOW_ALIGN_RIGHT) ) continue;
+					if(win.stepOfFourScreen == -1 &&  (!win.isHalfOrPhoneMode()) ) continue;
 					if(ignoreWindow((win)))continue;
 					
 					if(isHomeWindow(win)){
@@ -3768,12 +3768,20 @@ public class WindowManagerService extends IWindowManager.Stub
 				ws = win.mAttachedWindow;
 			}
 			
-			if(attrs != null && ws != null && ws.getAttrs()!= null&&  ws.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT){
+			if(attrs != null && ws != null && ws.getAttrs()!= null&&  
+				ws.isHalfOrPhoneMode()){
+				boolean found = false;
+				ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+				for(int i = mWindows.size()-1;i>=0;i--){
+					WindowState windows = mWindows.get(i);
+					if(windows == ws) found =true;
+				}
 				LOGD(win.getAttrs()+"========relayoutWindow=========="+ws);
-                win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
-				attrs.align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
-				//win.getAttrs().width = (mScreenRect.right-mScreenRect.left)/2;
-				//attrs.width = (mScreenRect.right-mScreenRect.left)/2;
+				LOGD(ws+"========relayoutWindow=========="+ws.getAttrs());
+				if(found){
+                	win.getAttrs().align  = ws.getAttrs().align;
+					attrs.align  = ws.getAttrs().align;
+				}
 			}
             WindowStateAnimator winAnimator = win.mWinAnimator;
             if (viewVisibility != View.GONE && (win.mRequestedWidth != requestedWidth
@@ -6079,7 +6087,7 @@ public class WindowManagerService extends IWindowManager.Stub
 					}
 				    }
 			       }
-				   if(mMulWindowService.findSamePositionOfFourScreenMode(ws,false) != null)applyPositionForFourScreenWindow(ws,true,false);
+				   //if(mMulWindowService.findSamePositionOfFourScreenMode(ws,false) != null)applyPositionForFourScreenWindow(ws,true,false);
 			     //setMultiWindowModeWindow(ws);
 			     }	
 			  }
@@ -7522,7 +7530,7 @@ public class WindowManagerService extends IWindowManager.Stub
 			return false;
 		}
 		int screenW = (win.mDecorFrame.right - win.mDecorFrame.left)/2 - 200;
-        if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT  &&
+        if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT&&
                win.getAttrs().width == screenW){
 			return true;
 		}
@@ -7531,7 +7539,7 @@ public class WindowManagerService extends IWindowManager.Stub
 			win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING){
 			if(win.getAttrs().width == -1 && win.getAttrs().height == -1)
 				return true;
-			if((win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT)){
+			if((win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_LEFT)){
 			//if((win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0){
 				return true;
 			}
@@ -7829,9 +7837,9 @@ public class WindowManagerService extends IWindowManager.Stub
 		}
 
 		public void applyPositionForFourScreenWindow(WindowState win,boolean isStart,boolean isMove){
-			mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart,isMove);
+			boolean isSuc = mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart,isMove);
 			
-			if(true){
+			if(isSuc){
 				if(mAppAlignWatcher.get(win)!=null){
 					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
 					onAppAlignChanged(watcher,win,false);
@@ -7910,6 +7918,7 @@ public class WindowManagerService extends IWindowManager.Stub
 			msg = WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN;
 		}
 		if(watcher != null){
+			LOGD(watcher+"==============onAppAlignChanged================"+win);
 			try{
 				watcher.onAppAlignChanged(msg,rotate);
 			}catch(RemoteException ex){}
@@ -7918,7 +7927,7 @@ public class WindowManagerService extends IWindowManager.Stub
 	public  void moveTaskToBack(int taskId){
 		Message m = mH.obtainMessage(H.MULTIWINDOW_MOVE_BACK_ACTION);
 		m.arg1 = taskId;
-		mH.sendMessageDelayed(m,1000);
+		mH.sendMessage(m);
 
 	}
 	@Override
@@ -7951,14 +7960,14 @@ public class WindowManagerService extends IWindowManager.Stub
 			ws.mVScale = 1.0f;
 			ws.mActualScale = 1.0f;
 			AppWindowToken wtoken = ws.mAppToken;		 
-			ws.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;				 
+			ws.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;				 
 			if(wtoken != null){
 				for(int j=0;j<wtoken.allAppWindows.size();j++){
 					WindowState win = wtoken.allAppWindows.get(j);
 					win.mHScale = 1.0f;
 					win.mVScale = 1.0f;
 					win.mActualScale = 1.0f;
-					win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+					win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
 					//win.getAttrs().width = (mScreenRect.right-mScreenRect.left)/2;
 					win.switchToPhoneMode(win.getAttrs().width/2,-1);
 				}
@@ -7973,7 +7982,7 @@ public class WindowManagerService extends IWindowManager.Stub
 				appWindowState.mHScale = 1.0f;
 				appWindowState.mVScale = 1.0f;
 				appWindowState.mActualScale = 1.0f;
-				appWindowState.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+				appWindowState.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
 			}
 			return 0;
 		}
@@ -8247,13 +8256,13 @@ public class WindowManagerService extends IWindowManager.Stub
 					win.mVScale = 1.0f;
 					win.mActualScale =  1.0f;
 					win.stepOfFourScreen = -1;
-					LOGD("===========updateAppTokenWindowsFullScreen================ws:"+ws);
+					LOGD("===========updateAppTokenWindowsFullScreen================ws:"+win);
 					win.mSurfaceFrame.set((int)(posX+xOffset), (int)(posY+yOffset), 
 									(int)(posX+xOffset)+(int)(win.mHScale*win.mVisibleFrame.width()),
 									(int)(posY+yOffset)+(int)(win.mVScale*(win.mVisibleFrame.height()+win.mVisibleInsets.bottom)));
 					if(mAppAlignWatcher.get(win)!=null){
 						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
-						win.mAttrs.align = WindowManagerPolicy.WINDOW_CHANGE_TO_FULLSCREEN;
+						win.mAttrs.align = -1;
 						onAppAlignChanged(watcher,win,false);
 					}
 				}
@@ -11321,7 +11330,7 @@ public class WindowManagerService extends IWindowManager.Stub
             Slog.wtf(TAG, "Unhandled exception while laying out windows", e);
         }
 
-if(mCurConfiguration.enableMultiWindow()){
+if(mCurConfiguration.enableMultiWindow()&&false){
 	boolean reComAppWindow = mLastWindowsCount != getDefaultWindowListLocked().size();
 	if(reComAppWindow || mHalfWindowChange){
 		mLastWindowsCount = getDefaultWindowListLocked().size();

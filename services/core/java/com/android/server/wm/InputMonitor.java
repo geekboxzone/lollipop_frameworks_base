@@ -484,7 +484,8 @@ private boolean validWindowState(WindowState win){
 	}else if(mService.isHomeWindow(win)){
 		isValid = false;
 	}else if((win.getAttrs().type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION||win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION) &&
-			((win.getAttrs().width == -1 && win.getAttrs().height == -1)||(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT))){
+			((win.getAttrs().width == -1 && win.getAttrs().height == -1)||win.isHalfOrPhoneMode()
+			)){
 			//google map run in here
 			//live wallpaper 
 		isValid = true;
@@ -538,8 +539,8 @@ private boolean validWindowState(WindowState win){
 			}
 		mService.applyXTrac(windowState, action, event);
 
-                if(mService.isMultiWindowMode() || (windowState.getAttrs() != null && windowState.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_RIGHT
-							)){
+          if(mService.isMultiWindowMode() || 
+		  		(windowState.getAttrs() != null && (windowState.isHalfOrPhoneMode()))){
 			if(event.getPointerCount() == 1 && windowState != null){
 			    WindowState ws = null;
 			    if(windowState.mAppWindowState != null){

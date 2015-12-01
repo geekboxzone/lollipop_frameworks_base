@@ -961,4 +961,9 @@
     <string name="navbar_popupmenu_pad_mode">PAD</string>
     <string name="navbar_popupmenu_phone_mode">PHONE</string>
     <string name="navbar_popupmenu_splite_mode">SPLITE</string>
+    
+    <string name="comment_text">Comment mode</string>
+    <string name="multishot_text">Static screenshot</string>
+    <string name="dynamic_text">Dynamic screenshot</string>
+    <string name="fullshot_text">Whole screenshot</string>
 </resources>

@@ -224,7 +224,6 @@ public final class WindowManagerGlobal {
         if (!(params instanceof WindowManager.LayoutParams)) {
             throw new IllegalArgumentException("Params must be WindowManager.LayoutParams");
         }
-
         final WindowManager.LayoutParams wparams = (WindowManager.LayoutParams)params;
         if (parentWindow != null) {
             parentWindow.adjustLayoutParamsForSubWindow(wparams);
@@ -359,11 +358,6 @@ public final class WindowManagerGlobal {
 				mParams.get(i).y = wparams.y;
 				mParams.get(i).align = wparams.align;
 				//mParams[i].gravity = wparams.gravity;
-				if((wparams.flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW)!=0){
-					mParams.get(i).flags |= WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
-				}else{
-					mParams.get(i).flags &= ~WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW;
-				}
 				mViews.get(i).setLayoutParams(mParams.get(i));
 				mRoots.get(i).setLayoutParams(mParams.get(i),false);
 				mRoots.get(i).setStopped(false);

@@ -6259,9 +6259,9 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     }
 
 
-    public boolean getRights(int id) {
+    public boolean getRights(int id,boolean isRemove) {
        if(mMulActivityService != null)
-          return mMulActivityService.getRight(id);
+          return mMulActivityService.getRight(id,isRemove);
 	return false;
      }
      public boolean getEnableMulWindow(){

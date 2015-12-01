@@ -396,4 +396,9 @@
     <string name="navbar_popupmenu_pad_mode">平板</string>
     <string name="navbar_popupmenu_phone_mode">手机</string>
     <string name="navbar_popupmenu_splite_mode">二分屏</string>
+    
+    <string name="comment_text">批注模式</string>
+    <string name="multishot_text">智能截图</string>
+    <string name="dynamic_text">录制动图</string>
+    <string name="fullshot_text">全屏截图</string>
 </resources>

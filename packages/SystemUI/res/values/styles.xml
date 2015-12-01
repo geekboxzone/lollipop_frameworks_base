@@ -289,8 +289,19 @@
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:backgroundDimEnabled">false</item>
  </style>
+    <style name="dialogWindowAnim" parent="android:Animation" mce_bogus="1">
+        <item name="android:windowEnterAnimation">@anim/open_side_bar</item>
+        <item name="android:windowExitAnimation">@anim/close_side_bar</item>
+    </style>
+    <style name="MultiChoseDialog" parent="android:Theme.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!--item name="android:backgroundDimEnabled">false</item-->
+ </style>
+ 
     <style name="TextAppearance.StatusBar.SimSwitchNotification"
         parent="@*android:style/TextAppearance.StatusBar">
         <item name="android:textSize">14dp</item>
-    </style>
+     </style>
 </resources>

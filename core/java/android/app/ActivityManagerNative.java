@@ -707,8 +707,9 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
 
 	case IF_UID_SUPPORT_PHONEMODE: {
             data.enforceInterface(IActivityManager.descriptor);
-	    int id = data.readInt();
-	    boolean result = getRights(id);
+		    int id = data.readInt();
+			int isRemove = data.readInt();
+		    boolean result = getRights(id,isRemove != 0);
             reply.writeNoException();
             reply.writeInt(result ? 1 : 0);
             return true;
@@ -5503,11 +5504,12 @@ class ActivityManagerProxy implements IActivityManager
     }
 
     @Override
-    public boolean getRights(int id) throws RemoteException {
+    public boolean getRights(int id,boolean isRemove) throws RemoteException {
 	Parcel data = Parcel.obtain();
 	Parcel reply = Parcel.obtain();
 	data.writeInterfaceToken(IActivityManager.descriptor);
-        data.writeInt(id);
+    data.writeInt(id);
+	data.writeInt(isRemove ? 1 : 0);
 	mRemote.transact(IF_UID_SUPPORT_PHONEMODE, data, reply, 0);
 	reply.readException();
 	boolean res = reply.readInt() != 0;

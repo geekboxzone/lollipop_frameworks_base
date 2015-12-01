@@ -14137,6 +14137,10 @@ public class PackageManagerService extends IPackageManager.Stub
         }
         ApplicationInfo appinfo = getApplicationInfo(pkgName, 0, UserHandle.myUserId());
         if(appinfo!=null) {
+			try{
+				if(!phonemode)
+					ActivityManagerNative.getDefault().getRights(appinfo.uid,true);
+				} catch (RemoteException re) {}	
             appinfo.phoneMode = phonemode;
             appinfo.halfScreenMode = halfscreenmode;
         }

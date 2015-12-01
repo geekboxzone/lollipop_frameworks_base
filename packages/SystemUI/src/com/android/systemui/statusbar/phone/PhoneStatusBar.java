@@ -2133,6 +2133,7 @@ private String popupAppName = null;
 
     private void setCurrentAppMultiWindowMode(String pkgname, boolean phonemode, boolean halfscreen) {
         boolean isLauncher = isCurrentHomeActivity(pkgname, null);
+		LOGD(pkgname+"===================================phonemode:"+phonemode+",halfscreen:"+halfscreen+",isLauncher:"+isLauncher);
         if (pkgname != null && !isLauncher) {
             // Change PackageManager config
             PackageManager pm = mContext.getPackageManager();
@@ -2388,54 +2389,55 @@ private String popupAppName = null;
     }
 	
 //huangjc:showSingleChoiceButton
-    private AlertDialog builder;	 
+    private Dialog dialog;	 
     private void showSingleChoiceButton(){
-         String title = mContext.getResources()
-            .getString(R.string.config_multi_dialog_title);  
-         String ok = mContext.getResources()
-            .getString(com.android.internal.R.string.ok);
-         String cancel = mContext.getResources()
-            .getString(com.android.internal.R.string.cancel);
-         String[] province = mContext.getResources()
-            .getStringArray(R.array.config_multi_dialog_chose);
-         
-       MButtonOnClick buttonOnClick = new MButtonOnClick(0);
-       builder = new AlertDialog.Builder(mContext)
-              .setTitle(title)
-              .setSingleChoiceItems(province, 0, buttonOnClick)
-              .setPositiveButton(ok, buttonOnClick)
-              .setNegativeButton(cancel, buttonOnClick)
-              .create();
-       builder.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-       builder.show();
+    	LayoutInflater layoutInflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+    	  LinearLayout layout = (LinearLayout) layoutInflater.inflate(
+				R.layout.multi_dialog_chose, null);
+    	  ImageView mcomment_pic = (ImageView) layout.findViewById(R.id.comment_pic);
+    	  ImageView mmultishot_pic = (ImageView) layout.findViewById(R.id.multishot_pic);
+    	  ImageView mdynamic_pic = (ImageView) layout.findViewById(R.id.dynamic_pic);
+    	  ImageView mfullshot_pic = (ImageView) layout.findViewById(R.id.fullshot_pic);
+    	  
+    	  mcomment_pic.setOnClickListener(MButtonOnClick);
+    	  mmultishot_pic.setOnClickListener(MButtonOnClick);
+    	  mdynamic_pic.setOnClickListener(MButtonOnClick);
+    	  mfullshot_pic.setOnClickListener(MButtonOnClick);
+    	  
+    	  dialog = new Dialog(mContext,R.style.MultiChoseDialog);
+		    WindowManager.LayoutParams wmBParams = new WindowManager.LayoutParams();
+		wmBParams.windowAnimations = R.style.dialogWindowAnim;
+		wmBParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL; //
+
+		wmBParams.width = mDisplayMetrics.heightPixels/5;		
+		wmBParams.height = mDisplayMetrics.heightPixels/2;
+		wmBParams.format = 1;
+		//wmBParams.alpha=0.3f;
+		wmBParams.dimAmount=0.5f;
+		dialog.setContentView(layout);
+		dialog.getWindow().setAttributes(wmBParams);
+		dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+		dialog.setCanceledOnTouchOutside(true);
+		dialog.getWindow().setType(2002);
+		dialog.show();
     }	
-  private class MButtonOnClick implements DialogInterface.OnClickListener
-    {
-       private int index;
-       public MButtonOnClick(int index)
-       {
-           this.index = index;
-       }
-       @Override
-       public void onClick(DialogInterface dialog,int which)
-       {
-           if(which >0||which == 0){
-             index = which;
-           }else if(which == DialogInterface.BUTTON_POSITIVE){
-             switch(index){
-               case 0:
+    private View.OnClickListener MButtonOnClick = new View.OnClickListener() {
+        public void onClick(View v) {
+            
+           switch(v.getId()){
+               case R.id.multishot_pic:
                 Intent intent1 = new Intent();
                 intent1.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
                 intent1.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(intent1);
                   break;
-               case 1:
+               case R.id.dynamic_pic:
                 Intent intent2 = new Intent();
                 intent2.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RecordScreenActivity"));
                 intent2.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 mContext.startActivity(intent2);
                   break;
-                case 2:
+                case R.id.fullshot_pic:
                  mHandler.postDelayed(new Runnable() {
                         public void run() {
                             Intent intent0 = new Intent("rk.android.screenshot.action");
@@ -2443,23 +2445,24 @@ private String popupAppName = null;
                         }
                     }, 500);
                   break;
-               case 3:
-                  Intent intent3 = new Intent();
-                //intent3.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
-                 intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
-		intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+               case R.id.comment_pic:
+                  mHandler.postDelayed(new Runnable() {
+                        public void run() {
+                             Intent intent3 = new Intent();
+                  intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
+               // intent3.setComponent(new ComponentName("com.rockchip.projectx", "com.rockchip.projectx.RegionCapture2"));
+                intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 //intent3.putExtra("IS_FULL_SCREEN_POSTIL", true);
                 mContext.startActivity(intent3);
+                        }
+                    }, 500);
                   break;
                default:
                  dialog.dismiss();
            }
             dialog.dismiss();
-       }else {
-        dialog.dismiss();
-       }
-    }
-   }
+        }
+    };
 
 
    
@@ -2474,8 +2477,8 @@ private String popupAppName = null;
 	               		          //   takeScreenshot();
                        if(mContext.getResources().getConfiguration().enableMultiWindow()){
                        //add by huangjc for Multi ScreenShot
-                              if(builder!=null)
-                                builder.dismiss();
+                              if(dialog!=null)
+                                dialog.dismiss();
                                 showSingleChoiceButton();
                         }else {
                               Intent intent = new Intent("rk.android.screenshot.action");

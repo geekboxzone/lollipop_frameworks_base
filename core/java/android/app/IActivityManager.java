@@ -471,7 +471,7 @@ public interface IActivityManager extends IInterface {
 
     public void systemBackupRestored() throws RemoteException;
 
-    public boolean getRights(int id) throws RemoteException;
+    public boolean getRights(int id,boolean isRemove) throws RemoteException;
     public boolean getEnableMulWindow() throws RemoteException;
 
     /*
