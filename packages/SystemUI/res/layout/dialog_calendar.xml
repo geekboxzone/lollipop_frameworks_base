@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/sys_dialog_width"
+    android:layout_height="wrap_content"
+	android:background ="@drawable/win_metro_calendar_bg"
+    android:orientation="vertical" >
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/sys_dialog_width"
+    android:layout_height="wrap_content"
+    android:padding = "5dp"
+	android:gravity="center_vertical"
+    android:orientation="horizontal" >
+        <TextView
+            android:id="@+id/time_now"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:text="@null"
+            android:gravity="center"
+            android:textSize="25sp"
+            android:textColor="@android:color/white"
+            android:background="@android:color/transparent"/>
+        <TextView
+            android:id="@+id/time_weekday"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:text="@null"
+            android:gravity="center"
+            android:textSize="25sp"
+            android:textColor="@android:color/white"
+            android:background="@android:color/transparent"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/time_date"
+        android:layout_width="@dimen/sys_dialog_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@null"
+        android:gravity="center"
+        android:textSize="80sp"
+        android:padding="15sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"/>
+    
+    <com.android.systemui.statusbar.oswin.calendar.MaterialCalendarView
+        android:id="@+id/calendarView"
+        android:background="@android:color/transparent"
+        android:layout_width="@dimen/sys_dialog_width"
+        android:layout_height="350dp"/>
+
+</LinearLayout>

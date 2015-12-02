@@ -96,6 +96,10 @@ public class BrightnessMirrorController {
                 R.dimen.notification_panel_width);
         lp.gravity = mBrightnessMirror.getResources().getInteger(
                 R.integer.notification_panel_layout_gravity);
+        if(mBrightnessMirror.getResources().getConfiguration().enableMultiWindow()){
+          lp.gravity = mBrightnessMirror.getResources().getInteger(
+                R.integer.notification_panel_layout_gravity_left);
+        }
         mBrightnessMirror.setLayoutParams(lp);
 
         int padding = mBrightnessMirror.getResources().getDimensionPixelSize(

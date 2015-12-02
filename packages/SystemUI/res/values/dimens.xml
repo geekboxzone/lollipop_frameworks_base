@@ -16,6 +16,49 @@
 */
 -->
 <resources>
+
+    <dimen name="win_metro_height">600dp</dimen>
+    <dimen name="win_app_list_width">220dp</dimen>
+    <dimen name="win_metro_list_width">720dp</dimen>
+    <dimen name="notification_center_width">350dp</dimen>
+
+    <dimen name="text_size_38">13dp</dimen>
+    <dimen name="text_size_50">16dp</dimen>
+    <dimen name="text_font_size_huge">21sp</dimen>
+
+    <dimen name="metro_offside">15dp</dimen>
+    <dimen name="metro_item_textsize">15sp</dimen>
+    <dimen name="metro_indicator_textsize">25sp</dimen>
+
+    <dimen name="fading_edge">80dp</dimen>
+    <dimen name="text_tab_padding">15dp</dimen>
+    
+    <dimen name="ITEM_DIVIDE_SIZE">5dp</dimen>
+    <dimen name="ITEM_V_WIDTH">120dp</dimen>
+    <dimen name="ITEM_V_HEIGHT">245dp</dimen>
+    <dimen name="ITEM_H_WIDTH">245dp</dimen>
+    <dimen name="ITEM_H_HEIGHT">120dp</dimen>
+    <dimen name="ITEM_NORMAL_SIZE">120dp</dimen>
+
+    <dimen name="metro_item_padding">3.5dp</dimen>
+    <dimen name="metro_item_recommend_text_height">20dp</dimen>
+    <dimen name="detail_y_distance">282dp</dimen>
+    
+    <dimen name="metro_item_logo_size">64dp</dimen>
+    <dimen name="metro_item_title_size">20dp</dimen>
+    <dimen name="metro_item_summary_size">15dp</dimen>
+	<dimen name="metro_btn_dimen">40dp</dimen>
+	<dimen name="metro_btn_dimen_half">20dp</dimen>
+	
+    <dimen name="week_day_radius">15dp</dimen>
+    <dimen name="week_day_width_outer">30dp</dimen>
+    <dimen name="week_day_width_inner">30dp</dimen>
+
+    <dimen name="icon_dimen_width">50dp</dimen>
+    <dimen name="icon_dimen_padding_5">5dp</dimen>
+    <dimen name="sys_dialog_width">310dp</dimen>
+	<dimen name="sys_dialog_height">500dp</dimen>
+
     <!-- Margin at the edge of the screen to ignore touch events for in the windowshade. -->
     <dimen name="status_bar_edge_ignore">5dp</dimen>
 
@@ -150,6 +193,7 @@
     <!-- Gravity for the notification panel -->
     <integer name="standard_notification_panel_layout_gravity">0x31</integer><!-- top|center_horizontal -->
     <integer name="notification_panel_layout_gravity">0x37</integer><!-- fill_horizontal|top -->
+    <integer name="notification_panel_layout_gravity_left">0x35</integer><!-- left|top -->
 
     <dimen name="notification_panel_padding_top">0dp</dimen>
     <dimen name="notification_panel_margin_left">0dp</dimen>

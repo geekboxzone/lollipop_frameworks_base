@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    
+	<item android:bottom="2dp" android:right="2dp" android:top="2dp" android:left="2dp" >
+	    <selector xmlns:android="http://schemas.android.com/apk/res/android"
+			android:exitFadeDuration="@android:integer/config_shortAnimTime">
+    
+	        <item android:state_pressed="true">
+				<shape android:shape="oval" >
+		            <corners android:radius="@dimen/week_day_radius"/>
+		            <solid android:color="@color/lightskyblue" />
+		            <size android:width  ="@dimen/week_day_width_inner"
+					      android:height ="@dimen/week_day_width_inner"/>
+        		</shape>
+			</item>
+			
+	        <item android:state_checked="true">
+				<shape android:shape="oval" >
+		            <corners android:radius="@dimen/week_day_radius"/>
+		            <solid android:color="@color/cornflowerblue" />
+		            <size android:width  ="@dimen/week_day_width_inner"
+					      android:height ="@dimen/week_day_width_inner"/>
+        		</shape>
+			</item>
+			
+	        <item android:state_selected="true">
+				<shape android:shape="oval" >
+		            <corners android:radius="@dimen/week_day_radius"/>
+		            <solid android:color="@color/lightskyblue" />
+		            <size android:width  ="@dimen/week_day_width_inner"
+					      android:height ="@dimen/week_day_width_inner"/>
+        		</shape>
+			</item>        
+		</selector>
+	</item>
+	
+</layer-list>

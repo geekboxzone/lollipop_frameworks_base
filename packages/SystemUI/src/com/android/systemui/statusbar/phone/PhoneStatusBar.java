@@ -41,6 +41,9 @@ import android.app.IActivityManager;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.StatusBarManager;
+
+import android.content.ContentResolver;
+
 import android.content.BroadcastReceiver;
 import android.content.ComponentCallbacks2;
 import android.content.Context;
@@ -125,7 +128,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.os.SystemProperties;
-
+import android.content.res.Configuration;
 import com.android.internal.statusbar.StatusBarIcon;
 import com.android.keyguard.KeyguardHostView.OnDismissAction;
 import com.android.keyguard.ViewMediatorCallback;
@@ -186,6 +189,7 @@ import com.android.systemui.statusbar.stack.StackScrollAlgorithm;
 import com.android.systemui.statusbar.stack.StackScrollState.ViewState;
 import com.android.systemui.volume.VolumeComponent;
 import com.android.systemui.statusbar.circlemenu.FourScreenCircleMenuView;
+import com.android.systemui.statusbar.circlemenu.FourScreenMenuWindow;
 import com.android.systemui.statusbar.minwindow.MinWindow;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -226,6 +230,7 @@ import android.app.AlertDialog;
 import android.widget.ListView;
 import android.widget.Button;
 import android.view.InputDevice;
+import android.app.AppGlobals;
 
 import android.view.inputmethod.InputMethodManager;
 import android.view.inputmethod.InputMethodInfo;
@@ -233,6 +238,9 @@ import android.content.DialogInterface;
 import android.widget.RadioGroup;
 import android.widget.PopupMenu;
 import android.view.MenuInflater;
+import com.android.systemui.statusbar.oswin.calendar.CalendarDialog;
+import com.android.systemui.statusbar.oswin.*;
+import com.android.systemui.statusbar.oswin.view.*;
 import com.android.systemui.screenshot.blur.*;
 import android.app.WallpaperManager;
 
@@ -354,6 +362,11 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
     // right-hand icons
     LinearLayout mSystemIconArea;
     LinearLayout mSystemIcons;
+    //
+    LinearLayout mSystemIconArea_win;
+    LinearLayout mSystemIcons_win;
+    LinearLayout mStatusIcons_win;
+	SignalClusterView signalCluster_win;
 
     // left-hand icons
     LinearLayout mStatusIcons;
@@ -503,6 +516,19 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
 	private FourScreenBackWindow mFourScreenBackWindow;
 	
 	private MinWindow mMinWindow;
+
+    //$_FENG_$_INFO_$_WinStyle
+
+    private WinMetroWindow mWinMetro;
+    private AppTaskManager mAppTaskManager;
+    private ContentResolver mContentResolver;
+    private MetroDataloader mMetroDataLoader;
+
+    //$_FENG_$_INFO_$_NotificationCenterLite
+    private NotificationCenterLite mNotificationLite;
+    private CalendarDialog mCalendarDialog;
+    private TextView mNotificationCount;
+    private SystemTime mSystemTime;
 	
 	private final boolean IS_USE_BACK_WINDOW = false;
 	private final boolean IS_USE_WHCONTROLS = false;
@@ -930,7 +956,7 @@ final Object mScreenshotLock = new Object();
                if(intent.getAction().equals(Intent.ACTION_WALLPAPER_CHANGED)){
                   if(mContext.getResources().getConfiguration().enableMultiWindow()){
                      //updateTopBlur();
-                     updateBottomBlur();
+                    //updateBottomBlur();
                   }
                }
           }
@@ -1019,9 +1045,13 @@ final Object mScreenshotLock = new Object();
         updateResources();
 
         mIconSize = res.getDimensionPixelSize(com.android.internal.R.dimen.status_bar_icon_size);
-
+       if(mContext.getResources().getConfiguration().enableMultiWindow()){
+        mStatusBarWindow = (StatusBarWindowView) View.inflate(context,
+                R.layout.super_status_bar_win, null);
+       }else{
         mStatusBarWindow = (StatusBarWindowView) View.inflate(context,
                 R.layout.super_status_bar, null);
+       }
         mStatusBarWindow.mService = this;
         mStatusBarWindow.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -1098,7 +1128,13 @@ final Object mScreenshotLock = new Object();
                     public boolean onTouch(View v, MotionEvent event) {
                         checkUserAutohide(v, event);
                         return false;
-                    }});			   
+                    }});			  
+          
+          if(mContext.getResources().getConfiguration().enableMultiWindow()){
+               mNotificationLite = null;//new NotificationCenterLite(mContext);
+               mCalendarDialog   = new CalendarDialog(mContext);
+			   
+			  }
             }
         } catch (RemoteException ex) {
             // no window manager? good luck with that
@@ -1251,6 +1287,17 @@ final Object mScreenshotLock = new Object();
         signalClusterKeyguard.setNetworkController(mNetworkController);
         signalClusterQs.setSecurityController(mSecurityController);
         signalClusterQs.setNetworkController(mNetworkController);
+			
+	if(mContext.getResources().getConfiguration().enableMultiWindow()){
+		   if(signalCluster_win==null&&mNavigationBarView!=null){
+		   mStatusIcons_win = mNavigationBarView.getStatusIcons_win();
+		    signalCluster_win = (SignalClusterView) mNavigationBarView.findViewById(R.id.signal_cluster);
+			mNetworkController.addSignalCluster(signalCluster_win);
+			signalCluster_win.setSecurityController(mSecurityController);
+            signalCluster_win.setNetworkController(mNetworkController);
+			}			
+		}
+	
         final boolean isAPhone = mNetworkController.hasVoiceCallingFeature();
         if (isAPhone) {
             mNetworkController.addEmergencyListener(new NetworkControllerImpl.EmergencyListener() {
@@ -1529,6 +1576,10 @@ final Object mScreenshotLock = new Object();
             mNaturalBarHeight =
                     res.getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);
         }
+        if(mContext.getResources().getConfiguration().enableMultiWindow()){
+           return mContext.getResources().getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height_mul);
+        }
+
         return mNaturalBarHeight;
     }
 
@@ -1614,9 +1665,9 @@ final Object mScreenshotLock = new Object();
 			if(enable){
 				mNavigationBarView.getDisplaycopyButton().setVisibility(View.VISIBLE);
 			}else{
-                            if(mContext.getResources().getConfiguration().enableMultiWindow())
+                         /*   if(mContext.getResources().getConfiguration().enableMultiWindow())
                                 mNavigationBarView.getDisplaycopyButton().setVisibility(View.INVISIBLE);
-                            else
+                            else*/
 				mNavigationBarView.getDisplaycopyButton().setVisibility(View.GONE);
 			}
 			
@@ -1634,7 +1685,34 @@ final Object mScreenshotLock = new Object();
     
     //haungjc:win bar    
     if(mContext.getResources().getConfiguration().enableMultiWindow()){
+	//init SystemTime
+            initSystemTime();
+			
+        //updateTopBlur();
+        //updateBottomBlur();
         mNavigationBarView.getWinStartButton().setOnTouchListener(mWinStartOnTouchListener);
+	  // mNavigationBarView.getWinStartButton().setOnClickListener(mWinStartClickListener);
+         
+//$_FENG_$_INFO_$_WinStart PopupWindow 
+ /*           mContentResolver =  mContext.getContentResolver();
+            mMetroDataLoader = new MetroDataloader();
+            mAppTaskManager = new AppTaskManager(this.mContext);
+            mMetroDataLoader.addDefalutAppType(mContentResolver, mContext);
+            mMetroDataLoader.addDefalutSystemApp(mContentResolver, mAppTaskManager);
+            mWinMetro = new WinMetroWindow(mContext, mAppTaskManager, mMetroDataLoader);
+*/
+//init some system button 
+           if(mNavigationBarView.getNotificationView()!=null)
+            mNavigationBarView.getNotificationView().setOnTouchListener(mOnTouchForNotification);
+           if(mNavigationBarView.getTimeView()!=null){
+		    mNavigationBarView.getTimeView().setClickable(true);
+            mNavigationBarView.getTimeView().setFocusable(true);
+            mNavigationBarView.getTimeView().setOnTouchListener(mOnTouchForCalender);
+			}
+            mNotificationCount = mNavigationBarView.getNotificationCountView();
+			if(mNotificationCount!=null)
+            mNotificationCount.setVisibility(View.GONE);
+			
 
 			//haungjc:win bar			
 			mAppsScrollView = mNavigationBarView.getAppsScrollView();
@@ -1711,6 +1789,40 @@ final Object mScreenshotLock = new Object();
 		   }
     }
     
+	 private BroadcastReceiver mIntentTimeReceiver = new BroadcastReceiver() {
+         @Override
+         public void onReceive(Context context, Intent intent) {
+             final String action = intent.getAction();
+             if (Intent.ACTION_TIME_TICK.equals(action)
+                     || Intent.ACTION_TIME_CHANGED.equals(action)
+                     || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
+                     || Intent.ACTION_LOCALE_CHANGED.equals(action)) {
+                 updateSystemTime();
+             }
+         }
+     };
+
+     private void initSystemTime(){
+         IntentFilter filter = new IntentFilter();
+         filter.addAction(Intent.ACTION_TIME_TICK);
+         filter.addAction(Intent.ACTION_TIME_CHANGED);
+         filter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+         filter.addAction(Intent.ACTION_LOCALE_CHANGED);
+         mContext.registerReceiver(mIntentTimeReceiver, filter, null, null);
+         mSystemTime = new SystemTime(mContext);
+         updateSystemTime();
+     }
+     
+     private void updateSystemTime(){
+	 if(mNavigationBarView!=null){
+         TextView tv = mNavigationBarView.getTimeView();
+         if((null != tv)&&(null != mSystemTime)){
+             mSystemTime.updateCalendar();
+             tv.setText(mSystemTime.getFormatTime());
+           }
+		 }
+     }
+	
 //<!-- $_rbox_$_modify_$_huangjc -->
     public void ClearRunningTasks(){
        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
@@ -2291,6 +2403,21 @@ private String popupAppName = null;
                         	}
                 };
 	
+	 private View.OnClickListener mWinStartClickListener = new View.OnClickListener() {
+         public void onClick(View v) {
+             if(mWinMetro.isShowing()){
+                mWinMetro.dismiss();
+             }else{
+                 mDisplay.getRealMetrics(mDisplayMetrics);
+                 int[] dims = {mDisplayMetrics.widthPixels, mDisplayMetrics.heightPixels};
+
+                 int scale = (dims[0]>dims[1]?dims[0]:dims[1])/512;
+                  Bitmap home = ScreenshotAPI.takeHomeScreenshot(dims[0], dims[1]);
+                 mWinMetro.show(ScreenshotAPI.makeHomeBlur(home,dims[0], dims[1],scale));                
+             }
+         }
+    };
+	
     private View.OnTouchListener mWinStartOnTouchListener = new View.OnTouchListener() {
 
                 @Override
@@ -2403,17 +2530,18 @@ private String popupAppName = null;
     	  mmultishot_pic.setOnClickListener(MButtonOnClick);
     	  mdynamic_pic.setOnClickListener(MButtonOnClick);
     	  mfullshot_pic.setOnClickListener(MButtonOnClick);
-    	  
+    	  if(dialog!=null)
+		      dialog=null;
     	  dialog = new Dialog(mContext,R.style.MultiChoseDialog);
 		    WindowManager.LayoutParams wmBParams = new WindowManager.LayoutParams();
 		wmBParams.windowAnimations = R.style.dialogWindowAnim;
 		wmBParams.gravity = Gravity.RIGHT | Gravity.CENTER_VERTICAL; //
 
-		wmBParams.width = mDisplayMetrics.heightPixels/5;		
+		wmBParams.width = mDisplayMetrics.heightPixels/4 +10;		
 		wmBParams.height = mDisplayMetrics.heightPixels/2;
 		wmBParams.format = 1;
 		//wmBParams.alpha=0.3f;
-		wmBParams.dimAmount=0.5f;
+		wmBParams.dimAmount=0.7f;
 		dialog.setContentView(layout);
 		dialog.getWindow().setAttributes(wmBParams);
 		dialog.getWindow().addFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
@@ -2446,7 +2574,57 @@ private String popupAppName = null;
                     }, 500);
                   break;
                case R.id.comment_pic:
-                  mHandler.postDelayed(new Runnable() {
+/*			   Dialog mdialog = new AlertDialog.Builder(mContext)
+			   .setTitle("Select")
+			   .setMessage("Please select the mode")
+			   .setPositiveButton("original",new View.OnClickListener() {
+			    @Override
+			public void onClick(DialogInterface dialog, int which) {
+			// TODO Auto-generated method stub
+			SystemProperties.set("sys.drawpath.fastmode", "false");
+			 mHandler.postDelayed(new Runnable() {
+                        public void run() {
+                             Intent intent3 = new Intent();
+                  intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
+                intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent3);
+                        }
+                    }, 500);
+					mdialog.dismiss();
+			}
+			}).setNegativeButton("testmode", new View.OnClickListener() {
+			 @Override
+			 public void onClick(DialogInterface dialog, int which) {
+			 // TODO Auto-generated method stub
+			SystemProperties.set("sys.drawpath.fastmode", "test");
+			 mHandler.postDelayed(new Runnable() {
+                        public void run() {
+                             Intent intent3 = new Intent();
+                  intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
+                intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent3);
+                        }
+                    }, 500);
+					mdialog.dismiss();
+			}
+			}).setNeutralButton("fastmode", new View.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+			// TODO Auto-generated method stub
+			SystemProperties.set("sys.drawpath.fastmode", "true");
+			mHandler.postDelayed(new Runnable() {
+                        public void run() {
+                             Intent intent3 = new Intent();
+                  intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
+                intent3.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent3);
+                        }
+                    }, 500);
+					mdialog.dismiss();
+			}
+			}).create();
+		mdialog.show();
+*/                 mHandler.postDelayed(new Runnable() {
                         public void run() {
                              Intent intent3 = new Intent();
                   intent3.setComponent(new ComponentName("com.android.winstart", "com.android.winstart.PaintActivity"));
@@ -2508,6 +2686,36 @@ private String popupAppName = null;
                 }
         };
 
+  private View.OnTouchListener mOnTouchForCalender = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            // TODO Auto-generated method stub
+            int action = event.getAction() & MotionEvent.ACTION_MASK;
+            if(action == MotionEvent.ACTION_UP){
+                if(null != mCalendarDialog){
+                    mCalendarDialog.openCalendar();
+                }
+                return true;
+            }
+            return false;
+        }
+    };
+
+    private View.OnTouchListener mOnTouchForNotification = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            // TODO Auto-generated method stub
+            int action = event.getAction() & MotionEvent.ACTION_MASK;
+            if(action == MotionEvent.ACTION_UP){
+			animateExpandNotificationsPanel();
+                if(null != mNotificationLite){
+                   // mNotificationLite.openCenter();
+                }
+                return true;
+            }
+            return false;
+        }
+    };
         private boolean mBarIsAdd = true;
         private void addBarInside(){
                 if (!mBarIsAdd){
@@ -2551,19 +2759,30 @@ private String popupAppName = null;
                         checkUserAutohide(v, event);
                         return false;
                     }});
+					
+			    	
+			if(mContext.getResources().getConfiguration().enableMultiWindow()){
+				   if(signalCluster_win==null&&mNavigationBarView!=null){
+				   mStatusIcons_win = mNavigationBarView.getStatusIcons_win();
+				    signalCluster_win = (SignalClusterView) mNavigationBarView.findViewById(R.id.signal_cluster);
+					mNetworkController.addSignalCluster(signalCluster_win);
+					signalCluster_win.setSecurityController(mSecurityController);
+		            signalCluster_win.setNetworkController(mNetworkController);
+				//	Log.d(TAG,"======mStatusIcons_win=====addSignalCluster==");
+					}			
+				}
+
             }
         } catch (RemoteException ex) {
             // no window manager? good luck with that
         }
-                        addNavigationBar();
-                      /*  if (mNavigationBarView != null)
-                                mWindowManager.addView(mNavigationBarView,(WindowManager.LayoutParams) mNavigationBarView.getLayoutParams());
-                        if (mStatusBarWindow != null)
-                                mWindowManager.addView(mStatusBarWindow,
-                                      (WindowManager.LayoutParams) mStatusBarWindow.getLayoutParams());
-                     */
-                     if (mStatusBarWindow != null)
-					 	  mStatusBarWindow.setVisibility(View.VISIBLE);
+              addNavigationBar();
+                     if (mStatusBarWindow != null&&!mContext.getResources().getConfiguration().enableMultiWindow()){
+			             mStatusBarWindow.setVisibility(View.VISIBLE);
+						 
+			         }
+					 updateNotifications();
+					 checkBarModes();
                         mBarIsAdd = true;
                 }
         }
@@ -2581,11 +2800,19 @@ private String popupAppName = null;
 				        }
 						}
 					//$_rockchip_$_modify_$_end
-                        if (mNavigationBarView != null)
+                        if (mNavigationBarView != null){
                                 mWindowManager.removeViewImmediate(mNavigationBarView);
-                       
-                       if (mStatusBarWindow != null)
+                       }
+                       if (!mContext.getResources().getConfiguration().enableMultiWindow()&&mStatusBarWindow != null)
 					 	  mStatusBarWindow.setVisibility(View.GONE);
+                      if(signalCluster_win!=null)
+					      signalCluster_win=null;
+					  if (mNavigationBarView != null)
+					      mNavigationBarView = null;
+						  
+                      if(mNotificationLite != null){
+			            mNotificationLite.closeCenter();
+			          }
                         mBarIsAdd = false;
                         if(!isMultiChange)
                         Toast.makeText(mContext, mContext.getResources().getString(R.string.hidebar_msg)
@@ -2672,6 +2899,10 @@ private String popupAppName = null;
         refreshAllIconsForLayout(mStatusIcons);
         refreshAllIconsForLayout(mStatusIconsKeyguard);
         refreshAllIconsForLayout(mNotificationIcons);
+	
+        if(mContext.getResources().getConfiguration().enableMultiWindow()&&mStatusIcons_win!=null){
+        refreshAllIconsForLayout(mStatusIcons_win);
+        }
     }
 
     private void refreshAllIconsForLayout(LinearLayout ll) {
@@ -2695,6 +2926,13 @@ private String popupAppName = null;
         view.set(icon);
         mStatusIconsKeyguard.addView(view, viewIndex, new LinearLayout.LayoutParams(
                 LayoutParams.WRAP_CONTENT, mIconSize));
+        //HUANGJC
+        if(mContext.getResources().getConfiguration().enableMultiWindow()&&mStatusIcons_win!=null){
+         view = new StatusBarIconView(mContext, slot, null);
+         view.set(icon);
+         mStatusIcons_win.addView(view, viewIndex, new LinearLayout.LayoutParams(
+                LayoutParams.WRAP_CONTENT, mIconSize));
+        }
     }
 
     public void updateIcon(String slot, int index, int viewIndex,
@@ -2705,12 +2943,22 @@ private String popupAppName = null;
         view.set(icon);
         view = (StatusBarIconView) mStatusIconsKeyguard.getChildAt(viewIndex);
         view.set(icon);
+        //HUANGJC
+        if(mContext.getResources().getConfiguration().enableMultiWindow()&&mStatusIcons_win!=null){
+         view = (StatusBarIconView) mStatusIcons_win.getChildAt(viewIndex);
+		 if(view!=null)
+         view.set(icon); 
+        }
     }
 
     public void removeIcon(String slot, int index, int viewIndex) {
         if (SPEW) Log.d(TAG, "removeIcon slot=" + slot + " index=" + index + " viewIndex=" + viewIndex);
         mStatusIcons.removeViewAt(viewIndex);
         mStatusIconsKeyguard.removeViewAt(viewIndex);
+        //HUANGJC
+        if(mContext.getResources().getConfiguration().enableMultiWindow()&&mStatusIcons_win!=null){
+        mStatusIcons_win.removeViewAt(viewIndex);
+        }
     }
 
     public UserHandle getCurrentUserHandle() {
@@ -2905,13 +3153,24 @@ private String popupAppName = null;
         }
 
         for (View remove : toRemove) {
-            mStackScroller.removeView(remove);
+            if(null!=mStackScroller){
+                mStackScroller.removeView(remove);
+            }
+        }
+        //HUANGJC
+        if(mContext.getResources().getConfiguration().enableMultiWindow()&&null!=mNotificationLite){
+//            mNotificationLite.clearViews();
         }
         for (int i=0; i<toShow.size(); i++) {
             View v = toShow.get(i);
             if (v.getParent() == null) {
                 mStackScroller.addView(v);
             }
+			//HUANGJC
+			View vl = toShow.get(i);
+            if (mContext.getResources().getConfiguration().enableMultiWindow()&&(vl.getParent() == null)&&(null!=mNotificationLite)) {
+//                mNotificationLite.addView(vl); 
+            } 
         }
 
         // So after all this work notifications still aren't sorted correctly.
@@ -2936,6 +3195,18 @@ private String popupAppName = null;
             mStackScroller.changeViewPosition(toShow.get(j), i);
             j++;
         }
+
+         if(mContext.getResources().getConfiguration().enableMultiWindow()){
+            if((j==0)/*&&(null!=mNotificationLite)*/){
+ //           mNotificationLite.closeCenter();
+            mNotificationCount.setVisibility(View.GONE);
+        }else{
+            mNotificationCount.setVisibility(View.VISIBLE);
+            mNotificationCount.setGravity(Gravity.CENTER);
+            mNotificationCount.setText(String.valueOf(j));
+                        }
+                        }
+
         updateRowStates();
         updateSpeedbump();
         updateClearAll();
@@ -2990,6 +3261,7 @@ private String popupAppName = null;
     protected void updateNotifications() {
         // TODO: Move this into updateNotificationIcons()?
         if (mNotificationIcons == null) return;
+//        if (mContext.getResources().getConfiguration().enableMultiWindow()&&mNotificationLite  == null) return;
 
         mNotificationData.filterAndSort();
 
@@ -3057,6 +3329,10 @@ private String popupAppName = null;
     protected void updateRowStates() {
         super.updateRowStates();
         mNotificationPanel.notifyVisibleChildrenChanged();
+		//
+		if(mContext.getResources().getConfiguration().enableMultiWindow()){
+//		  mNotificationLite.notifyVisibleChildrenChanged();
+		}
     }
 
     protected void updateCarrierLabelVisibility(boolean force) {
@@ -3674,8 +3950,9 @@ private String popupAppName = null;
     }
 
     void makeExpandedVisible(boolean force) {
-        if (SPEW) Log.d(TAG, "Make expanded visible: expanded visible=" + mExpandedVisible);
-        if (!force && (mExpandedVisible || !panelsEnabled())) {
+        if (SPEW) Log.d(TAG, "Make expanded visible: expanded visible=" + mExpandedVisible+" force:"+force+" panelsEnabled:"+panelsEnabled()+"==mStatusBarWindow.getVisibility():"+mStatusBarWindow.getVisibility());      
+                         
+		if (!force && (mExpandedVisible || !panelsEnabled())) {
             return;
         }
 
@@ -3683,6 +3960,7 @@ private String popupAppName = null;
         //$_RBOX_$_modify_huangjc add hide button
         if (mNavigationBarView != null && mBarIsAdd)
             mNavigationBarView.setSlippery(true);
+
 
         updateCarrierLabelVisibility(true);
 
@@ -3865,7 +4143,7 @@ private String popupAppName = null;
         // Shrink the window to the size of the status bar only
         mStatusBarWindowManager.setStatusBarExpanded(false);
         mStatusBarView.setFocusable(true);
-        
+		
         // Close any "App info" popups that might have snuck on-screen
         dismissPopups();
 
@@ -4486,7 +4764,7 @@ private String popupAppName = null;
 
     @Override
     public void updateExpandedViewPos(int thingy) {
-        if (SPEW) Log.v(TAG, "updateExpandedViewPos");
+        if (SPEW) Log.v(TAG, "updateExpandedViewPos====mExpandedVisible:"+mExpandedVisible+"==mStatusBarWindow.getVisibility():"+mStatusBarWindow.getVisibility());
 
         // on larger devices, the notification panel is propped open a bit
         mNotificationPanel.setMinimumHeight(
@@ -4732,6 +5010,8 @@ private String popupAppName = null;
         if (mNotificationPanelGravity <= 0) {
             mNotificationPanelGravity = Gravity.START | Gravity.TOP;
         }
+        if(mContext.getResources().getConfiguration().enableMultiWindow())
+           mNotificationPanelGravity = res.getInteger(R.integer.notification_panel_layout_gravity_left);
 
         mCarrierLabelHeight = res.getDimensionPixelSize(R.dimen.carrier_label_height);
         mStatusBarHeaderHeight = res.getDimensionPixelSize(R.dimen.status_bar_header_height);
@@ -6879,7 +7159,7 @@ private String popupAppName = null;
         
         //huangjc win bar
          if(isMultiChange){
-		 	if("box".equals(SystemProperties.get("ro.target.product", "tablet"))){
+		/* 	if("box".equals(SystemProperties.get("ro.target.product", "tablet"))){
 				isMultiChange = false;
 	//	 	 android.os.Process.killProcess(android.os.Process.myPid()); 
 			 return;
@@ -6891,7 +7171,10 @@ private String popupAppName = null;
 						 //Log.e(TAG,"Exception:" +ex.getMessage());
 					}
 		      addBar();
+			  */
+			  
 		      isMultiChange = false;
+              return;     
 		  }
 		    	
         updateDisplaySize(); // populates mDisplayMetrics

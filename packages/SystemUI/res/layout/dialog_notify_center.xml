@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/notification_center_width"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout 
+        android:id="@+id/notify_container"
+        android:layout_width="@dimen/notification_center_width"
+        android:layout_height="wrap_content"
+        android:background ="@color/text_color_white_80"
+        android:gravity="top"
+        android:orientation="vertical">
+        <LinearLayout
+            android:id="@+id/main_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/deep_grey"
+            android:gravity="center" 
+            android:divider="@null"
+            android:showDividers ="middle"
+            android:orientation="horizontal">
+             <TextView android:id="@+id/center_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:ellipsize="start"
+                android:padding="5dp"
+                android:gravity="center_vertical"
+                android:text="@string/notification_center"
+                android:textColor="@android:color/white"
+                android:textSize="20sp" /> 
+            <ImageView android:id="@+id/btn_clearall"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+				android:scaleType="fitXY"
+				android:padding = "5dp"
+				android:paddingStart = "10dp"
+                android:src="@drawable/win_sys_noti_delete"
+				android:clickable="true"
+                android:contentDescription="@null"
+                android:adjustViewBounds="true"/>
+        </LinearLayout>
+        <ScrollView 
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:scrollbars="vertical"
+            android:fadingEdge="vertical">        
+            <LinearLayout 
+                android:id="@+id/motification_list"
+                android:layout_width="@dimen/notification_center_width"
+                android:layout_height="wrap_content"
+                android:paddingStart="0dip"
+                android:background="@android:color/transparent"
+                android:gravity="top"
+                android:scrollbars="vertical"
+                android:orientation="vertical">
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+</LinearLayout>
+

@@ -103,6 +103,7 @@ import android.database.ContentObserver;
 import android.content.ContentResolver;
 import android.provider.Settings;
 import android.net.Uri;
+import android.view.IWindowManager;
 /**
  * The top of a view hierarchy, implementing the needed protocol between View
  * and the WindowManager.  This is for the most part an internal implementation
@@ -368,6 +369,7 @@ public final class ViewRootImpl implements ViewParent,
     private boolean mIsCircularEmulator;
     private final boolean mWindowIsRound;
 
+    protected IWindowManager mWindowManagerService;
     /**
      * Consistency verifier for debugging purposes.
      */
@@ -385,6 +387,7 @@ public final class ViewRootImpl implements ViewParent,
     public ViewRootImpl(Context context, Display display) {
         mContext = context;
         mWindowSession = WindowManagerGlobal.getWindowSession();
+	mWindowManagerService = WindowManagerGlobal.getWindowManagerService();
         mDisplay = display;
         mBasePackageName = context.getBasePackageName();
 
@@ -4386,8 +4389,12 @@ public final class ViewRootImpl implements ViewParent,
 		   mWindowSession.getTransFormInfo(mWindow, info);
 		}catch(RemoteException e){}
 
-		int statusBarHeight =
-                mView.getContext().getResources().getDimensionPixelSize(com.android.internal.R.dimen.status_bar_height);
+                int statusBarHeight = 0;
+               try {
+                       statusBarHeight = (int)mWindowManagerService.getStatusBarHeight();
+               } catch (RemoteException e) {
+                       //Log.w(TAG, "Error :" + e);
+               }
 		if("com.tencent.androidqqmail".equals(mView.getContext().getPackageName())) statusBarHeight = 0;
 		if(info.mHScale != 1.0f && info.mVScale != 1.0f)
 		   event.transformCoordinate(info.mPosX, info.mPosY-statusBarHeight>0?info.mPosY-statusBarHeight:0, info.mHScale, info.mVScale);

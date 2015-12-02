@@ -17,6 +17,36 @@
  */
 -->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <string name="app_type_all">AllApp</string>
+    <string name="app_type_system">SYSTEM</string>
+    <string name="app_type_office">OFFICE</string>
+    <string name="app_type_game">GAME</string>
+    <string name="app_type_media">SOCIAL</string>
+    <string name="app_type_other">OTHER</string>
+    <string name="default_account_name">ROCKCHIP</string>
+
+    <string name="week_monday">Mon.</string>
+    <string name="week_tuesday">Tues.</string>
+    <string name="week_wednesday">Wed.</string>
+    <string name="week_thurday ">Thur.</string>
+    <string name="week_friday">Fri.</string>
+    <string name="week_saturday">Sat.</string>
+    <string name="week_sunday">Sun.</string>
+
+    <string-array name="custom_weekdays">
+        <item>Sun.</item>
+        <item>Mon.</item>
+        <item>Tues.</item>
+        <item>Wed.</item>
+        <item>Thur.</item>
+        <item>Fri.</item>
+        <item>Sat.</item>
+    </string-array>
+    
+    <string name="drag_and_drop_ended">APP:%1$s is added to Desktop! </string>
+    <string name="notification_center">Notification Center</string>
+
     <!-- Name of the status bar as seen in the applications info settings page. [CHAR LIMIT=12] -->
     <string name="app_label">System UI</string>
 
@@ -963,7 +993,13 @@
     <string name="navbar_popupmenu_splite_mode">SPLITE</string>
     
     <string name="comment_text">Comment mode</string>
-    <string name="multishot_text">Static screenshot</string>
-    <string name="dynamic_text">Dynamic screenshot</string>
-    <string name="fullshot_text">Whole screenshot</string>
+    <string name="multishot_text">Static shot</string>
+    <string name="dynamic_text">Dynamic shot</string>
+    <string name="fullshot_text">Whole shot</string>
+    
+    <string name="fail_open_app">Open App Fail...</string>
+
+    <string name="power_sub_close">Shutdown</string>
+    <string name="power_sub_sleep">Go to Sleep</string>
+    <string name="power_sub_reboot">Reboot</string>
 </resources>

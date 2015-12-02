@@ -45,6 +45,8 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
+
 
 import com.android.systemui.R;
 import com.android.systemui.statusbar.BaseStatusBar;
@@ -301,7 +303,23 @@ public class NavigationBarView extends LinearLayout {
      public View getWinStartButton(){
                return mCurrentView.findViewById(R.id.win_start);
        }
+     //HUANGJC
+	 public LinearLayout getStatusIcons_win(){
+	    return (LinearLayout)mCurrentView.findViewById(R.id.statusIcons);
+	 }
+	 
+	  public View getNotificationView(){
+        return mCurrentView.findViewById(R.id.notification);
+    }
 
+    public TextView getNotificationCountView(){
+        return (TextView)mCurrentView.findViewById(R.id.notification_count);
+    }
+
+    public TextView getTimeView() {
+        return (TextView)mCurrentView.findViewById(R.id.system_time_tick);
+    }
+	//END
      public HorizontalScrollView getAppsScrollView(){
                return (HorizontalScrollView)mCurrentView.findViewById(R.id.mAppsScrollView);
        }

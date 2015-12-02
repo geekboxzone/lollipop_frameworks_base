@@ -270,7 +270,7 @@ public abstract class BaseStatusBar extends SystemUI implements
 		            // Intentionally left blank
 		        }
 				
-			if("box".equals(SystemProperties.get("ro.target.product", "tablet"))){
+			if(true||"box".equals(SystemProperties.get("ro.target.product", "tablet"))){
 		 	 android.os.Process.killProcess(android.os.Process.myPid()); 
 		 	}			
 		      }
@@ -1588,7 +1588,9 @@ public abstract class BaseStatusBar extends SystemUI implements
                         //
                         // In most cases, when FLAG_AUTO_CANCEL is set, the notification will
                         // become canceled shortly by NoMan, but we can't assume that.
-                        mHeadsUpNotificationView.releaseAndClose();
+                        if(null != mHeadsUpNotificationView){
+                             mHeadsUpNotificationView.releaseAndClose();
+                        }
                     }
                     new Thread() {
                         @Override
@@ -1864,9 +1866,11 @@ public abstract class BaseStatusBar extends SystemUI implements
 
         final String key = notification.getKey();
         boolean wasHeadsUp = isHeadsUp(key);
-        Entry oldEntry;
+        Entry oldEntry = null;
         if (wasHeadsUp) {
-            oldEntry = mHeadsUpNotificationView.getEntry();
+            if(null != mHeadsUpNotificationView){
+                oldEntry = mHeadsUpNotificationView.getEntry();
+            }
         } else {
             oldEntry = mNotificationData.get(key);
         }
@@ -1971,7 +1975,9 @@ public abstract class BaseStatusBar extends SystemUI implements
                         }
                     } else {
                         // we updated the notification above, so release to build a new shade entry
+                        if(null!=mHeadsUpNotificationView){
                         mHeadsUpNotificationView.releaseAndClose();
+                        }
                         return;
                     }
                 } else {
@@ -2010,7 +2016,9 @@ public abstract class BaseStatusBar extends SystemUI implements
                 } else {
                     if (DEBUG) Log.d(TAG, "releasing heads up for key: " + key);
                     oldEntry.notification = notification;
-                    mHeadsUpNotificationView.releaseAndClose();
+                    if(null!=mHeadsUpNotificationView){
+                        mHeadsUpNotificationView.releaseAndClose();
+                    }
                     return;
                 }
             } else {
@@ -2027,8 +2035,10 @@ public abstract class BaseStatusBar extends SystemUI implements
                             n.iconLevel,
                             n.number,
                             n.tickerText);
-                    oldEntry.icon.setNotification(n);
-                    oldEntry.icon.set(ic);
+                    if(null != oldEntry.icon){
+                        oldEntry.icon.setNotification(n);
+                        oldEntry.icon.set(ic);
+                    }
                     inflateViews(oldEntry, mStackScroller, wasHeadsUp);
                     mNotificationData.updateRanking(ranking);
                     updateNotifications();
@@ -2117,7 +2127,7 @@ public abstract class BaseStatusBar extends SystemUI implements
             return false;
         }
 
-        if (mHeadsUpNotificationView.isSnoozed(sbn.getPackageName())) {
+        if ((null!=mHeadsUpNotificationView)&&mHeadsUpNotificationView.isSnoozed(sbn.getPackageName())) {
             return false;
         }
 

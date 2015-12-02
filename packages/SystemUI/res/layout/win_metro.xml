@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal" 
+	android:layout_width="wrap_content"
+	android:background="@color/metro_main_color"
+	android:layout_height="@dimen/win_metro_height">
+
+    <RelativeLayout 
+         android:layout_width="@dimen/win_app_list_width"
+         android:layout_height="@dimen/win_metro_height"
+         android:background="@color/metro_main_color"
+         android:orientation="vertical">
+    	<LinearLayout 
+         android:layout_width="@dimen/win_app_list_width"
+         android:layout_height="wrap_content"
+         android:background="@android:color/transparent"
+         android:orientation="vertical">
+			<LinearLayout android:id="@+id/recent_item"  
+			    android:layout_width="match_parent"  
+			    android:layout_height="wrap_content"
+			    android:padding ="20dip"
+			    android:orientation="horizontal"   
+			    android:gravity="center_vertical">  
+			
+			    <ImageView android:id="@+id/account_logo"  
+			        android:layout_width="48dp"  
+			        android:layout_height="48dp"
+			        android:background="@drawable/account" 
+			        android:src="@drawable/account_light" 
+			        android:padding ="0dip"
+			        android:scaleType="fitXY"/> 
+			  
+			    <TextView android:id="@+id/account_name"  
+			        android:layout_width="match_parent"  
+			        android:layout_height="wrap_content"
+			        android:paddingStart="10dp"
+			        android:ellipsize="end" 
+			        android:singleLine="true"
+			        android:typeface="monospace"
+			        android:text="@string/default_account_name" 
+			        android:textColor="@android:color/white"  
+			        android:textSize="@dimen/metro_item_textsize" />
+			</LinearLayout> 
+	         <ListView android:id="@+id/mListType"
+					android:layout_width="fill_parent"
+					android:layout_height="wrap_content"
+					android:background="@android:color/transparent"
+					android:columnWidth="64dp"
+					android:paddingStart="15dip"
+					android:horizontalSpacing="0dp" 
+					android:gravity="center"
+					android:listSelector="@android:color/transparent"
+					android:cacheColorHint="@android:color/transparent"
+					android:scrollbars="none"/>
+         </LinearLayout>
+
+    	<LinearLayout 
+             android:layout_width="@dimen/win_app_list_width"
+             android:layout_height="wrap_content"
+             android:layout_alignParentBottom="true"
+             android:orientation="vertical">
+            <FrameLayout android:id="@+id/system_func"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true">
+                <ListView android:id="@+id/mListSystem"
+    				android:layout_width="match_parent"
+    				android:layout_height="wrap_content"
+    				android:background="@android:color/transparent"
+    				android:columnWidth="64dp"
+    				android:horizontalSpacing="0dp" 
+    				android:gravity="center"
+    				android:paddingStart="15dip"
+    				android:layout_gravity="bottom"
+    				android:listSelector="@android:color/transparent"
+    				android:cacheColorHint="@android:color/transparent"
+    				android:scrollbars="none"/>
+               <ListView android:id="@+id/power_menu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|bottom"
+                    android:divider="@null"
+                    android:visibility="invisible"
+                    android:background="@drawable/win_metro_power_menu"
+                    android:listSelector="@android:color/transparent"
+                    android:cacheColorHint="@android:color/transparent"/>
+             </FrameLayout>
+         </LinearLayout>
+    </RelativeLayout>
+    <LinearLayout android:layout_width="600dp"
+         android:layout_height="fill_parent"
+         android:background="@color/metro_main_color"
+         android:gravity="center"
+         android:padding="@dimen/metro_offside"
+         android:orientation="horizontal">
+        <ImageButton
+            android:id="@+id/btn_metro_left"
+            android:layout_width="@dimen/metro_btn_dimen"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true" 
+            android:src="@drawable/win_metro_left_selector"
+            android:clickable="true"
+            android:layout_gravity="center_vertical|left"  
+            android:background="@android:color/transparent"/>
+        <RelativeLayout 
+            android:layout_width="500dp"
+            android:layout_height="fill_parent"
+            android:background="@color/metro_main_color"
+            android:orientation="vertical">
+
+            <com.android.systemui.statusbar.oswin.view.MetroLayout
+                android:id="@+id/metrolayout"
+                android:layout_width  = "500dp"
+                android:layout_height = "wrap_content"/>
+            <TextView android:id="@+id/metro_page_indicator"  
+			    android:layout_width="500dp"  
+			    android:layout_height="wrap_content"
+			    android:padding="10dp"
+			    android:ellipsize="end" 
+			    android:singleLine="true"
+			    android:text="@string/default_account_name"
+			    android:gravity="center"
+			    android:layout_alignParentBottom="true"
+			    android:textColor="@android:color/white"  
+			    android:textSize="@dimen/metro_indicator_textsize" />                
+        </RelativeLayout>
+        <ImageButton
+            android:id="@+id/btn_metro_right"
+            android:layout_width="@dimen/metro_btn_dimen"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:src="@drawable/win_metro_right_selector"
+            android:clickable="true"
+            android:layout_gravity="center_vertical|right"  
+            android:background="@android:color/transparent"/>
+    </LinearLayout>  
+</LinearLayout>

@@ -232,6 +232,7 @@ public class NotificationPanelView extends PanelView implements
                 }
             }
         });
+	updateResources();
     }
 
     @Override
@@ -254,27 +255,34 @@ public class NotificationPanelView extends PanelView implements
     }
 
     public void updateResources() {
+	boolean isMulWindow = mKeyguardShowing?false:getContext().getResources().getConfiguration().enableMultiWindow();
+	updateResources(isMulWindow);
+    }
+
+    public void updateResources(boolean ismulwindow) {
         int panelWidth = getResources().getDimensionPixelSize(R.dimen.notification_panel_width);
         int panelGravity = getResources().getInteger(R.integer.notification_panel_layout_gravity);
+        int panelGravityLeft = getResources().getInteger(R.integer.notification_panel_layout_gravity_left);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) mHeader.getLayoutParams();
-        if (lp.width != panelWidth) {
+	int gravity = ismulwindow?panelGravityLeft:panelGravity;
+        if (lp.width != panelWidth || lp.gravity != gravity) {
             lp.width = panelWidth;
-            lp.gravity = panelGravity;
+            lp.gravity = gravity;
             mHeader.setLayoutParams(lp);
             mHeader.post(mUpdateHeader);
         }
 
         lp = (FrameLayout.LayoutParams) mNotificationStackScroller.getLayoutParams();
-        if (lp.width != panelWidth) {
+        if (lp.width != panelWidth || lp.gravity != gravity) {
             lp.width = panelWidth;
-            lp.gravity = panelGravity;
+            lp.gravity = gravity;
             mNotificationStackScroller.setLayoutParams(lp);
         }
 
         lp = (FrameLayout.LayoutParams) mScrollView.getLayoutParams();
-        if (lp.width != panelWidth) {
+        if (lp.width != panelWidth || lp.gravity != gravity) {
             lp.width = panelWidth;
-            lp.gravity = panelGravity;
+            lp.gravity = gravity;
             mScrollView.setLayoutParams(lp);
         }
     }
@@ -889,6 +897,7 @@ public class NotificationPanelView extends PanelView implements
         }
         mStatusBarState = statusBarState;
         mKeyguardShowing = keyguardShowing;
+	updateResources();
         updateQsState();
         if (goingToFullShade) {
             animateHeaderSlidingIn();

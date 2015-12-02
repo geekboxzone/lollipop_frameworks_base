@@ -44,6 +44,15 @@
     <style name="RecentsTheme.NoWallpaper">
         <item name="android:windowBackground">@android:color/black</item>
     </style>
+	
+	<style name="dialog" parent="@android:style/Theme.Dialog"> 
+		<item name="android:windowFrame">@null</item> 
+		<item name="android:windowIsFloating">true</item> 
+		<item name="android:windowIsTranslucent">false</item> 
+		<item name="android:windowNoTitle">true</item> 
+		<item name="android:windowBackground">@android:color/transparent</item> 
+		<item name="android:backgroundDimEnabled">false</item> 
+	</style>
 
     <!-- Animations for a non-full-screen window or activity. -->
     <style name="Animation.RecentsActivity" parent="@android:style/Animation.Activity">
@@ -303,5 +312,10 @@
     <style name="TextAppearance.StatusBar.SimSwitchNotification"
         parent="@*android:style/TextAppearance.StatusBar">
         <item name="android:textSize">14dp</item>
-     </style>
+    </style>
+	
+    <style name="CustomDayTextAppearance"
+	    parent="@android:style/TextAppearance.Medium">
+        <item name="android:textColor">#E0FFFFFF</item>
+    </style>
 </resources>

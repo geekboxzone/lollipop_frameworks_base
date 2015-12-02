@@ -118,6 +118,13 @@
     <!-- Screen Capturing -->
     <uses-permission android:name="android.permission.MANAGE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.CHANGE_CONFIGURATION" />
+	
+	<!-- Install/Uninstall Shortcut In Launcher -->
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.READ_SETTINGS" />
+    <uses-permission android:name="android.permission.SHUTDOWN"/>
+    <uses-permission android:name="android.permission.REBOOT"/>
 
     <application
         android:name=".SystemUIApplication"
@@ -129,6 +136,7 @@
         android:icon="@drawable/icon"
         android:process="com.android.systemui"
         android:supportsRtl="true"
+        android:largeHeap="true"
         android:theme="@style/systemui_theme">
         <!-- Keep theme in sync with SystemUIApplication.onCreate().
              Setting the theme on the application does not affect views inflated by services.
@@ -334,6 +342,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </service>
+	
+         <provider android:name="com.android.systemui.statusbar.oswin.data.AppContentProvider" 
+            android:authorities="com.android.systemui.data.appprovider"/>  
 
         <service
             android:name=".keyguard.KeyguardService"

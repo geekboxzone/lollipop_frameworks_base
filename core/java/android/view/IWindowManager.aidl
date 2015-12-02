@@ -295,4 +295,5 @@ interface IWindowManager
 
    void updateDisplayShowSynchronization();
    void moveWindowToSecondDisplay();
+   float getStatusBarHeight();
 }

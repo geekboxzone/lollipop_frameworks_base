@@ -1447,6 +1447,7 @@
   <java-symbol type="dimen" name="navigation_bar_height_landscape" />
   <java-symbol type="dimen" name="navigation_bar_width" />
   <java-symbol type="dimen" name="status_bar_height" />
+  <java-symbol type="dimen" name="status_bar_height_mul" />
   <java-symbol type="dimen" name="app_window_bounds_width"/>
   <java-symbol type="drawable" name="ic_jog_dial_sound_off" />
   <java-symbol type="drawable" name="ic_jog_dial_sound_on" />

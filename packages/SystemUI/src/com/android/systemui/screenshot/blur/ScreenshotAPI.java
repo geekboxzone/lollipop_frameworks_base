@@ -121,6 +121,43 @@ public class ScreenshotAPI {
         
         return full;
     }
+	public static Bitmap makeHomeBlur(Bitmap homeImage, int dst_w, int dst_h, int scale) {
+	    long now = System.currentTimeMillis();
+        Bitmap half = ImageUtil.scaleImage(homeImage, dst_w/scale, dst_h/scale);
+		//Bitmap half = ImageUtil.loadImageFromUrl(HOME_SHOT_PATH, dst_w/2, dst_h/2);
+        if(half == null){
+        	return null;
+        }
+        homeImage.recycle();
+        Log.e(TAG, "scaleImage(1/2) ConsumedTime:" + (System.currentTimeMillis()-now) + "ms"
+                    + "; " + half.toString());
+        
+        GaussianFastBlur fastBlur = new GaussianFastBlur();
+	    //NdkStackBlur fastBlur = new NdkStackBlur();
+        //SuperFastBlur   fastBlur = new SuperFastBlur();
+	    Bitmap blur = fastBlur.blur(2, half.copy(Bitmap.Config.ARGB_8888, true));
+        if(blur == null){
+        	return null;
+        }
+        Log.e(TAG, "fastBlur.blur ConsumedTime:" + (System.currentTimeMillis()-now) + "ms"
+                    + "; " + blur.toString());
+
+        
+        Bitmap full = ImageUtil.scaleImage(blur, dst_w, dst_h);
+        if(full == null){
+        	return null;
+        }
+        half.recycle();
+        Log.e(TAG, "scaleImage(2.0) ConsumedTime:" + (System.currentTimeMillis()-now) + "ms"
+                    + "; " + full.toString());
+
+
+        // Optimizations
+        full.setHasAlpha(true);
+        full.prepareToDraw();
+        
+        return full;
+    }
     
     public static Bitmap invokeTakeScreenshot(int width, int height){
     	Class<?> sc;

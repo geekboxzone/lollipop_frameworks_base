@@ -117,7 +117,9 @@ public abstract class PanelView extends FrameLayout {
 
     protected void onExpandingFinished() {
         endClosing();
-        mBar.onExpandingFinished();
+        if(null != mBar){
+            mBar.onExpandingFinished();
+        }
     }
 
     protected void onExpandingStarted() {
@@ -397,14 +399,18 @@ public boolean panelViewEnabled(){
 
     protected void onTrackingStopped(boolean expand) {
         mTracking = false;
-        mBar.onTrackingStopped(PanelView.this, expand);
+        if(null != mBar){
+            mBar.onTrackingStopped(PanelView.this, expand);
+        }
     }
 
     protected void onTrackingStarted() {
         endClosing();
         mTracking = true;
         mCollapseAfterPeek = false;
-        mBar.onTrackingStarted(PanelView.this);
+        if(null!=mBar){
+            mBar.onTrackingStarted(PanelView.this);
+        }
         notifyExpandingStarted();
     }
 
@@ -766,7 +772,7 @@ public boolean panelViewEnabled(){
 
     public void expand() {
         if (DEBUG) logf("expand: " + this);
-        if (isFullyCollapsed()) {
+        if (isFullyCollapsed()&&(null!=mBar)) {
             mBar.startOpeningPanel(this);
             notifyExpandingStarted();
             fling(0, true /* expand */);
@@ -835,7 +841,9 @@ public boolean panelViewEnabled(){
     }
 
     protected void onClosingFinished() {
-        mBar.onClosingFinished();
+        if(null != mBar){
+            mBar.onClosingFinished();
+        }
     }
 
 

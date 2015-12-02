@@ -70,11 +70,12 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener {
     private float mDozeBehindAlpha;
     private float mCurrentInFrontAlpha;
     private float mCurrentBehindAlpha;
+    private Context mContext;
 
     public ScrimController(ScrimView scrimBehind, ScrimView scrimInFront, boolean scrimSrcEnabled) {
         mScrimBehind = scrimBehind;
         mScrimInFront = scrimInFront;
-        final Context context = scrimBehind.getContext();
+        final Context context = mContext = scrimBehind.getContext();
         mUnlockMethodCache = UnlockMethodCache.getInstance(context);
         mLinearOutSlowInInterpolator = AnimationUtils.loadInterpolator(context,
                 android.R.interpolator.linear_out_slow_in);
@@ -203,7 +204,10 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener {
     }
 
     private void setScrimBehindColor(float alpha) {
-        setScrimColor(mScrimBehind, alpha);
+        boolean isMulWindow = false;
+        if (mContext != null)
+            isMulWindow = mContext.getResources().getConfiguration().enableMultiWindow();
+            setScrimColor(mScrimBehind, isMulWindow?0:alpha);
     }
 
     private void setScrimInFrontColor(float alpha) {

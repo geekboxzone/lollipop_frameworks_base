@@ -37,6 +37,7 @@
             android:clipChildren="false"
             android:clipToPadding="false"
             android:id="@+id/nav_buttons"
+	    android:layout_gravity="left|center_vertical"
             android:animateLayoutChanges="true"
             >
 
@@ -79,115 +80,8 @@
                 android:scaleType="centerInside"
                 android:layout_weight="0"
                 />
-             
-            <ImageButton
-              android:id="@+id/win_1"
-                       android:layout_width="0dp"
-                       android:layout_height="match_parent"
-                       android:gravity="center"
-                       android:scaleType="centerInside"
-                       android:background="@drawable/bg_item_taskbar"
-                       android:src="@drawable/ic_launcher_settings" />
-              <Space 
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                />
-              <ImageButton
-              android:id="@+id/win_2"
-                       android:layout_width="0dp"
-                       android:layout_height="match_parent"
-                       android:gravity="center"
-                       android:scaleType="centerInside"
-                       android:background="@drawable/bg_item_taskbar"
-                       android:src="@drawable/ic_launcher_calculator" />
-               <Space 
-                android:layout_width="10dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                />
-             <LinearLayout 
-               android:orientation="vertical" 
-               android:layout_width="760dp"
-               android:layout_height="match_parent">
-            <HorizontalScrollView 
-                       android:id="@+id/mAppsScrollView"
-                       android:layout_width="fill_parent"
-                       android:layout_height="match_parent"
-                       
-                       >
-                 <LinearLayout android:layout_width="fill_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="horizontal"
-                        >
-                    <GridView 
-                         android:id="@+id/mAppsGridView"
-                         android:layout_width="fill_parent"
-                         android:layout_height="wrap_content"
-                         android:columnWidth="64dp"
-                         android:horizontalSpacing="0dp" 
-                          android:gravity="center"
-                         android:listSelector="#00000000"
-                         android:cacheColorHint="#00000000"
-                         android:scrollbars="none"  
-                         />
-                  </LinearLayout>   
-            </HorizontalScrollView>
-            </LinearLayout>
-            <!--Space 
-                android:layout_width="500dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                /-->
-            <com.android.systemui.statusbar.policy.KeyButtonView
-                android:id="@+id/sub"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:contentDescription="@string/accessibility_recent"
-                android:paddingLeft="0dp"
-                android:paddingRight="0dp"
-                android:src="@drawable/sub_normal"
-                android:visibility="invisible"
-                systemui:keyCode="25"
-                />
-                <com.android.systemui.statusbar.policy.KeyButtonView
-                android:id="@+id/displaycopy" android:paddingStart="0dp" android:paddingEnd="0dp"
-                android:layout_width="100dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:contentDescription="@string/accessibility_recent"
-                android:scaleType="centerInside"
-                android:src="@drawable/display_copy"
-                android:visibility="invisible"
-                />
-                <FrameLayout
-                android:layout_width="48dp"
-                android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:layout_marginEnd="2dp" >
-                <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/menu"
-                    android:layout_width="@dimen/navigation_extra_key_width"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ic_sysbar_menu"
-                android:scaleType="centerInside"
-                    android:layout_marginEnd="2dp"
-                    systemui:keyCode="82"
-                    android:visibility="invisible"
-                    android:contentDescription="@string/accessibility_menu"
-                    />
-                <com.android.systemui.statusbar.policy.KeyButtonView
-                    android:id="@+id/ime_switcher"
-                    android:layout_width="@dimen/navigation_extra_key_width"
-                    android:layout_height="match_parent"
-                    android:layout_marginEnd="2dp"
-                    android:scaleType="centerInside"
-                    android:src="@drawable/ic_ime_switcher_default"
-                    android:visibility="invisible"
-                    android:contentDescription="@string/accessibility_ime_switch_button" />
-            </FrameLayout>
-            <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/back"
-                android:layout_width="90dp" android:paddingStart="10dp" android:paddingEnd="0dp"
+<com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/back"
+                android:layout_width="80dp" android:paddingStart="10dp" android:paddingEnd="0dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_back"
                 android:scaleType="centerInside"
@@ -196,7 +90,7 @@
                 android:contentDescription="@string/accessibility_back"
                 />
             <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/home"
-                android:layout_width="100dp" android:paddingStart="0dp" android:paddingEnd="0dp"
+                android:layout_width="90dp" android:paddingStart="0dp" android:paddingEnd="0dp"
                 android:layout_height="match_parent"
                 android:src="@drawable/ic_sysbar_home"
                 android:scaleType="centerInside"
@@ -232,12 +126,143 @@
                 android:src="@drawable/ic_sysbar_hide"
                 android:layout_weight="0"
                 android:contentDescription="@string/accessibility_recent"
+
+          
                 />
-            <!--Space 
-                android:layout_width="match_parent"
+             
+            <ImageButton
+              android:id="@+id/win_1"
+                       android:layout_width="0dp"
+                       android:layout_height="match_parent"
+                       android:gravity="center"
+                       android:scaleType="centerInside"
+                       android:background="@drawable/bg_item_taskbar"
+                       android:src="@drawable/ic_launcher_settings" />
+              <Space 
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_weight="0"
+                />
+              <ImageButton
+              android:id="@+id/win_2"
+                       android:layout_width="0dp"
+                       android:layout_height="match_parent"
+                       android:gravity="center"
+                       android:scaleType="centerInside"
+                       android:background="@drawable/bg_item_taskbar"
+                       android:src="@drawable/ic_launcher_calculator" />
+               <Space 
+                android:layout_width="10dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                />
+		<ImageView
+                  android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:src="@drawable/start_line"
+                android:paddingStart="0dp"
+                android:scaleType="centerInside"
+                android:layout_weight="0"
+                />
+             <LinearLayout 
+               android:orientation="vertical" 
+               android:layout_width="600dp"
+               android:layout_height="match_parent">
+            <HorizontalScrollView 
+                       android:id="@+id/mAppsScrollView"
+                       android:layout_width="fill_parent"
+                       android:layout_height="match_parent"
+                       
+                       >
+                 <LinearLayout android:layout_width="fill_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal"
+                        >
+                    <GridView 
+                         android:id="@+id/mAppsGridView"
+                         android:layout_width="fill_parent"
+                         android:layout_height="wrap_content"
+                         android:columnWidth="64dp"
+                         android:horizontalSpacing="0dp" 
+                          android:gravity="center"
+                         android:listSelector="#00000000"
+                         android:cacheColorHint="#00000000"
+                         android:scrollbars="none"  
+                         />
+                  </LinearLayout>   
+            </HorizontalScrollView>
+            </LinearLayout>
+            <!--Space 
+                android:layout_width="500dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
                 /-->
+            
+            <View
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:layout_marginStart="dp"
+                android:visibility="invisible"
+                />
+        </LinearLayout>
+	
+	 <LinearLayout android:id="@+id/nav_right_buttons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:layout_gravity="right|center_vertical"
+            android:animateLayoutChanges="true">
+            <com.android.systemui.statusbar.policy.KeyButtonView
+                android:id="@+id/sub"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                android:paddingLeft="0dp"
+                android:paddingRight="0dp"
+                android:src="@drawable/sub_normal"
+                android:visibility="invisible"
+                systemui:keyCode="25"
+                />
+                <com.android.systemui.statusbar.policy.KeyButtonView
+                android:id="@+id/displaycopy" android:paddingStart="0dp" android:paddingEnd="0dp"
+                android:layout_width="90dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:contentDescription="@string/accessibility_recent"
+                android:scaleType="centerInside"
+                android:src="@drawable/display_copy"
+                android:visibility="invisible"
+                />
+                <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="match_parent"
+                android:layout_weight="0"
+                android:layout_marginEnd="2dp" >
+                <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/menu"
+                    android:layout_width="@dimen/navigation_extra_key_width"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_sysbar_menu"
+                android:scaleType="centerInside"
+                    android:layout_marginEnd="2dp"
+                    systemui:keyCode="82"
+                    android:visibility="invisible"
+                    android:contentDescription="@string/accessibility_menu"
+                    />
+                <com.android.systemui.statusbar.policy.KeyButtonView
+                    android:id="@+id/ime_switcher"
+                    android:layout_width="@dimen/navigation_extra_key_width"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="2dp"
+                    android:scaleType="centerInside"
+                    android:src="@drawable/ic_ime_switcher_default"
+                    android:visibility="invisible"
+                    android:contentDescription="@string/accessibility_ime_switch_button" />
+            </FrameLayout>
+            
             
                <com.android.systemui.statusbar.policy.KeyButtonView android:id="@+id/screenshot"
                 android:layout_width="64dp"
@@ -249,13 +274,47 @@
                 android:visibility="invisible"
                    android:contentDescription="@string/accessibility_recent"
              />
-            <View
-                android:layout_width="0dp"
+            <FrameLayout
+                android:layout_width="@dimen/icon_dimen_width"
+                android:layout_height="match_parent">				
+				<ImageView android:id="@+id/notification"
+					android:layout_width="@dimen/icon_dimen_width"
+					android:layout_height="match_parent"
+					android:padding="12dp"
+					android:src="@drawable/win_sys_notification"
+					android:scaleType="centerInside"
+					android:clickable="true"
+					android:visibility="visible"
+					android:contentDescription="@string/accessibility_recent"/>
+				<TextView  android:id="@+id/notification_count"  
+					android:layout_width="20dp"  
+					android:layout_height="20dp"
+					android:background="@drawable/notification_count"
+					android:layout_gravity="top|right"
+					android:gravity="center"/>
+			</FrameLayout>  
+			
+	    <com.android.keyguard.AlphaOptimizedLinearLayout android:id="@+id/system_icon_area"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            >
+
+            <include layout="@layout/system_icons" />
+
+           <TextView  android:id="@+id/system_time_tick"  
+                android:layout_width="wrap_content"  
                 android:layout_height="match_parent"
-                android:layout_weight="0"
-                android:layout_marginStart="dp"
-                android:visibility="invisible"
-                />
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp" 
+                android:maxLines="2"
+                android:textSize="15sp"
+                android:ellipsize="end"/>
+        </com.android.keyguard.AlphaOptimizedLinearLayout>
+        
+     
         </LinearLayout>
 
         <!-- lights out layout to match exactly -->
@@ -519,6 +578,57 @@
                     android:contentDescription="@string/accessibility_ime_switch_button"
                     android:scaleType="centerInside" />
             </FrameLayout>
+        </LinearLayout>
+        <LinearLayout android:id="@+id/nav_right_buttons"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:layout_gravity="right|center_vertical"
+            android:animateLayoutChanges="true">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent">				
+				<ImageView android:id="@+id/notification"
+					android:layout_width="@dimen/icon_dimen_width"
+					android:layout_height="match_parent"
+					android:padding="8dp"
+					android:src="@drawable/win_sys_notification"
+					android:scaleType="centerInside"
+					android:clickable="true"
+					android:visibility="visible"
+					android:contentDescription="@string/accessibility_recent"/>
+				<TextView  android:id="@+id/notification_count"  
+					android:layout_width="20dp"  
+					android:layout_height="20dp"
+					android:background="@drawable/notification_count"
+					android:layout_gravity="top|right"
+					android:gravity="center"/>
+			</FrameLayout>  
+			
+	    <com.android.keyguard.AlphaOptimizedLinearLayout android:id="@+id/system_icon_area"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            >
+
+            <include layout="@layout/system_icons" />
+
+           <TextView  android:id="@+id/system_time_tick"  
+                android:layout_width="0dp"  
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp" 
+                android:maxLines="2"
+                android:textSize="15sp"
+                android:ellipsize="end"/>
+        </com.android.keyguard.AlphaOptimizedLinearLayout>
+
+     
         </LinearLayout>
 
         <!-- lights out layout to match exactly -->

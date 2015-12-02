@@ -163,7 +163,9 @@ public class BatteryMeterView extends View implements DemoMode,
             // preload the battery level
             mTracker.onReceive(getContext(), sticky);
         }
-        mBatteryController.addStateChangedCallback(this);
+        if(null != mBatteryController){
+            mBatteryController.addStateChangedCallback(this);
+        }
     }
 
     @Override
@@ -171,7 +173,9 @@ public class BatteryMeterView extends View implements DemoMode,
         super.onDetachedFromWindow();
 
         getContext().unregisterReceiver(mTracker);
-        mBatteryController.removeStateChangedCallback(this);
+        if(null != mBatteryController){
+            mBatteryController.removeStateChangedCallback(this);
+        }
     }
 
     public BatteryMeterView(Context context) {
@@ -255,8 +259,10 @@ public class BatteryMeterView extends View implements DemoMode,
 
     @Override
     public void onPowerSaveChanged() {
-        mPowerSaveEnabled = mBatteryController.isPowerSave();
-        invalidate();
+        if(null!=mBatteryController){
+            mPowerSaveEnabled = mBatteryController.isPowerSave();
+            invalidate();
+        }
     }
 
     private static float[] loadBoltPoints(Resources res) {

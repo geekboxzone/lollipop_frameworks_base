@@ -13,7 +13,7 @@
 # limitations under the License.
 
 LOCAL_PATH := $(call my-dir)
-include $(CLEAR_VARS)
+#include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := tests
 
@@ -30,10 +30,10 @@ LOCAL_JAVA_LIBRARIES := android.test.runner telephony-common
 
 LOCAL_PACKAGE_NAME := SystemUITests
 
-LOCAL_STATIC_JAVA_LIBRARIES := mockito-target Keyguard
+LOCAL_STATIC_JAVA_LIBRARIES := android_support-v4 mockito-target Keyguard
 
 # sign this with platform cert, so this test is allowed to inject key events into
 # UI it doesn't own. This is necessary to allow screenshots to be taken
 LOCAL_CERTIFICATE := platform
 
-include $(BUILD_PACKAGE)
+#include $(BUILD_PACKAGE)
