@@ -578,7 +578,8 @@ private boolean validWindowState(WindowState win){
 			if (!((move_rel + ws.mSfOffsetY) > barheight)) {
 			   move_rel = barheight - ws.mSfOffsetY;
 			}
-			 mService.applyPositionForMultiWindow(ws,posX+(int)event.getX()- mov_x,posY+ (int)event.getY()-mov_y);
+			if(ws.mAttrs.align != WindowManagerPolicy.WINDOW_ALIGN_LEFT)
+			 	mService.applyPositionForMultiWindow(ws,posX+(int)event.getX()- mov_x,posY+ (int)event.getY()-mov_y);
 			 mov_x = (int)event.getX();
 			 mov_y = (int)event.getY();
 			 return 0;
@@ -586,7 +587,10 @@ private boolean validWindowState(WindowState win){
 			  up_x = (int)event.getX();
 			  up_y = (int)event.getY();
 			 if (isSideSlip && ((up_x > (x1 + 50)) || (up_x < (x1 - 30)))) {
-				mService.applySizeForMultiWindow(ws);
+			 	if(ws.mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT)
+					mService.setHalfScreenWindowTransFormInfo(ws,(up_x-x1)*10000,-1);
+				else
+					mService.applySizeForMultiWindow(ws);
 			 }
                        	  mov_x = 0;
                        	  mov_y = 0;

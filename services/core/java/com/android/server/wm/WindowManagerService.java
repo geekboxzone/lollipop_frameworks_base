@@ -2850,7 +2850,24 @@ public class WindowManagerService extends IWindowManager.Stub
                     + win);
             removeWindowInnerLocked(cwin.mSession, cwin);
         }
-
+		boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+        if (multiWindowConfig){
+			WindowList allwindows = getDefaultDisplayContentLocked().getWindowList();
+			for(int i=allwindows.size()-1;i>=0;i--){
+				WindowState current = allwindows.get(i);
+					if(win != null && current!=null && ((current.taskId == win.taskId && current.taskId != -1)
+						|| (current.mAppToken!=null && current.mAppToken.groupId == win.taskId))){
+						if(current.mAppWindowState == win){
+							current.mAppWindowState = null;
+							}
+						//if(current.mAttachedWindow!=null){
+						//	 current.mAttachedWindow = null;
+						//}
+						Slog.w(TAG, "====Force-removing child win " + current + " from container "
+	                    + win);
+					}
+				}
+        }		
         win.mRemoved = true;
 
         if (mInputMethodTarget == win) {
@@ -3338,7 +3355,7 @@ public class WindowManagerService extends IWindowManager.Stub
 				WindowState win = windows.get(i);
 				if(win!=null && current!=null && (current.getAttrs().packageName.equals(win.getAttrs().packageName)
 					|| (current.taskId == win.taskId && current.taskId != -1))){
-					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+					IAppAlignWatcher watcher = mAppAlignWatcher.get(current);
 					if(watcher != null){
 						try{
 							watcher.onHalfScreenWindowPositionChanged(posX,posY);
@@ -7537,7 +7554,7 @@ public class WindowManagerService extends IWindowManager.Stub
 		if(win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION ||
 			win.getAttrs().type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION ||
 			win.getAttrs().type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING){
-			if(win.getAttrs().width == -1 && win.getAttrs().height == -1)
+			if(win.getAttrs().width == -1 || win.getAttrs().height == -1 || win.getAttrs().height == -2||win.getAttrs().width == -2)
 				return true;
 			if((win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_LEFT)){
 			//if((win.getAttrs().flags & WindowManager.LayoutParams.FLAG_HALF_SCREEN_WINDOW) !=0){
@@ -7821,7 +7838,7 @@ public class WindowManagerService extends IWindowManager.Stub
                         return -1;
         }
        public void applyPositionForMultiWindow(WindowState win,int posX,int posY){
-	   	mMulWindowService.applyPositionForMultiWindow(mAppAlignWatcher,win,posX,posY);
+	   	  mMulWindowService.applyPositionForMultiWindow(mAppAlignWatcher,win,posX,posY);
 	
 		}
 
@@ -8218,6 +8235,7 @@ public class WindowManagerService extends IWindowManager.Stub
 				if(isHomeWindow(w)){
 					continue;
 				}
+				LOGD("===========updateAppTokenWindowsFullScreen================ws:"+w);
 				if(ignoreWindow(w)){
 					continue;
 				}
