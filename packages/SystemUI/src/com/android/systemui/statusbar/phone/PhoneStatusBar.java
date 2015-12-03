@@ -1986,7 +1986,6 @@ final Object mScreenshotLock = new Object();
             am.removeTask(persistentId/*, ActivityManager.REMOVE_TASK_KILL_PROCESS*/);
 			am.forceStopPackage	(pkNmae);
           }
-	  am.forceStopPackage(pkNmae);
         }
     } catch (Exception e) {
         e.printStackTrace();
