@@ -956,7 +956,7 @@ final Object mScreenshotLock = new Object();
                if(intent.getAction().equals(Intent.ACTION_WALLPAPER_CHANGED)){
                   if(mContext.getResources().getConfiguration().enableMultiWindow()){
                      //updateTopBlur();
-                    //updateBottomBlur();
+                    updateBottomBlur();
                   }
                }
           }
@@ -1689,7 +1689,7 @@ final Object mScreenshotLock = new Object();
             initSystemTime();
 			
         //updateTopBlur();
-        //updateBottomBlur();
+        updateBottomBlur();
         mNavigationBarView.getWinStartButton().setOnTouchListener(mWinStartOnTouchListener);
 	  // mNavigationBarView.getWinStartButton().setOnClickListener(mWinStartClickListener);
          
