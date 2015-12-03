@@ -473,7 +473,7 @@ public class SurfaceView extends View {
         if (myWidth <= 0) myWidth = getWidth();
         int myHeight = mRequestedHeight;
         if (myHeight <= 0) myHeight = getHeight();
-		if ( "cn.wps.moffice_eng".equals(getContext().getPackageName()) &&
+		if (( "cn.wps.moffice_eng".equals(getContext().getPackageName()) ||"android.rk.RockVideoPlayer".equals(getContext().getPackageName())) &&
 			getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW) {
 			if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT ){		
 				myWidth =  (myWidth == display.getWidth()) ?myWidth/2:myWidth;
@@ -514,7 +514,7 @@ public class SurfaceView extends View {
                 mLayout.width = getWidth();
                 mLayout.height = getHeight();
 				if (DEBUG)Log.i(TAG, "   updateWindow mRequestedWidth: "+mRequestedWidth +",myHeight:"+myHeight + "mLayout.width :"+mLayout.height);
-				if ( "cn.wps.moffice_eng".equals(getContext().getPackageName())&&
+				if (( "cn.wps.moffice_eng".equals(getContext().getPackageName()) ||"android.rk.RockVideoPlayer".equals(getContext().getPackageName()))&&
 						getContext().getResources().getConfiguration().multiwindowflag == Configuration.ENABLE_MULTI_WINDOW) {
 					if(mLayout.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT){
 						mLayout.width =  myWidth;

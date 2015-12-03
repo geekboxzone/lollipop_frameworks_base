@@ -1984,6 +1984,7 @@ final Object mScreenshotLock = new Object();
             int persistentId = ra.persistentId; // pid 
             //Log.v(TAG,"kill name="+intent.getComponent().getPackageName()+"kill persistentId=" + persistentId);
             am.removeTask(persistentId/*, ActivityManager.REMOVE_TASK_KILL_PROCESS*/);
+			am.forceStopPackage	(pkNmae);
           }
 	  am.forceStopPackage(pkNmae);
         }

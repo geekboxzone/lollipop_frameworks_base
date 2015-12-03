@@ -6709,8 +6709,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
                 mContext.getContentResolver(), Settings.System.MULTI_WINDOW_CONFIG, Settings.System.MULTI_WINDOW_CLOSE);
 	    int visibility = 0;
 		int v = View.VISIBLE;
-                 if(config == Settings.System.MULTI_WINDOW_CLOSE||(config != Settings.System.MULTI_WINDOW_CLOSE && (("com.android.winstart".equals(win.getAttrs().packageName)&&win.getAttrs().taskId!=-1) ||
-win.isHomeWindow()))){
+                 if(config == Settings.System.MULTI_WINDOW_CLOSE||(config != Settings.System.MULTI_WINDOW_CLOSE && (("com.android.winstart".equals(win.getAttrs().packageName)&&
+				 	win.getAttrs().taskId!= -1) ||win.isHomeWindow()))){
 			v = updateSystemBarsLw(win, mLastSystemUiFlags, tmpVisibility);
 		}else{
 			/*try{

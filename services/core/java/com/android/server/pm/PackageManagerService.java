@@ -14143,7 +14143,6 @@ public class PackageManagerService extends IPackageManager.Stub
 				} catch (RemoteException re) {}	
             appinfo.phoneMode = phonemode;
             appinfo.halfScreenMode = halfscreenmode;
-			Log.d("MultiWindowGlobal",appinfo.phoneMode+"=================="+appinfo);
         }
         return true;
     }
