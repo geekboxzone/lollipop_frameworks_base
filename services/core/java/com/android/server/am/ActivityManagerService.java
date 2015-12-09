@@ -4891,7 +4891,8 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
                 + ", thread: " + thread.asBinder());
 	    boolean isrestart = true; 
 	    if("true".equals(SystemProperties.get("ro.config.low_ram", "false")) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
-	    	isrestart = false;
+		if(!"com.android.systemui".equals(app.processName))
+	    		isrestart = false;
             handleAppDiedLocked(app, false, isrestart);
 
             if (doOomAdj) {
