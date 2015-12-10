@@ -2249,14 +2249,28 @@ private String popupAppName = null;
 		LOGD(pkgname+"===================================phonemode:"+phonemode+",halfscreen:"+halfscreen+",isLauncher:"+isLauncher);
         if (pkgname != null && !isLauncher) {
             // Change PackageManager config
+            Toast.makeText(mContext,mContext.getResources().getString(R.string.restart_app_msg),Toast.LENGTH_SHORT).show();
             PackageManager pm = mContext.getPackageManager();
             pm.setAppMultiWindowMode(pkgname, phonemode, halfscreen);
             // Close current app
             removeAppTask(pkgname);
             isWinShow = false;
             UpdateAppsList(pkgname);
+            //restart app
+             launchIntent = null;
+             launchIntent = new Intent("android.intent.action.MAIN")
+                    .addCategory(Intent.CATEGORY_LAUNCHER);
+            launchIntent.setComponent(pm.getLaunchIntentForPackage(pkgname).getComponent());
+            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mHandler.postDelayed(mRestartAppforMulti,500);
         }
     }
+    private  Intent launchIntent;
+    Runnable mRestartAppforMulti = new Runnable() {
+        public void run() {
+            mContext.startActivity(launchIntent);
+        }
+    };
 
     public void showLockPopuWindow(int x,String name) {  
       if(mContext.getResources().getConfiguration().enableMultiWindow()){    

@@ -998,6 +998,7 @@
     <string name="fullshot_text">Whole shot</string>
     
     <string name="fail_open_app">Open App Fail...</string>
+    <string name="restart_app_msg">Restarting App...</string>
 
     <string name="power_sub_close">Shutdown</string>
     <string name="power_sub_sleep">Go to Sleep</string>

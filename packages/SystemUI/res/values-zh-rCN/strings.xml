@@ -431,6 +431,8 @@
     <string name="multishot_text">智能截图</string>
     <string name="dynamic_text">录制动图</string>
     <string name="fullshot_text">全屏截图</string>
+
+  <string name="restart_app_msg">应用正在重启...</string>
     
     <string name="power_sub_close">关闭系统</string>
     <string name="power_sub_sleep">系统休眠</string>
