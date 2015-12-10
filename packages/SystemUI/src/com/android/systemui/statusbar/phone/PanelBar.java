@@ -42,6 +42,7 @@ public class PanelBar extends FrameLayout {
     PanelView mTouchingPanel;
     private int mState = STATE_CLOSED;
     private boolean mTracking;
+    private Context mContext;
 
     float mPanelExpandedFractionSum;
 
@@ -52,6 +53,7 @@ public class PanelBar extends FrameLayout {
 
     public PanelBar(Context context, AttributeSet attrs) {
         super(context, attrs);
+         mContext = context;
     }
 
     @Override
@@ -190,7 +192,7 @@ public class PanelBar extends FrameLayout {
     public void collapseAllPanels(boolean animate) {
         boolean waiting = false;
         for (PanelView pv : mPanels) {
-            if (animate && !pv.isFullyCollapsed()) {
+            if (animate && (!pv.isFullyCollapsed()||mContext.getResources().getConfiguration().enableMultiWindow())) {
                 pv.collapse(true /* delayed */);
                 waiting = true;
             } else {

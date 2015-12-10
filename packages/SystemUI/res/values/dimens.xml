@@ -56,7 +56,7 @@
 
     <dimen name="icon_dimen_width">50dp</dimen>
     <dimen name="icon_dimen_padding_5">5dp</dimen>
-    <dimen name="sys_dialog_width">310dp</dimen>
+    <dimen name="sys_dialog_width">350dp</dimen>
 	<dimen name="sys_dialog_height">500dp</dimen>
 
     <!-- Margin at the edge of the screen to ignore touch events for in the windowshade. -->

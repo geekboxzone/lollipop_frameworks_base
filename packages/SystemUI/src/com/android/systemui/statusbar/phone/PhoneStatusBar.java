@@ -1722,7 +1722,7 @@ final Object mScreenshotLock = new Object();
 			 mAppsScrollView.setOnTouchListener(new View.OnTouchListener() {
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
-				  Log.d("hjc","====MotionEvent:"+event.toString()); 
+				//  Log.d("hjc","====MotionEvent:"+event.toString());
 					if (popupWindow != null){
 						LOGD("wintask ==mAppsScrollView== dismiss==");
 									  popupWindow.dismiss();
@@ -2708,7 +2708,13 @@ private String popupAppName = null;
             // TODO Auto-generated method stub
             int action = event.getAction() & MotionEvent.ACTION_MASK;
             if(action == MotionEvent.ACTION_UP){
-			animateExpandNotificationsPanel();
+                //Log.d("hjc","====mOnTouchForNotification==mNotificationPanel.isFullyCollapsed():"+mNotificationPanel.isFullyCollapsed());
+                if(!mNotificationPanel.isFullyCollapsed()){
+                    animateCollapsePanels();
+                }else {
+                    animateExpandNotificationsPanel();
+                    //animateExpandSettingsPanel();
+                }
                 if(null != mNotificationLite){
                    // mNotificationLite.openCenter();
                 }
