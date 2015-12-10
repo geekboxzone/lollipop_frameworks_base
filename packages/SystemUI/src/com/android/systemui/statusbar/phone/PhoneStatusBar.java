@@ -1612,7 +1612,7 @@ final Object mScreenshotLock = new Object();
         public boolean onTouch(View v, MotionEvent event) {
             switch(event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                if (!shouldDisableNavbarGestures()) {
+                if (!shouldDisableNavbarGestures()&&!mContext.getResources().getConfiguration().enableMultiWindow()) {
                     mHandler.removeCallbacks(mShowSearchPanel);
                     mHandler.postDelayed(mShowSearchPanel, mShowSearchHoldoff);
                 }
