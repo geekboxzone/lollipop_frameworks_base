@@ -14042,7 +14042,7 @@ public class PackageManagerService extends IPackageManager.Stub
     private final static String TAG_MULTIWINDOW = "multiwindow_mode";
     public MultiWindowMode getAppMultiWindowMode(String pkgName) {
         MultiWindowMode multiWindowMode = null;
-		Log.e(TAG_MULTIWINDOW, "MultiWindow - initConfigFile dosen't exist: ");
+		//Log.e(TAG_MULTIWINDOW, "MultiWindow - initConfigFile dosen't exist: ");
         File appWindowModeConfigFile = new File(Environment.getDataDirectory(), "system/package_phonemode.xml");
         if(!appWindowModeConfigFile.exists()) {
             Log.e(TAG_MULTIWINDOW, "MultiWindow - appWindowModeConfigFile dosen't exist, get it from init config file");
@@ -14139,7 +14139,7 @@ public class PackageManagerService extends IPackageManager.Stub
         if(appinfo!=null) {
 			try{
 				if(!phonemode)
-					ActivityManagerNative.getDefault().getRights(appinfo.uid,true);
+					ActivityManagerNative.getDefault().getRights(pkgName,true);
 				} catch (RemoteException re) {}	
             appinfo.phoneMode = phonemode;
             appinfo.halfScreenMode = halfscreenmode;

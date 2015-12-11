@@ -6168,7 +6168,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             }
             ProfilerInfo profilerInfo = profileFile == null ? null
                     : new ProfilerInfo(profileFile, profileFd, samplingInterval, profileAutoStop);
-	    Configuration realConfiguration = mMulActivityService.getConfiguration(appInfo, mConfiguration);
+	    Configuration realConfiguration = mMulActivityService.getConfiguration(appInfo,pid, mConfiguration);
             thread.bindApplication(processName, appInfo, providers, app.instrumentationClass,
                     profilerInfo, app.instrumentationArguments, app.instrumentationWatcher,
                     app.instrumentationUiAutomationConnection, testMode, enableOpenGlTrace,
@@ -6260,7 +6260,7 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     }
 
 
-    public boolean getRights(int id,boolean isRemove) {
+    public boolean getRights(String id,boolean isRemove) {
        if(mMulActivityService != null)
           return mMulActivityService.getRight(id,isRemove);
 	return false;
@@ -8615,7 +8615,9 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             ProcessRecord pr = procsToKill.get(i);
             if (pr.setSchedGroup == Process.THREAD_GROUP_BG_NONINTERACTIVE) {
                 pr.kill("remove task", true);
+				Slog.w(TAG, pr.pid+"cleanUpRemovedTaskLocked  of task: " + tr);
             } else {
+            Slog.w(TAG, pr.pid+"cleanUpRemovedTaskLocked  remove task: " + tr);
                 pr.waitingToKill = "remove task";
             }
         }

@@ -2859,6 +2859,12 @@ public class WindowManagerService extends IWindowManager.Stub
 						|| (current.mAppToken!=null && current.mAppToken.groupId == win.taskId))){
 						if(current.mAppWindowState == win){
 							current.mAppWindowState = null;
+							WindowState mainwin = current.mAppToken.findMainWindow();
+							if(mainwin!=null &&mainwin != current){
+									current.mAppWindowState = mainwin;
+									Slog.w(TAG, "====update windowstate mainwin win " + mainwin + " from container "
+	                    + current);
+								}
 							}
 						//if(current.mAttachedWindow!=null){
 						//	 current.mAttachedWindow = null;
@@ -2867,7 +2873,7 @@ public class WindowManagerService extends IWindowManager.Stub
 	                    + win);
 					}
 				}
-        }		
+        }	
         win.mRemoved = true;
 
         if (mInputMethodTarget == win) {
@@ -3099,13 +3105,9 @@ public class WindowManagerService extends IWindowManager.Stub
 					  // outTransFormInfo.set(0.0f, 0.0f, 1.0f, 1.0f);
 						getDefalutTransInfo(outTransFormInfo);
 					   return;
-				   }
-				   
-				   mMulWindowService.getWindowTransFormInfo(win,outTransFormInfo,getRotation());
-				   
+				   }		   
+				   mMulWindowService.getWindowTransFormInfo(win,outTransFormInfo,getRotation());			   
 			   }
-
-
 	}
 
 	public boolean isTopToLauncher(int taskId){
@@ -3787,7 +3789,7 @@ public class WindowManagerService extends IWindowManager.Stub
 			
 			if(attrs != null && ws != null && ws.getAttrs()!= null&&  
 				ws.isHalfOrPhoneMode()){
-				boolean found = false;
+				/*boolean found = false;
 				ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
 				for(int i = mWindows.size()-1;i>=0;i--){
 					WindowState windows = mWindows.get(i);
@@ -3795,10 +3797,10 @@ public class WindowManagerService extends IWindowManager.Stub
 				}
 				LOGD(win.getAttrs()+"========relayoutWindow=========="+ws);
 				LOGD(ws+"========relayoutWindow=========="+ws.getAttrs());
-				if(found){
+				if(found){*/
                 	win.getAttrs().align  = ws.getAttrs().align;
 					attrs.align  = ws.getAttrs().align;
-				}
+				//}
 			}
             WindowStateAnimator winAnimator = win.mWinAnimator;
             if (viewVisibility != View.GONE && (win.mRequestedWidth != requestedWidth
@@ -7821,25 +7823,32 @@ public class WindowManagerService extends IWindowManager.Stub
 		}
 	
        public void applySizeForMultiWindow(WindowState win) {
+		synchronized(mWindowMap){
                mMulWindowService.applySizeForMultiWindow(getAllWindowListInDefaultDisplay(), mActivityManager, win);
+			}
        }
 
        public void applyXTrac(WindowState win, int action, MotionEvent event) {
-               boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+            boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+			synchronized(mWindowMap){
                if (multiWindowConfig)
                        mMulWindowService.applyXTrac(mAppAlignWatcher, getAllWindowListInDefaultDisplay(), mActivityManager, win, action, event);
+			}
        }
 
  	 public int countHalf(int id) {
-                boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
-                if (multiWindowConfig)
-                        return mMulWindowService.countHalf(getAllWindowListInDefaultDisplay(),id);
-                else
-                        return -1;
+           boolean multiWindowConfig = mCurConfiguration.enableMultiWindow();
+		   synchronized(mWindowMap){
+	                if (multiWindowConfig)
+	                        return mMulWindowService.countHalf(getAllWindowListInDefaultDisplay(),id);
+	                else
+	                        return -1;
+			}
         }
        public void applyPositionForMultiWindow(WindowState win,int posX,int posY){
-	   	  mMulWindowService.applyPositionForMultiWindow(mAppAlignWatcher,win,posX,posY);
-	
+	   	 synchronized(mWindowMap){
+	   	  	mMulWindowService.applyPositionForMultiWindow(mAppAlignWatcher,win,posX,posY);
+	   	 }
 		}
 
 		public void applyPositionForWindow(WindowState win,int posX,int posY){
@@ -7854,12 +7863,13 @@ public class WindowManagerService extends IWindowManager.Stub
 		}
 
 		public void applyPositionForFourScreenWindow(WindowState win,boolean isStart,boolean isMove){
-			boolean isSuc = mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart,isMove);
-			
-			if(isSuc){
-				if(mAppAlignWatcher.get(win)!=null){
-					IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
-					onAppAlignChanged(watcher,win,false);
+			synchronized(mWindowMap){
+				boolean isSuc = mMulWindowService.applyPositionForFourScreenWindow(win,getDefaultDisplayContentLocked(),isStart,isMove);
+				if(isSuc){
+					if(mAppAlignWatcher.get(win)!=null){
+						IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+						onAppAlignChanged(watcher,win,false);
+					}
 				}
 			}
 	}
