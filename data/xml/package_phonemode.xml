@@ -9,6 +9,7 @@
     <app package="com.sohu.tv" phonemode="false" halfscreen="false"/>
     <app package="com.sohu.sohuvideo" phonemode="false" halfscreen="false"/>
     <app package="com.youku.phone" phonemode="false" halfscreen="false"/>
+    <app package="com.tudou.android" phonemode="false" halfscreen="false"/>
     <app package="com.sohu.newsclient" phonemode="false" halfscreen="false"/>
     <app package="com.letv.android.client.pad" phonemode="false" halfscreen="false"/>
     <app package="com.hdzdy.game" phonemode="false" halfscreen="false"/>

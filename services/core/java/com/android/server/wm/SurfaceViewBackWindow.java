@@ -30,13 +30,23 @@ import android.view.Surface.OutOfResourcesException;
 import android.util.Log;
 
 class SurfaceViewBackWindow {
+    static final boolean DEBUG = false;
+    static final String TAG = "SurfaceViewBackWindow";
     private final SurfaceControl mSurfaceControl;
     private final Surface mSurface = new Surface();
     int mLastDW;
     int mLastDH;
+    int mLastX;
+    int mLastY;
     boolean mDrawNeeded;
     final int mThickness = 20;
 	public int mLayer = 0;
+
+     void LOGD(String msg){
+                if(DEBUG){
+                        Log.d(TAG,msg);
+                }
+        }
 
     public SurfaceViewBackWindow(Display display, SurfaceSession session) {
 		SurfaceControl ctrl = null;
@@ -60,7 +70,8 @@ class SurfaceViewBackWindow {
         mDrawNeeded = false;
         final int dw = mLastDW;
         final int dh = mLastDH;
-		Log.v("SurfaceViewBackWindow","---------drawIfNeeded------------dw:"+dw+",dh:"+dh);
+//		Log.v("SurfaceViewBackWindow","---------drawIfNeeded------------dw:"+dw+",dh:"+dh);
+		LOGD("---------drawIfNeeded------------dw:"+dw+",dh:"+dh);
         Rect dirty = new Rect(0, 0, dw, dh);
         Canvas c = null;
         try {
@@ -95,12 +106,14 @@ class SurfaceViewBackWindow {
     }
 
     void positionSurface(int posX,int posY,int dw, int dh) {
-        if (mLastDW == dw && mLastDH == dh) {
+        if (mLastDW == dw && mLastDH == dh && mLastX == posX && mLastY == posY) {
             return;
         }
-		Log.v("SurfaceViewBackWindow","---------------------posX:"+posX+",posY:"+posY+",dw:"+dw+",dh:"+dh);
+		LOGD("---------------------posX:"+posX+",posY:"+posY+",dw:"+dw+",dh:"+dh);
         mLastDW = dw;
         mLastDH = dh;
+	mLastX = posX;
+	mLastY = posY;
 		if(dw == 0 || dh == 0){
 			setVisibility(false);
 		}else{
@@ -113,7 +126,7 @@ class SurfaceViewBackWindow {
 
     void SetLayer(int layer){
         if(mSurfaceControl != null){
-			Log.v("SurfaceViewBackWindow","---------------------layer:"+layer);
+			LOGD("---------------------layer:"+layer);
 			mLayer = layer;
             mSurfaceControl.setLayer(layer);
         }

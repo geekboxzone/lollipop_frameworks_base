@@ -681,8 +681,11 @@ public class WindowAnimator {
                 for (int j = N-1; j >= 0; j--) {
                     windows.get(j).mWinAnimator.prepareSurfaceLocked(true);
 					WindowState ww = windows.get(j);
-					if(ww.mSurfaceViewBackWindow != null){
-						ww.mSurfaceViewBackWindow.SetLayer(ww.mLayer- 2);
+					ww.setSmallLayer(ww.mLayer);
+					if(/*ww.mSurfaceViewBackWindow != null || */ww.hasBackWindow()){
+						//ww.mSurfaceViewBackWindow.SetLayer(ww.mLayer- 2);
+						ww.setLayer();
+						//mService.setSurfaceViewBackWindowShow(ww);
 					}				
                 }
             }

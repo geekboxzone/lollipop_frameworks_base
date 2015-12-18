@@ -541,11 +541,11 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			mPosX = mAttachedWindow.mPosX;
 			mPosY = mAttachedWindow.mPosY;
 			mActualScale = mAttachedWindow.mActualScale;
-			if(mAttachedWindow.mAppWindowState !=null){
-				mAppWindowState = mAttachedWindow.mAppWindowState;
-			}else{
+			//if(mAttachedWindow.mAppWindowState !=null){
+				//mAppWindowState = mAttachedWindow.mAppWindowState;
+			//}else{
 				mAppWindowState = mAttachedWindow;
-			}
+			//}
 			mDisableMulti = mAttachedWindow.mDisableMulti;
 			mAttrs.align = mAttachedWindow.getAttrs().align;
 
@@ -608,14 +608,80 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 		stepOfFourScreen = -1;
 		mService.setMultiWindowModeWindow(this);
 
-	/*	if(mService.mCurConfiguration.enableMultiWindow()){
+		if(mService.mCurConfiguration.enableMultiWindow()){
 			if(mAttachedWindow != null && mAttrs.getTitle().toString().equals("SurfaceView")
 				&& !"MediaView".equals(mAttachedWindow.getAttrs().getTitle().toString())){
 				if (mSurfaceViewBackWindow == null) {
-					mSurfaceViewBackWindow = new SurfaceViewBackWindow(mDisplayContent.getDisplay(), mService.mFxSession);
+					createBackWindow();
+					//mSurfaceViewBackWindow = new SurfaceViewBackWindow(mDisplayContent.getDisplay(), mService.mFxSession);
 				}
 			}
-		}*/
+		}
+    }
+
+    public int smallLayer = -1;
+
+    public void setSmallLayer(int layer) {
+	if (mAttachedWindow != null) {
+		mAttachedWindow.setSmallLayer(layer);
+        }
+	if (smallLayer == -1)
+            smallLayer = mLayer;
+    	if (layer < smallLayer)
+	    smallLayer = layer;
+    }
+
+    public void setLayer() {
+	if ((mAttachedWindow != null && mAttachedWindow.hasBackWindow())) {
+	    mAttachedWindow.mSurfaceViewBackWindow.SetLayer(mAttachedWindow.smallLayer - 2);
+	} else if (mSurfaceViewBackWindow != null) {
+	    mSurfaceViewBackWindow.SetLayer(smallLayer- 2);
+	}
+
+    }
+
+    public void createBackWindow() {
+	if(getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_LEFT) {
+        if(mService.mCurConfiguration.enableMultiWindow() && (mAppWindowState != null &&"com.tudou.android".equals(mAppWindowState.getAttrs().packageName))){
+	    if(true || mAttachedWindow != null && mAttrs.getTitle().toString().equals("SurfaceView")
+			&& !"MediaView".equals(mAttachedWindow.getAttrs().getTitle().toString())){
+		if ((mAttachedWindow != null && !mAttachedWindow.hasBackWindow())) {
+		    mAttachedWindow.createBackWindow();
+		} else if (mSurfaceViewBackWindow == null) {
+		    mSurfaceViewBackWindow = new SurfaceViewBackWindow(mDisplayContent.getDisplay(), mService.mFxSession);
+		}
+	    }
+	}
+	}
+    }
+
+    public void rmBackWindow() {
+        if(mSurfaceViewBackWindow != null){
+	    Log.v("SurfaceViewBackWindow","-----WindowState-----removeLocked-----------------");
+	    mSurfaceViewBackWindow.positionSurface(0, 0, 0, 0);
+	    mSurfaceViewBackWindow.setVisibility(false);
+	    mSurfaceViewBackWindow.destroy();
+	    mSurfaceViewBackWindow = null;
+	}
+	if ((mAttachedWindow != null && mAttachedWindow.hasBackWindow())) {
+	    mAttachedWindow.rmBackWindow();
+	}
+    }
+
+    public boolean hasBackWindow() {
+        if(mSurfaceViewBackWindow != null || (mAttachedWindow != null && mAttachedWindow.hasBackWindow())){
+	    return true;
+	}
+	return false;
+    }
+
+    public void visBackWindow() {
+	if ((mAttachedWindow != null && mAttachedWindow.hasBackWindow())) {
+	    mAttachedWindow.visBackWindow();
+	} else if(mSurfaceViewBackWindow != null){
+	    Log.v("SurfaceViewBackWindow","-----WindowState-----setAppOpVisibilityLw-----------------");
+	    mSurfaceViewBackWindow.setVisibility(false);	
+	}
     }
 
     void attach() {
@@ -910,6 +976,8 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			}
 			shouldForceAnim(mAttrs.align,value);
 		}
+    //reportResized();
+	mService.setSurfaceViewBackWindowShow(this);
 
         if (false) Slog.v(TAG,
                 "Resolving (mRequestedWidth="
@@ -1392,6 +1460,7 @@ private void shouldForceAnim(int align,int value){
     }
 
     void removeLocked() {
+	rmBackWindow();
         disposeInputChannel();
 
         if (mAttachedWindow != null) {
@@ -1407,6 +1476,7 @@ private void shouldForceAnim(int align,int value){
 			mSurfaceViewBackWindow.destroy();
 			mSurfaceViewBackWindow = null;
 		}
+					
         try {
             mClient.asBinder().unlinkToDeath(mDeathRecipient, 0);
         } catch (RuntimeException e) {
@@ -1580,6 +1650,7 @@ private void shouldForceAnim(int align,int value){
 					Log.v("SurfaceViewBackWindow","-----WindowState-----setAppOpVisibilityLw-----------------");
 					mSurfaceViewBackWindow.setVisibility(false);	
 				}
+		visBackWindow();
                 hideLw(true, true);
             }
         }

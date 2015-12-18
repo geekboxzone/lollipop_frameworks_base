@@ -7874,7 +7874,7 @@ public class WindowManagerService extends IWindowManager.Stub
 			}
 	}
 	
-	private void setSurfaceViewBackWindowShow(WindowState w){
+	public void setSurfaceViewBackWindowShow(WindowState w){
 		if(mCurConfiguration.enableMultiWindow() && w.mSurfaceViewBackWindow != null){
 			SurfaceControl.openTransaction();
             try {
@@ -7882,19 +7882,19 @@ public class WindowManagerService extends IWindowManager.Stub
 				int top = 0;
 				int width = 0;
 				int height = 0;
-				if(w.mAttachedWindow != null){
+				if(true || w.mAttachedWindow != null){
 					int statusBarHeight = (int)mPolicy.getStatusBarHeightIfAvailable();
 					Point p = getFourScreenSettingPosition();
 					int WIDTH = getDefaultDisplayContentLocked().getDisplay().getWidth();
 					int HEIGHT = getDefaultDisplayContentLocked().getDisplay().getHeight();
-					switch(w.mAttachedWindow.stepOfFourScreen){
-						case 0:
-							left = 0;
+					switch(w.getAttrs().align) {//mAttachedWindow.stepOfFourScreen){
+						case WindowManagerPolicy.WINDOW_ALIGN_LEFT:
+							left = (w.mSurfaceFrame.left < (WIDTH/2 -2))?0:WIDTH/2;
 							top = statusBarHeight;
-							width = p.x;
-							height = p.y - statusBarHeight;
+							width = WIDTH/2;//p.x;
+							height = HEIGHT - statusBarHeight;
 							break;
-						case 1:
+						/*case 1:
 							left = p.x;
 							top = statusBarHeight;
 							width = WIDTH - left;
@@ -7911,20 +7911,25 @@ public class WindowManagerService extends IWindowManager.Stub
 							top = p.y;
 							width = WIDTH - left; 
 							height = HEIGHT - top;
-							break;
+							break;*/
 					}
 				}
-				Log.v("SurfaceViewBackWindow","---wms---left:"+left+",top:"+top+",width:"+width+",height:"+height);
-				w.mSurfaceViewBackWindow.positionSurface(left,top,width,height);	
+				//Log.v("SurfaceViewBackWindow","---wms---left:"+w.mAttachedWindow.mSurfaceFrame.left+",top:"+w.mAttachedWindow.mSurfaceFrame.top+",width:"+w.mAttachedWindow.mSurfaceFrame.right+",height:"+w.mAttachedWindow.mSurfaceFrame.bottom);
+                              if(w.mSurfaceFrame.width()>(getDefaultDisplayContentLocked().getDisplay().getWidth()/2)){
+                                         w.mSurfaceViewBackWindow.setVisibility(false);
+                              }else{
+				w.mSurfaceViewBackWindow.positionSurface(w.mSurfaceFrame.left,w.mSurfaceFrame.top,w.mSurfaceFrame.width(),w.mSurfaceFrame.height());	
+				//w.mSurfaceViewBackWindow.positionSurface(w.mAttachedWindow.mSurfaceFrame.left,w.mAttachedWindow.mSurfaceFrame.top,(w.mAttachedWindow.mSurfaceFrame.right - w.mAttachedWindow.mSurfaceFrame.left),(w.mAttachedWindow.mSurfaceFrame.bottom - w.mAttachedWindow.mSurfaceFrame.top));
 				boolean used = false;//Settings.System.getInt(mContext.getContentResolver(),Settings.System.MULTI_WINDOW_USED, 0) ==1;
 				if(w.mViewVisibility == View.VISIBLE && !used){
-					//w.mSurfaceViewBackWindow.SetLayer(w.mLayer- 2);
-					Log.v("SurfaceViewBackWindow","----wms------setVisibility-------true----------");
+					//w.mSurfaceViewBackWindow.SetLayer(w.mAttachedWindow.mLayer- 2);
+					LOGD("----wms------setVisibility-------true----------");
 					w.mSurfaceViewBackWindow.setVisibility(true);
 				}else{
-					Log.v("SurfaceViewBackWindow","-----wms-----setVisibility-------false----------");
+					LOGD("-----wms-----setVisibility-------false----------");
 					w.mSurfaceViewBackWindow.setVisibility(false);
 				}
+                              }
 			} finally {
                 SurfaceControl.closeTransaction();
             }	
@@ -7986,6 +7991,8 @@ public class WindowManagerService extends IWindowManager.Stub
 			ws.mHScale = 1.0f;
 			ws.mVScale = 1.0f;
 			ws.mActualScale = 1.0f;
+			ws.mPosX = 0;
+			ws.mPosY = 0;
 			AppWindowToken wtoken = ws.mAppToken;		 
 			ws.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;				 
 			if(wtoken != null){
@@ -7994,6 +8001,8 @@ public class WindowManagerService extends IWindowManager.Stub
 					win.mHScale = 1.0f;
 					win.mVScale = 1.0f;
 					win.mActualScale = 1.0f;
+					win.mPosY = 0;
+					win.mPosX = 0;
 					win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
 					//win.getAttrs().width = (mScreenRect.right-mScreenRect.left)/2;
 					win.switchToPhoneMode(win.getAttrs().width/2,-1);
@@ -8009,6 +8018,8 @@ public class WindowManagerService extends IWindowManager.Stub
 				appWindowState.mHScale = 1.0f;
 				appWindowState.mVScale = 1.0f;
 				appWindowState.mActualScale = 1.0f;
+				appWindowState.mPosX = 0;
+				appWindowState.mPosY = 0;
 				appWindowState.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
 			}
 			return 0;
@@ -8151,6 +8162,11 @@ public class WindowManagerService extends IWindowManager.Stub
 			for(int i = mWindows.size()-1;i>=0;i--){
 				int step = -1;
 				WindowState ws = mWindows.get(i);
+				if(mAppAlignWatcher.get(ws)!=null){
+					//IAppAlignWatcher watcher = mAppAlignWatcher.get(win);
+					//onAppAlignChanged(watcher,win,false);
+					//"SurfaceView".equals(win.getAttrs().getTitle().toString())
+				}
 				AppWindowToken wtoken = ws.mAppToken;
 				if(wtoken == null){
 					continue;
