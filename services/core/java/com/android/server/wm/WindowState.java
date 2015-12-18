@@ -637,7 +637,8 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 
     public void setLayer() {
 	if ((mAttachedWindow != null && mAttachedWindow.hasBackWindow())) {
-	    mAttachedWindow.mSurfaceViewBackWindow.SetLayer(mAttachedWindow.smallLayer - 2);
+	    //mAttachedWindow.mSurfaceViewBackWindow.SetLayer(mAttachedWindow.smallLayer - 2);
+	    mAttachedWindow.setLayer();
 	} else if (mSurfaceViewBackWindow != null) {
 	    mSurfaceViewBackWindow.SetLayer(smallLayer- 2);
 	}
@@ -647,7 +648,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
     public void createBackWindow() {
 	if(getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_LEFT) {
         if(mService.mCurConfiguration.enableMultiWindow() && (mAppWindowState != null &&"com.tudou.android".equals(mAppWindowState.getAttrs().packageName))){
-	    if(true || mAttachedWindow != null && mAttrs.getTitle().toString().equals("SurfaceView")
+	    if(true || mAttachedWindow != null && mAttachedWindow.getAttrs().getTitle().toString().equals("SurfaceView")
 			&& !"MediaView".equals(mAttachedWindow.getAttrs().getTitle().toString())){
 		if ((mAttachedWindow != null && !mAttachedWindow.hasBackWindow())) {
 		    mAttachedWindow.createBackWindow();
@@ -666,9 +667,6 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 	    mSurfaceViewBackWindow.setVisibility(false);
 	    mSurfaceViewBackWindow.destroy();
 	    mSurfaceViewBackWindow = null;
-	}
-	if ((mAttachedWindow != null && mAttachedWindow.hasBackWindow())) {
-	    mAttachedWindow.rmBackWindow();
 	}
     }
 
