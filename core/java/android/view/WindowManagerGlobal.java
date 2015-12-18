@@ -320,7 +320,7 @@ public final class WindowManagerGlobal {
 
         synchronized (mLock) {
             int index = findViewLocked(view, true);
-            wparams = mMultiWindowGlobal.updateViewLayout(wparams,mParams,index);
+            wparams = mMultiWindowGlobal.updateViewLayout(view,wparams,mParams,index);
             ViewRootImpl root = mRoots.get(index);
             mParams.remove(index);
             mParams.add(index, wparams);
@@ -357,6 +357,7 @@ public final class WindowManagerGlobal {
 				mParams.get(i).x = wparams.x;
 				mParams.get(i).y = wparams.y;
 				mParams.get(i).align = wparams.align;
+				Log.d(TAG," updateAppLayout 222 = " + mParams.get(i));
 				//mParams[i].gravity = wparams.gravity;
 				mViews.get(i).setLayoutParams(mParams.get(i));
 				mRoots.get(i).setLayoutParams(mParams.get(i),false);

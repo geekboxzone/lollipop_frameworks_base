@@ -34,7 +34,7 @@ public class BaseIWindow extends IWindow.Stub {
     }
 	
 	@Override
-	public void switchToPhoneMode(int width,int height){
+	public void switchToPhoneMode(int align,int x,int y,int width,int height){
 		}
 
     @Override

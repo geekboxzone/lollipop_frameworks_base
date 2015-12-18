@@ -77,8 +77,8 @@ import java.util.List;
 
 import com.android.multiwindow.wmservice.MultiWindowState;
 
-class WindowList extends ArrayList<WindowState> {
-}
+/*class WindowList extends ArrayList<WindowState> {
+}*/
 
 /**
  * A window in the window manager.
@@ -116,7 +116,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
     final int mBaseLayer;
     final int mSubLayer;
     final boolean mLayoutAttached;
-    final boolean mIsImWindow;
+    public final boolean mIsImWindow;
 	final boolean mIsMcWindow;//multi-controller window
     final boolean mIsWallpaper;
     final boolean mIsFloatingLayer;
@@ -223,7 +223,7 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
      * NOT touchable, so we must use those to adjust the frame during hit
      * tests.
      */
-    int mTouchableInsets = ViewTreeObserver.InternalInsetsInfo.TOUCHABLE_INSETS_FRAME;
+    public int mTouchableInsets = ViewTreeObserver.InternalInsetsInfo.TOUCHABLE_INSETS_FRAME;
 
     /**
      * This is rectangle of the window's surface that is not covered by
@@ -541,18 +541,22 @@ public final class WindowState implements WindowManagerPolicy.WindowState {
 			mPosX = mAttachedWindow.mPosX;
 			mPosY = mAttachedWindow.mPosY;
 			mActualScale = mAttachedWindow.mActualScale;
-			//if(mAttachedWindow.mAppWindowState !=null){
-				//mAppWindowState = mAttachedWindow.mAppWindowState;
-			//}else{
+			 if (mAttachedWindow.mAttrs.type == WindowManager.LayoutParams.TYPE_BASE_APPLICATION
+                    		|| mAttachedWindow.mAttrs.type == WindowManager.LayoutParams.TYPE_APPLICATION_STARTING) {
+                    		mAppWindowState = mAttachedWindow;
+			 }else  if(mAttachedWindow.mAppWindowState !=null){
+				mAppWindowState = mAttachedWindow.mAppWindowState;
+			
+			}else{
 				mAppWindowState = mAttachedWindow;
-			//}
+			}
 			mDisableMulti = mAttachedWindow.mDisableMulti;
 			mAttrs.align = mAttachedWindow.getAttrs().align;
 
 			LOGD(mAppWindowState+"----------------------mAttachedWindow:"+mAttrs.align );
 			LOGD(this+"----------------------mAttachedWindow:"+mAttachedWindow.getAttrs());
 			if(mAppWindowState.isHalfMode())
-				mMultiWindowState.switchToPhoneMode(getAttrs().width/2,-1);
+				mMultiWindowState.switchToPhoneMode(WindowManagerPolicy.WINDOW_ALIGN_LEFT,getAttrs().x,getAttrs().y,getAttrs().width/2,-1);
 		}else{
             ArrayList<WindowState> list = mService.getAllWindowListInDefaultDisplay();
 			for(int i= 0;i<list.size();i++){
@@ -1509,8 +1513,8 @@ private void shouldForceAnim(int align,int value){
 
         mInputWindowHandle.inputChannel = null;
     }
-	public void switchToPhoneMode(int width ,int height){
-		mMultiWindowState.switchToPhoneMode(width,height);
+	public void switchToPhoneMode(int align,int x,int y,int width ,int height){
+		mMultiWindowState.switchToPhoneMode(align,x,y,width,height);
 	}
 
     private class DeathRecipient implements IBinder.DeathRecipient {

@@ -3644,7 +3644,7 @@ public final class ViewRootImpl implements ViewParent,
                     setLayoutParams(lp,false);
             }break;
 			case MSG_SWITCH_PHONE_MODE:{
-				mWindowAttributes.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
+				//mWindowAttributes.align = WindowManagerPolicy.WINDOW_ALIGN_RIGHT;
 				Log.v(TAG, "Window dispatchSwitchToPhoneMode " + this + ": mWindowAttributes="+ mWindowAttributes);
 				}break;
             }
@@ -6857,7 +6857,7 @@ public final class ViewRootImpl implements ViewParent,
 			* add by lly
 		   */
 		@Override
-        public void switchToPhoneMode(int width,int height){
+        public void switchToPhoneMode(int align,int x,int y,int width,int height){
          final ViewRootImpl viewAncestor = mViewAncestor.get();
             if (viewAncestor != null) {
 				viewAncestor.dispatchSwitchToPhoneMode(width,height);

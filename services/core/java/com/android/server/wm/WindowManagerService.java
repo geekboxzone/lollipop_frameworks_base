@@ -699,7 +699,7 @@ public class WindowManagerService extends IWindowManager.Stub
     boolean mLowPowerMode = false;
     boolean mLowPowerModeLimitAnimation = true;
 
-    final InputManagerService mInputManager;
+    public final InputManagerService mInputManager;
     final DisplayManagerInternal mDisplayManagerInternal;
     final DisplayManager mDisplayManager;
     //$_rbox_$_modify_$_chenxiao_begin,add for remotecontrol
@@ -2860,10 +2860,15 @@ public class WindowManagerService extends IWindowManager.Stub
 						if(current.mAppWindowState == win){
 							current.mAppWindowState = null;
 							WindowState mainwin = current.mAppToken.findMainWindow();
-							if(mainwin!=null &&mainwin != current){
-									current.mAppWindowState = mainwin;
-									Slog.w(TAG, "====update windowstate mainwin win " + mainwin + " from container "
+							if(mainwin !=null && mainwin != current){
+								Slog.w(TAG,current.mAppWindowState+ "====update windowstate mainwin win " + mainwin + " from container "
 	                    + current);
+								if(current.mAttachedWindow!=null){
+									current.mAppWindowState = current.mAttachedWindow;
+
+								}else
+									current.mAppWindowState = mainwin;
+									
 								}
 							}
 						//if(current.mAttachedWindow!=null){
@@ -3355,14 +3360,26 @@ public class WindowManagerService extends IWindowManager.Stub
 			WindowList windows = getDefaultDisplayContentLocked().getWindowList();
 			for(int i=windows.size()-1;i>=0;i--){
 				WindowState win = windows.get(i);
+				Log.e(TAG,current+"~~~~~~~~~~~~~~~~~~~setHalfScreenWindowTransFormInfo:"+",win:"+win);
 				if(win!=null && current!=null && (current.getAttrs().packageName.equals(win.getAttrs().packageName)
 					|| (current.taskId == win.taskId && current.taskId != -1))){
 					IAppAlignWatcher watcher = mAppAlignWatcher.get(current);
+					Log.e(TAG,current+"~~~222~~~~~~~~~~~~~~~~setHalfScreenWindowTransFormInfo:"+",win:"+win);
 					if(watcher != null){
 						try{
 							watcher.onHalfScreenWindowPositionChanged(posX,posY);
 						}catch(RemoteException ex){
 						}
+					}else if(win.getAttrs().align == WindowManagerPolicy.WINDOW_ALIGN_LEFT){
+						if(posX < 0) {
+							win.getAttrs().x = 0;
+							LOGR("setHalfScreenWindowTransFormInfo  wpm = " + win.getAttrs());	
+						} else {
+							win.getAttrs().x = win.getAttrs().width;
+				    		LOGR("setHalfScreenWindowTransFormInfo screen wpm = " +  win.getAttrs());		
+						}
+						win.switchToPhoneMode(WindowManagerPolicy.WINDOW_ALIGN_LEFT,win.getAttrs().x,win.getAttrs().y,win.getAttrs().width,-1);
+
 					}
 				}
 			}
@@ -7987,12 +8004,12 @@ public class WindowManagerService extends IWindowManager.Stub
 		}
 	
 		@Override
-		public int getAppWindowStepOfFourScreen(WindowState ws) {
-			ws.mHScale = 1.0f;
+		public int getAppWindowStepOfFourScreen(WindowState current) {
+	/*		ws.mHScale = 1.0f;
 			ws.mVScale = 1.0f;
 			ws.mActualScale = 1.0f;
-			ws.mPosX = 0;
-			ws.mPosY = 0;
+			ws.mPosX =0;
+			ws.mPosY =0;
 			AppWindowToken wtoken = ws.mAppToken;		 
 			ws.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;				 
 			if(wtoken != null){
@@ -8022,6 +8039,50 @@ public class WindowManagerService extends IWindowManager.Stub
 				appWindowState.mPosY = 0;
 				appWindowState.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
 			}
+*/
+			synchronized(mWindowMap){
+			int tempGroupId = -1;
+			int topTaskId = current.taskId;
+			ArrayList<WindowState> mWindows = getAllWindowListInDefaultDisplay();
+			for(int i = mWindows.size()-1;i>=0;i--){
+				WindowState ws = mWindows.get(i);
+				AppWindowToken wtoken = ws.mAppToken;
+				if(wtoken == null){
+                    continue;
+				}
+				WindowState w = wtoken.findMainWindow();	
+				if(isHomeWindow(w)){
+					LOGD("ignore the launcher and windows that below launcher");
+					continue;
+				}
+				if(ignoreWindow(w)){
+					break;
+				}
+			    if(topTaskId != wtoken.groupId || ws.getAttrs().align  == WindowManagerPolicy.WINDOW_ALIGN_LEFT){
+					continue;
+				}
+				for(int j=0;j<wtoken.allAppWindows.size();j++){
+					WindowState win = wtoken.allAppWindows.get(j);		
+                    win.mHScale = 1.0f;
+					win.mVScale = 1.0f;
+					win.mActualScale = 1.0f;
+					win.mPosX =0;
+					win.mPosY =0;
+					win.getAttrs().align  = WindowManagerPolicy.WINDOW_ALIGN_LEFT;
+					win.switchToPhoneMode(WindowManagerPolicy.WINDOW_ALIGN_LEFT,win.getAttrs().x,win.getAttrs().y,win.getAttrs().width/2,-1);
+					Log.e(TAG,"getAppWindowStepOfFourScreen" +win);
+					try{
+							IAppAlignWatcher watcher = mAppAlignWatcher
+									.get(win);
+							if (watcher != null) {
+									watcher.onAppAlignChanged(
+											WindowManagerPolicy.WINDOW_ALIGN_LEFT,
+											false);
+							}
+						}catch(RemoteException ex){}
+				}
+			}
+		}
 			return 0;
 		}
 	
@@ -8283,7 +8344,7 @@ public class WindowManagerService extends IWindowManager.Stub
 						posY = 0;
 					}
 					if(win.isSurfaceViewHalfMode()){
-						win.switchToPhoneMode(-1,-1);	
+						win.switchToPhoneMode(-1,0,0,-1,-1);	
 					}
 					float xOffset = win.mSystemDecorRect.left;
 					float yOffset = win.mSystemDecorRect.top;
@@ -14956,5 +15017,9 @@ if(mCurConfiguration.enableMultiWindow()&&false){
                 WindowManagerService.this.removeWindowToken(token);
             }
         }
+    }
+
+    public Configuration getCurConfiguration() {
+    	return mCurConfiguration; 
     }
 }

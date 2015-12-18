@@ -493,202 +493,9 @@ private boolean validWindowState(WindowState win){
 	return isValid;
 }
 
-
-	/* Provides an opportunity for the window manager policy to process a motion before
-     * ordinary dispatch. 
-     * return 0: MotionEntry::INTERCEPT_MOTION_RESULT_CONTINUE
-     * return -1(<0): MotionEntry::INTERCEPT_MOTION_RESULT_SKIP
-     * return other value:MotionEntry::INTERCEPT_MOTION_RESULT_TRY_AGAIN_LATER
-     */
-     int x1=0 ,y1=0,up_x,up_y,mov_x,mov_y,temp_x=0;
-     Rect mRect = null;
-     boolean isSideSlip = false;
      public long interceptMotionBeforeDispatching(
      		InputWindowHandle focus,MotionEvent event,int policyFlags){
-     		int action = event.getAction();	
-		int screenWidth = mService.getDefaultDisplayInfoLocked().logicalWidth;
-		if (mService.mCurConfiguration.dualscreenflag == Configuration.ENABLE_DUAL_SCREEN && action == MotionEvent.ACTION_HOVER_MOVE) {
-			x1 = (int)event.getX();
-			y1 = (int)event.getY();
-			if (x1 + 15 > screenWidth) {
-				if(!mService.isWorked("com.android.Listappinfo.ManderService")){
-					LOGV("start com.android.Listappinfo.ManderService");
-					Intent intent = new Intent();
-					intent.setClassName("com.android.Listappinfo", "com.android.Listappinfo.ManderService");
-					mService.mContext.startService(intent);
-					return -1;
-				}
-			}
-		}
-     	 if(mService.mCurConfiguration.multiwindowflag == Configuration.DISABLE_MULTI_WINDOW){
-			return 0;
-		}
-			  
-		WindowState windowState = focus != null ? (WindowState) focus.windowState : null;		
-		boolean used = mInputMonitorController.isMultiWindowUsed(mService.mContext);
-		long result = 0;
-		int policy = WindowManagerPolicy.MOTION_PASS_TO_USER;
-
-		//LOGV(windowState.getAttrs()+"MotionEvent event="+screenWidth+"    event"+(windowState.getAttrs()));
-		if(windowState != null){
-			if(validWindowState(windowState)){
-				mCurFocusWindowState = windowState;
-				LOGV("mCurFocusWindow="+mCurFocusWindowState);
-			}else{
-				mCurFocusWindowState = null;
-			}
-		mService.applyXTrac(windowState, action, event);
-
-          if(mService.isMultiWindowMode() || 
-		  		(windowState.getAttrs() != null && (windowState.isHalfOrPhoneMode()))){
-			if(event.getPointerCount() == 1 && windowState != null){
-			    WindowState ws = null;
-			    if(windowState.mAppWindowState != null){
-			       ws = windowState.mAppWindowState;
-			    }else if(windowState.mAttachedWindow!=null){
-			       ws = windowState.mAttachedWindow;
-			    }else{
-			       ws = windowState;
-			    }
-                        //action = action & MotionEvent.ACTION_MASK;
-			if(action== MotionEvent.ACTION_DOWN){
-			    x1 = (int)event.getX();
-			    y1 = (int)event.getY();
-                            mov_x = 0;
-                            mov_y = 0;
-                            int x_width = (int)(ws.mPosX)+(int)(ws.mHScale*ws.mVisibleFrame.width());	
-                           if(x1 >ws.mPosX && x1 < x_width && y1 < ws.mPosY+100*ws.mActualScale&& y1> windowState.mPosY){
-			     //LOGV(ws.mPosY+"down to position=ooo=22=============="+x_width);
-                             isSideSlip = true;
-			    }
-			    //LOGV(ws.mPosY+"down to position=ooo==============="+x_width+" X1 "+x1+" Y1 "+y1+"windowState.mPosX "+ws.mPosX);
-			}else if(action ==MotionEvent.ACTION_MOVE){
-					   
-                            int posX =ws.mPosX;
-			    int posY = ws.mPosY;
-	                    LOGV(mov_y+"move to position =   ooo===============mov_x"+mov_x+",posX:"+posX+",posY"+posY+" x"+ isSideSlip);
-                        if(mov_x == 0 && mov_y ==0) {
-			    mov_x = (int)event.getX();
-			    mov_y = (int)event.getY();
- 			    return 0;
-			}
-                        if(!isSideSlip) return 0;
-			float barheight = mService.getStatusBarHeight();
-			float move_rel = posY + (int)event.getY()-mov_y;
-			if (!((move_rel + ws.mSfOffsetY) > barheight)) {
-			   move_rel = barheight - ws.mSfOffsetY;
-			}
-			if(ws.mAttrs.align != WindowManagerPolicy.WINDOW_ALIGN_LEFT)
-			 	mService.applyPositionForMultiWindow(ws,posX+(int)event.getX()- mov_x,posY+ (int)event.getY()-mov_y);
-			 mov_x = (int)event.getX();
-			 mov_y = (int)event.getY();
-			 return 0;
-		     }else if(action ==MotionEvent.ACTION_UP){
-			  up_x = (int)event.getX();
-			  up_y = (int)event.getY();
-			 if (isSideSlip && ((up_x > (x1 + 50)) || (up_x < (x1 - 30)))) {
-			 	if(ws.mAttrs.align == WindowManagerPolicy.WINDOW_ALIGN_LEFT)
-					mService.setHalfScreenWindowTransFormInfo(ws,(up_x-x1)*10000,-1);
-				else
-					mService.applySizeForMultiWindow(ws);
-			 }
-                       	  mov_x = 0;
-                       	  mov_y = 0;
-                          isSideSlip = false;
-			 return 0;
-		      }
- 	          }
-	    }
-			
-			//don't switch foucs app when current foucs window is not base_application
-			//contains(dialog,NotificationPanel,RecentPanel,SearchPanel,inputPanel)
-			//the second condition for activity type with dialog theme(ig: choose Wallpaper,
-			// choose an app for intent)
-			// google map activity type==2 and height == width == -1
-			//
-			if((windowState.getAttrs().type != WindowManager.LayoutParams.TYPE_BASE_APPLICATION||
-				(windowState.getAttrs().flags&WindowManager.LayoutParams.FLAG_DIM_BEHIND)!=0) && 
-					(windowState.getAttrs().width!=-1 || windowState.getAttrs().height != -1)){
-					LOGD("focus window have flag_dim_behind flag jut return ");
-					 if (!mDontNeedFocusHome) {
-						mDontNeedFocusHome = true;
-						windowState.mDisplayContent.layoutNeeded = true;
-						mService.performLayoutAndPlaceSurfacesLocked();
-					}
-					 //will reset the multiwindow mode when these windows fouced 
-				mInputMonitorController.setMultiWindowUsed(mService.mContext, true);
-				return 0;
-
-			}
-			//find the focus app.
-			int touchX = (int)event.getRawX();
-			int touchY = (int)event.getRawY();
-			Rect df = windowState.getSurfaceFrameLw();
-			//first judge the launcher app
-			LOGD("df="+df.toString()+"title="+windowState.getAttrs().getTitle().toString()+
-				"touch("+touchX+","+touchY+")");
-				//now find the window which will get the focus.				
-				WindowState matchFocus = null;
-				boolean isMatch = false;
-				if(df.contains(touchX, touchY)) {
-					LOGD("we don't need to match again");
-				} else if (action== MotionEvent.ACTION_DOWN){
-				WindowList windows = mService.getDefaultDisplayContentLocked().getWindowList();
-				for(int i=windows.size()-1;i>=0;i--){
-					matchFocus = windows.get(i);
-					WindowManager.LayoutParams lp = matchFocus.getAttrs();
-					if((lp.flags & WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)!=0){
-						continue;
-					}
-                    if (matchFocus.mWinAnimator.mSurfaceShown) {
-                        Rect frame = matchFocus.getSurfaceFrameLw();
-						if(matchFocus.mTouchableInsets != 0){
-							Region r = new Region();
-							matchFocus.getTouchableRegion(r);
-							r.getBounds(frame);
-						}
-						float posX = matchFocus.mWinAnimator.mSurfaceX;
-						float posY = matchFocus.mWinAnimator.mSurfaceY;
-						float posW = matchFocus.mWinAnimator.mSurfaceW;
-						float posH = matchFocus.mWinAnimator.mSurfaceH;
-						boolean input = false;
-						if (matchFocus.mAppWindowState != null)
-							input = matchFocus.mAppWindowState.mIsImWindow;//mAttrs.type == TYPE_INPUT_METHOD;
-						if(frame.contains(touchX, touchY) || 
-						(input && !(touchX < posX) && !(touchX > (posX + posW)) &&
-							!(touchY < posY) && !(touchY > (posY + posH)))){
-							if(mService.isHomeWindow(matchFocus)){
-								policy = WindowManagerPolicy.MOTION_PASS_TO_HOME;
-							}else if(matchFocus != windowState){
-									isMatch = true;	
-							}
-							break;
-						}
-					}
-				}
-				}
-		
-				if(isMatch){
-					mInputMonitorController.switchFocusWindow(mService.mContext, matchFocus);
-				}
-		}else{
-			LOGD("focus window is null i do not know how to do ");
-			return 0;
-		}
-		//LOGD("policy="+policy);
-		if(policy == WindowManagerPolicy.MOTION_PASS_TO_HOME){
-			mDontNeedFocusHome = false;
-			mService.mInputManager.setDontFocusedHome(mDontNeedFocusHome);
-			return 0;
-		}else if(policy == WindowManagerPolicy.MOTION_PASS_TO_USER){
-		 if (!mDontNeedFocusHome) {
-                    mDontNeedFocusHome = true;
-                    windowState.mDisplayContent.layoutNeeded = true;
-                    mService.performLayoutAndPlaceSurfacesLocked();
-                }
-			return 0;
-		}
-		return 0;
+    		return mInputMonitorController.interceptMotionBeforeDispatching(mService.mContext,focus, event, policyFlags);
 	}
 
 private boolean maybeModeChange(Point p1, Point p2, Point p3){
@@ -739,7 +546,15 @@ public int getAppTokenTaskId(WindowState windowstate){
 	return taskid;
 }
 
+@Override
+public boolean ifDontNeedFocusHome() {
+	return mDontNeedFocusHome;
+}
 
+@Override
+public void setDontNeedFocusHome(boolean set) {
+	mDontNeedFocusHome = set;
+}
 
 
     /* Provides an opportunity for the window manager policy to process a key that

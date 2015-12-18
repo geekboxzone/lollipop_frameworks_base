@@ -72,7 +72,7 @@ class WinAnimatorList extends ArrayList<WindowStateAnimator> {
 /**
  * Keep track of animations and surface operations for a single WindowState.
  **/
-class WindowStateAnimator {
+public class WindowStateAnimator {
     static final String TAG = "WindowStateAnimator";
 	static final boolean DEBUG_ZJY = false;
 	static final boolean DEBUG_ZJY_ANIM = false;
@@ -150,8 +150,8 @@ class WindowStateAnimator {
 
     // For debugging, this is the last information given to the surface flinger.
     public boolean mSurfaceShown;
-    float mSurfaceX, mSurfaceY;
-    float mSurfaceW, mSurfaceH;
+    public float mSurfaceX, mSurfaceY;
+    public float mSurfaceW, mSurfaceH;
     int mSurfaceLayer;
     float mSurfaceAlpha;
 

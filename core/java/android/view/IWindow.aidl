@@ -56,7 +56,7 @@ oneway interface IWindow {
    /**
     * add lly switch to phone mode
    **/
-    void switchToPhoneMode(int width,int height);
+    void switchToPhoneMode(int align,int x,int y,int width,int height);
     /**
      * Tell the window that it is either gaining or losing focus.  Keep it up
      * to date on the current state showing navigational focus (touch mode) too.
