@@ -27,6 +27,8 @@ import java.util.List;
 
 import libcore.util.Objects;
 
+import android.os.SystemProperties;
+
 /**
  * Describes how a logical display is configured.
  * <p>
@@ -255,8 +257,14 @@ final class LogicalDisplay {
      */
     public void configureDisplayInTransactionLocked(DisplayDevice device,
             boolean isBlanked, DisplayInfo info) {
-        //final DisplayInfo displayInfo = getDisplayInfoLocked();
-        final DisplayInfo displayInfo = info != null?info:getDisplayInfoLocked();
+        boolean dualconfig = false;
+        DisplayInfo displayInfo = getDisplayInfoLocked();
+	 if (SystemProperties.get("dualscreen_eable", "false").equals("true")) {
+             dualconfig= true;
+	 }
+	 if (dualconfig) {
+	 	displayInfo = info != null?info:getDisplayInfoLocked();
+ 	 }
         final DisplayDeviceInfo displayDeviceInfo = device.getDisplayDeviceInfoLocked();
 
         // Set the layer stack.
