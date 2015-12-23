@@ -714,6 +714,15 @@ public abstract class ActivityManagerNative extends Binder implements IActivityM
             reply.writeInt(result ? 1 : 0);
             return true;
 	}
+
+        case IF_UID_SUPPORT_HALFMODE: {
+            data.enforceInterface(IActivityManager.descriptor);
+            String id = data.readString();
+            boolean result = getLefts(id);
+            reply.writeNoException();
+            reply.writeInt(result ? 1 : 0);
+            return true;
+        }
         case GET_ENABLE_MULTI_WINDOW: {
             data.enforceInterface(IActivityManager.descriptor);
             int id = data.readInt();
@@ -5508,7 +5517,7 @@ class ActivityManagerProxy implements IActivityManager
 	Parcel data = Parcel.obtain();
 	Parcel reply = Parcel.obtain();
 	data.writeInterfaceToken(IActivityManager.descriptor);
-    data.writeString(id);
+    	data.writeString(id);
 	data.writeInt(isRemove ? 1 : 0);
 	mRemote.transact(IF_UID_SUPPORT_PHONEMODE, data, reply, 0);
 	reply.readException();
@@ -5518,6 +5527,19 @@ class ActivityManagerProxy implements IActivityManager
 	return res;
     }
 
+   @Override
+    public boolean getLefts(String id) throws RemoteException {
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        data.writeInterfaceToken(IActivityManager.descriptor);
+    	data.writeString(id);
+        mRemote.transact(IF_UID_SUPPORT_HALFMODE, data, reply, 0);
+        reply.readException();
+        boolean res = reply.readInt() != 0;
+        data.recycle();
+        reply.recycle();
+        return res;
+    }
       @Override
     public boolean getEnableMulWindow() throws RemoteException {
         Parcel data = Parcel.obtain();

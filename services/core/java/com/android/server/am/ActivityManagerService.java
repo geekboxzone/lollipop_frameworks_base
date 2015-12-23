@@ -6263,10 +6263,15 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
     public boolean getRights(String id,boolean isRemove) {
        if(mMulActivityService != null)
           return mMulActivityService.getRight(id,isRemove);
-	return false;
+		return false;
+     }
+	 public boolean getLefts(String id) {
+       if(mMulActivityService != null)
+          return mMulActivityService.getLeft(id);
+		return false;
      }
      public boolean getEnableMulWindow(){
-	return mMulActivityService.getEnableMulWindow();
+		return mMulActivityService.getEnableMulWindow();
     }
     @Override
     public final void attachApplication(IApplicationThread thread) {

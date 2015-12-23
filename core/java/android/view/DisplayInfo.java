@@ -367,15 +367,18 @@ public final class DisplayInfo implements Parcelable {
         ownerUid = source.readInt();
         ownerPackageName = source.readString();
         uniqueId = source.readString();
-		
-	try {
-	if (ActivityManagerNative.getDefault().getRights(String.valueOf(Process.myPid()),false)) {
-		appWidth = logicalWidth/2 - 200;
-		appHeight = logicalHeight - 50;
-		rotation = 1;
-	}
-	} catch (RemoteException re) {
-	}
+			
+		try {
+			if (ActivityManagerNative.getDefault().getRights(String.valueOf(Process.myPid()),false)) {
+				appWidth = logicalWidth/2 - 200;
+				appHeight = logicalHeight - 50;
+				rotation = 1;
+			}else if(ActivityManagerNative.getDefault().getLefts(String.valueOf(Process.myPid()))){
+					//appHeight = logicalHeight - 50;
+					rotation = 1;
+
+			}
+		} catch (RemoteException re) {}
     }
 
     @Override

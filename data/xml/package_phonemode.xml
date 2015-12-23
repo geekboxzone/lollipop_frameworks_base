@@ -3,19 +3,24 @@
     <app package="com.mt.mtxx.mtxx" phonemode="false" halfscreen="false"/>
     <app package="com.meitu.meiyancamera" phonemode="false" halfscreen="false"/>
     <app package="com.baidu.baiducamera" phonemode="false" halfscreen="false"/>
-    <app package="com.qiyi.video" phonemode="false" halfscreen="false"/>
-    <app package="com.qiyi.video.pad" phonemode="false" halfscreen="false"/>
-    <app package="com.qiyi.video.pad.intel" phonemode="false" halfscreen="false"/>
-    <app package="com.sohu.tv" phonemode="false" halfscreen="false"/>
-    <app package="com.sohu.sohuvideo" phonemode="false" halfscreen="false"/>
-    <app package="com.youku.phone" phonemode="false" halfscreen="false"/>
-    <app package="com.tudou.android" phonemode="false" halfscreen="false"/>
+    <app package="com.qiyi.video" phonemode="false" halfscreen="true"/>
+    <app package="com.qiyi.video.pad" phonemode="false" halfscreen="true"/>
+    <app package="com.qiyi.video.pad.intel" phonemode="false" halfscreen="true"/>
+    <app package="com.sohu.tv" phonemode="false" halfscreen="true"/>
+    <app package="com.sohu.sohuvideo" phonemode="false" halfscreen="true"/>
+    <app package="com.youku.phone" phonemode="false" halfscreen="true"/>
     <app package="com.sohu.newsclient" phonemode="false" halfscreen="false"/>
-    <app package="com.letv.android.client.pad" phonemode="false" halfscreen="false"/>
+    <app package="com.letv.android.client.pad" phonemode="false" halfscreen="true"/>
+	<app package="com.letv.android.client" phonemode="false" halfscreen="true"/>
+	<app package="com.tudou.android" phonemode="false" halfscreen="true"/>
+	<app package="com.pplive.androidphone" phonemode="false" halfscreen="false"/>
     <app package="com.hdzdy.game" phonemode="false" halfscreen="false"/>
     <app package="com.iflytek.inputmethod" phonemode="false" halfscreen="false"/>
     <app package="com.baidu.input" phonemode="false" halfscreen="false"/>
+	 <app package="com.baidu.video" phonemode="false" halfscreen="true"/>
     <app package="com.gamedo.ZombieTerminator.bd" phonemode="false" halfscreen="false"/>
+	<app package="com.qzone" phonemode="true" halfscreen="false"/>
+
 
     <app package="com.tencent.mm" phonemode="true" halfscreen="false"/>
     <app package="com.tencent.minihd.qq" phonemode="false" halfscreen="true"/>
@@ -100,4 +105,51 @@
     <app package="com.sinyee.babybus.clothes" phonemode="false" halfscreen="false"/>
     <app package="com.sinyee.babybus.different" phonemode="false" halfscreen="false"/>
     <app package="com.sinyee.babybus.cookingpercussion" phonemode="false" halfscreen="false"/>
+    <app package="com.android.settings" phonemode="false" halfscreen="true"/>
+    <app package="com.tudou.android" phonemode="false" halfscreen="false"/>
+    <app package="com.baidu.video" phonemode="false" halfscreen="false"/>
+    <app package="com.letv.android.client" phonemode="false" halfscreen="true"/>
+    <app package="com.pplive.androidphone" phonemode="false" halfscreen="true"/>
+    <app package="tv.pps.mobile" phonemode="false" halfscreen="true"/>
+    <app package="com.tencent.qqlive" phonemode="false" halfscreen="true"/>
+    <app package="com.storm.smart" phonemode="false" halfscreen="true"/>
+    <app package="com.qzone" phonemode="true" halfscreen="false"/>
+    <app package="project.zjsc3d.bd" phonemode="false" halfscreen="false"/>
+    <app package="com.joym.world.baidu" phonemode="false" halfscreen="false"/>
+    <app package="project.race2.bd" phonemode="false" halfscreen="false"/>
+    <app package="com.joycity.gunshipbattle.baidu" phonemode="false" halfscreen="false"/>
+    <app package="com.wanmei.mini.dod.BD" phonemode="false" halfscreen="false"/>
+    <app package="com.tencent.mtt" phonemode="false" halfscreen="true"/>
+    <app package="com.baidu.BaiduMap" phonemode="true" halfscreen="false"/>
+    <app package="air.com.tencent.qqfarmios" phonemode="false" halfscreen="false"/>
+    <app package="com.tencent.qqmusic" phonemode="true" halfscreen="false"/>
+    <app package="com.storm.yeelion" phonemode="false" halfscreen="true"/>
+    <app package="com.baidu.appsearch" phonemode="true" halfscreen="false"/>
+    <app package="com.baidu.tieba" phonemode="true" halfscreen="false"/>
+    <app package="com.carrot.iceworld" phonemode="false" halfscreen="true"/>
+    <app package="cn.opda.a.phonoalbumshoushou" phonemode="true" halfscreen="false"/>
+    <app package="com.ting.mp3.android" phonemode="true" halfscreen="false"/>
+    <app package="com.baidu.netdisk" phonemode="false" halfscreen="true"/>
+    <app package="com.ourpalm.buliangren.baidu" phonemode="false" halfscreen="false"/>
+    <app package="com.gameley.runningman3.baidu" phonemode="false" halfscreen="false"/>
+    <app package="com.supercell.clashofclans.baidu" phonemode="false" halfscreen="false"/>
+    <app package="me.gztfgame.mx.three.baidu" phonemode="false" halfscreen="false"/>
+    <app package="com.bd.CrazyFish" phonemode="false" halfscreen="false"/>
+    <app package="com.qiugame.ddz.bd" phonemode="true" halfscreen="false"/>
+    <app package="com.doupo.baidu" phonemode="true" halfscreen="false"/>
+    <app package="com.shenxiuinfo.sg.baidu" phonemode="false" halfscreen="false"/>
+    <app package="com.cnvcs.xiangqi" phonemode="true" halfscreen="false"/>
+    <app package="com.phoneu.yqdmj.bd" phonemode="false" halfscreen="false"/>
+    <app package="com.vlocker.locker" phonemode="true" halfscreen="false"/>
+    <app package="com.happyelements.AndroidAnimal" phonemode="true" halfscreen="false"/>
+    <app package="com.tencent.karaoke" phonemode="true" halfscreen="false"/>
+    <app package="com.tencent.tmgp.gods" phonemode="false" halfscreen="false"/>
+    <app package="com.crisisfire.android.baidu" phonemode="false" halfscreen="false"/>
+    <app package="com.hano.zjh.baidu2" phonemode="false" halfscreen="false"/>
+    <app package="com.sds.android.ttpod" phonemode="true" halfscreen="false"/>
+    <app package="com.outfit7.talkingtom2" phonemode="true" halfscreen="false"/>
+    <app package="com.taobao.taobao" phonemode="false" halfscreen="false"/>
+    <app package="com.sincetimes.games.worldship.DKbaidu" phonemode="false" halfscreen="false"/>
+    <app package="com.snailgame.pandabaidu" phonemode="false" halfscreen="true"/>
+    <app package="com.sohu.inputmethod.sogou" phonemode="false" halfscreen="false"/>
 </office-package>

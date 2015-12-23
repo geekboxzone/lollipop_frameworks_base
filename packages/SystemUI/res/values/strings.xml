@@ -990,7 +990,7 @@
     <string name="navbar_popupmenu_windowmode">APP MODE</string>
     <string name="navbar_popupmenu_pad_mode">PAD</string>
     <string name="navbar_popupmenu_phone_mode">PHONE</string>
-    <string name="navbar_popupmenu_splite_mode">SPLITE</string>
+    <string name="navbar_popupmenu_splite_mode">SPLIT</string>
     
     <string name="comment_text">Comment mode</string>
     <string name="multishot_text">Static shot</string>
