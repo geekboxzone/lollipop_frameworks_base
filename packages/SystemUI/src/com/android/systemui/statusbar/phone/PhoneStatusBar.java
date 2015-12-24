@@ -1085,8 +1085,13 @@ final Object mScreenshotLock = new Object();
                     R.color.notification_panel_solid_background)));
         }
         if (ENABLE_HEADS_UP) {
+           if(mContext.getResources().getConfiguration().enableMultiWindow()){
+            mHeadsUpNotificationView =
+                    (HeadsUpNotificationView) View.inflate(context, R.layout.heads_up_win, null);
+           } else {
             mHeadsUpNotificationView =
                     (HeadsUpNotificationView) View.inflate(context, R.layout.heads_up, null);
+           }
             mHeadsUpNotificationView.setVisibility(View.GONE);
             mHeadsUpNotificationView.setBar(this);
         }
@@ -2708,7 +2713,10 @@ private String popupAppName = null;
             int action = event.getAction() & MotionEvent.ACTION_MASK;
             if(action == MotionEvent.ACTION_UP){
                 if(null != mCalendarDialog){
+                  if(!mCalendarDialog.isCalendarShow())
                     mCalendarDialog.openCalendar();
+                  else
+                    mCalendarDialog.closeCalendar();
                 }
                 return true;
             }
@@ -5050,6 +5058,9 @@ private String popupAppName = null;
 		MUL_CON_POS = MUL_CON_PAD+ (int)(MUL_IMA_SIZE/2);
 
         mHeadsUpNotificationDecay = res.getInteger(R.integer.heads_up_notification_decay);
+        if(mContext.getResources().getConfiguration().enableMultiWindow())
+            mHeadsUpNotificationDecay = res.getInteger(R.integer.heads_up_notification_decay_win);
+        
         mRowMinHeight =  res.getDimensionPixelSize(R.dimen.notification_min_height);
         mRowMaxHeight =  res.getDimensionPixelSize(R.dimen.notification_max_height);
 

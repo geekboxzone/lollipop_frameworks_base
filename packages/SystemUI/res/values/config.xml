@@ -146,6 +146,9 @@
 
     <!-- milliseconds before the heads up notification auto-dismisses. -->
     <integer name="heads_up_notification_decay">10000</integer>
+    
+    <!--For MultiWindow mode: milliseconds before the heads up notification auto-dismisses. -->    
+    <integer name="heads_up_notification_decay_win">2000</integer>
 
     <!-- milliseconds after a heads up notification is pushed back
      before the app can interrupt again. -->
