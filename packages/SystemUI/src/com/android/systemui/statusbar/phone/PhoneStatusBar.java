@@ -243,6 +243,9 @@ import com.android.systemui.statusbar.oswin.*;
 import com.android.systemui.statusbar.oswin.view.*;
 import com.android.systemui.screenshot.blur.*;
 import android.app.WallpaperManager;
+import android.app.ActivityManager.MemoryInfo; 
+import android.app.ActivityManager.RunningAppProcessInfo;
+
 
 public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
         DragDownHelper.DragDownCallback, ActivityStarter, OnUnlockMethodChangedListener,CircleMenuView.BtnClickCallBack {
@@ -1784,7 +1787,8 @@ final Object mScreenshotLock = new Object();
 
 			}
 			else {
-               ClearRunningTasks();
+                ClearRunningTasks();
+                ClearRunningProcesses();
 			}
 			mAppsGridView.setOnItemClickListener(mWinItemClickListener);
             mAppsGridView.setOnItemLongClickListener(mWinItemLongClickListener);
@@ -1845,13 +1849,48 @@ final Object mScreenshotLock = new Object();
             int persistentId = ra.persistentId; // pid 
             //Log.v(TAG,"kill name="+intent.getComponent().getPackageName()+"kill persistentId=" + persistentId);
             am.removeTask(persistentId/*, ActivityManager.REMOVE_TASK_KILL_PROCESS*/);
-			Toast.makeText(mContext, mContext.getResources().getString(R.string.cleartasks_msg)
-, 500).show();
+            am.forceStopPackage(intent.getComponent().getPackageName());
         }
     } catch (Exception e) {
         e.printStackTrace();
     }
+	 Toast.makeText(mContext, mContext.getResources().getString(R.string.cleartasks_msg), 500).show();
     }
+    
+    public void ClearRunningProcesses(){
+        ActivityManager am = (ActivityManager) mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        List<RunningAppProcessInfo> infoList = am.getRunningAppProcesses(); 
+             //   List<ActivityManager.RunningServiceInfo> serviceInfos = am.getRunningServices(100); 
+                long beforeMem = getAvailMemory(mContext); 
+                int count = 0; 
+                if (infoList != null) { 
+                    for (int i = 0; i < infoList.size(); ++i) { 
+                        RunningAppProcessInfo appProcessInfo = infoList.get(i); 
+                        // 一般数值大于RunningAppProcessInfo.IMPORTANCE_VISIBLE的进程都是非可见进程，也就是在后台运行着 
+                        if (appProcessInfo.importance > RunningAppProcessInfo.IMPORTANCE_VISIBLE) { 
+                            String[] pkgList = appProcessInfo.pkgList; 
+                            for (int j = 0; j < pkgList.length; ++j) {//pkgList 得到该进程下运行的包名 
+                               // Log.d(TAG, "It will be killed, package name : " + pkgList[j]); 
+                                am.killBackgroundProcesses(pkgList[j]); 
+                                count++; 
+                            } 
+                        } 
+   
+                    } 
+                }
+              long afterMem = getAvailMemory(mContext);
+             // Toast.makeText(mContext, mContext.getResources().getString(R.string.cleartasks_msg)+(afterMem-beforeMem)+"M", 500).show();
+       }
+    //获取可用内存大小 
+    private long getAvailMemory(Context context) { 
+        // 获取android当前可用内存大小 
+        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE); 
+        MemoryInfo mi = new MemoryInfo(); 
+        am.getMemoryInfo(mi); 
+        //mi.availMem; 当前系统的可用内存 
+      //  Log.d(TAG, "可用内存---->>>" + mi.availMem / (1024 * 1024)); 
+        return mi.availMem / (1024 * 1024); 
+    } 
 
 	public boolean isCurrentHomeActivity(String component, ActivityInfo homeInfo) {
 			if (homeInfo == null) {
@@ -5879,6 +5918,7 @@ private String popupAppName = null;
                 if (v.getId() == R.id.home&&mContext.getResources().getConfiguration().enableMultiWindow()) {
 					LOGD("wintask Longpress home button for clear tasks!");
 					ClearRunningTasks();
+                                        ClearRunningProcesses();
 					if(appslist!=null && appslist.size() > 0){
 					 appslist.clear();  
 		             listadapter.notifyDataSetChanged();
