@@ -68,6 +68,7 @@ struct audiotrack_callback_cookie {
 // keep these values in sync with AudioTrack.java
 #define MODE_STATIC 0
 #define MODE_STREAM 1
+#define MODE_STREAM_DIRECT 2
 
 // ----------------------------------------------------------------------------
 class AudioTrackJniStorage {
@@ -329,6 +330,26 @@ android_media_AudioTrack_setup(JNIEnv *env, jobject thiz, jobject weak_this,
                 true,// thread can call Java
                 sessionId,// audio session ID
                 AudioTrack::TRANSFER_SHARED,
+                NULL,                         // default offloadInfo
+                -1, -1,                       // default uid, pid values
+                paa);
+        break;
+        
+    case MODE_STREAM_DIRECT:
+
+        status = lpTrack->set(
+                AUDIO_STREAM_DEFAULT,// stream type, but more info conveyed in paa (last argument)
+                sampleRateInHertz,
+                format,// word length, PCM
+                nativeChannelMask,
+                frameCount,
+                AUDIO_OUTPUT_FLAG_DIRECT,
+                audioCallback, &(lpJniStorage->mCallbackData),//callback, callback data (user)
+                0,// notificationFrames == 0 since not using EVENT_MORE_DATA to feed the AudioTrack
+                0,// shared mem
+                true,// thread can call Java
+                sessionId,// audio session ID
+                AudioTrack::TRANSFER_SYNC,
                 NULL,                         // default offloadInfo
                 -1, -1,                       // default uid, pid values
                 paa);
