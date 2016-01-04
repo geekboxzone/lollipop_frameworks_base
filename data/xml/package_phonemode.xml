@@ -22,6 +22,8 @@
 	<app package="com.qzone" phonemode="true" halfscreen="false"/>
 
 
+    <app package="com.android.vending" phonemode="false" halfscreen="true"/>
+    <app package="com.google.android.youtube" phonemode="false" halfscreen="true"/>
     <app package="com.tencent.mm" phonemode="true" halfscreen="false"/>
     <app package="com.tencent.minihd.qq" phonemode="false" halfscreen="true"/>
     <app package="com.yongqv.XXL2048" phonemode="true" halfscreen="false"/>
