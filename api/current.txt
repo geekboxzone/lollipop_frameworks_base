@@ -14340,6 +14340,7 @@ package android.media {
     field public static final int ERROR_INVALID_OPERATION = -3; // 0xfffffffd
     field public static final int MODE_STATIC = 0; // 0x0
     field public static final int MODE_STREAM = 1; // 0x1
+    field public static final int MODE_STREAM_DIRECT = 2; // 0x2
     field public static final int PLAYSTATE_PAUSED = 2; // 0x2
     field public static final int PLAYSTATE_PLAYING = 3; // 0x3
     field public static final int PLAYSTATE_STOPPED = 1; // 0x1
