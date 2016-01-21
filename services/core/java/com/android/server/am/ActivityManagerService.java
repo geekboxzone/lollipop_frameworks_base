@@ -15177,8 +15177,10 @@ Intent.CATEGORY_LAUNCHER) */&& startFlags==0){
             if (removeDyingProviderLocked(app, cpr, always) || always) {
                 // We left the provider in the launching list, need to
                 // restart it.
-			if((("true".equals(SystemProperties.get("ro.config.low_ram", "false")))||("true".equals(SystemProperties.get("ro.mem_optimise.enable", "false")))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
-                	restart = true;
+			    if((("true".equals(SystemProperties.get("ro.config.low_ram", "false")))||("true".equals(SystemProperties.get("ro.mem_optimise.enable", "false")))) && (!"true".equals(SystemProperties.get("sys.cts_gts.status", "false"))))
+                    restart = false;
+                else
+                    restart = true;
             }
 
             cpr.provider = null;
