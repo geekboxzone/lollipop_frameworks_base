@@ -2234,7 +2234,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
     public View addStartingWindow(IBinder appToken,int groupId, String packageName, int theme,
             CompatibilityInfo compatInfo, CharSequence nonLocalizedLabel, int labelRes,
             int icon, int logo, int windowFlags,int align) {
-        if (!SHOW_STARTING_ANIMATIONS) {
+        if (!SHOW_STARTING_ANIMATIONS && !MultiWindowSettings.checkConfig(mContext)) {
             return null;
         }
         if (packageName == null) {
