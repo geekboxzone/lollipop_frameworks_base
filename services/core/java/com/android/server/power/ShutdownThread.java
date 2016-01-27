@@ -204,7 +204,11 @@ public final class ShutdownThread extends Thread {
     }
 
     public static void rebootLinuxOS(final Context context, String reason, boolean confirm) {
-        SystemProperties.set("ctl.start", "reboot2linux");
+        try {
+            Runtime.getRuntime().exec("reboot ramfs");
+        } catch (IOException ioe) {
+            throw new RuntimeException("Error running command reboot ramfs", ioe);
+        }
         mReboot = true;
         mRebootSafeMode = false;
         mReboot2Linux = true;
