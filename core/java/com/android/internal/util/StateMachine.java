@@ -1184,7 +1184,7 @@ public class StateMachine {
         /** @see StateMachine#transitionTo(IState) */
         private final void transitionTo(IState destState) {
             mDestState = (State) destState;
-            if (mDbg) mSm.log("transitionTo: destState=" + mDestState.getName());
+           mSm.log("transitionTo: destState=" + mDestState.getName());
         }
 
         /** @see StateMachine#deferMessage(Message) */

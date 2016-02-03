@@ -59,6 +59,8 @@ interface IDisplayManager {
     // No permissions required.
     WifiDisplayStatus getWifiDisplayStatus();
 
+	boolean isWfdConnect();
+
     // Requires CAPTURE_VIDEO_OUTPUT, CAPTURE_SECURE_VIDEO_OUTPUT, or an appropriate
     // MediaProjection token for certain combinations of flags.
     int createVirtualDisplay(in IVirtualDisplayCallback callback,

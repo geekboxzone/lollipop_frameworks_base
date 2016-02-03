@@ -24,6 +24,7 @@ import android.os.Handler;
 import android.util.SparseArray;
 import android.view.Display;
 import android.view.Surface;
+import android.util.Log;
 
 import java.util.ArrayList;
 
@@ -238,6 +239,7 @@ public final class DisplayManager {
     public DisplayManager(Context context) {
         mContext = context;
         mGlobal = DisplayManagerGlobal.getInstance();
+		//Log.e(TAG, "DisplayManager: mGlobal=" + mGlobal);
     }
 
     /**
@@ -321,10 +323,10 @@ public final class DisplayManager {
     }
 
     private Display getOrCreateDisplayLocked(int displayId, boolean assumeValid) {
+		//Log.d(TAG, "getOrCreateDisplayLocked: displayId=" + displayId);
         Display display = mDisplays.get(displayId);
         if (display == null) {
-            display = mGlobal.getCompatibleDisplay(displayId,
-                    mContext.getDisplayAdjustments(displayId));
+            display = mGlobal.getCompatibleDisplay(displayId, mContext.getDisplayAdjustments(displayId));
             if (display != null) {
                 mDisplays.put(displayId, display);
             }
@@ -478,6 +480,17 @@ public final class DisplayManager {
             int width, int height, int densityDpi, @Nullable Surface surface, int flags) {
         return createVirtualDisplay(name, width, height, densityDpi, surface, flags, null, null);
     }
+
+     /**
+     * Judge the wfp p2p CONNECT status(add by szc).
+     *
+     * @return The current wfd p2p CONNECT status.
+     * @hide
+     */ 
+    public boolean isWfdConnect() {
+       return mGlobal.isWfdConnect();
+    }
+
 
     /**
      * Creates a virtual display.

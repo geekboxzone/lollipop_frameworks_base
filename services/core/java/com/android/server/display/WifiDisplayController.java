@@ -56,6 +56,22 @@ import java.util.Enumeration;
 
 import libcore.util.Objects;
 
+import android.net.wifi.p2p.WifiP2pInfo;
+import android.net.wifi.p2p.WifiP2pManager.ConnectionInfoListener;
+import android.os.SystemProperties;
+import java.util.ArrayList;
+import java.util.Collection;
+import android.widget.Toast;
+import android.os.Looper;
+import android.os.PowerManager;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+
+
+
+
 /**
  * Manages all of the various asynchronous interactions with the {@link WifiP2pManager}
  * on behalf of {@link WifiDisplayAdapter}.
@@ -70,13 +86,20 @@ import libcore.util.Objects;
  */
 final class WifiDisplayController implements DumpUtils.Dump {
     private static final String TAG = "WifiDisplayController";
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static final int DEFAULT_CONTROL_PORT = 7236;
     private static final int MAX_THROUGHPUT = 50;
     private static final int CONNECTION_TIMEOUT_SECONDS = 30;
     private static final int RTSP_TIMEOUT_SECONDS = 30;
     private static final int RTSP_TIMEOUT_SECONDS_CERT_MODE = 120;
+
+	private static final int WIFI_DISPLAY_DISABLE = 1;
+	private static final int WIFI_DISPLAY_STARTING = 2;
+	private static final int WIFI_DISPLAY_ENABLED = 3;
+	private static final int WIFI_DISPLAY_CONNECTED = 3;
+	private static File DDR_FREQ = new File("/dev/video_state"); 
+
 
     // We repeatedly issue calls to discover peers every so often for a few reasons.
     // 1. The initial request may fail and need to retried.
@@ -102,6 +125,13 @@ final class WifiDisplayController implements DumpUtils.Dump {
     private boolean mWfdEnabled;
     private boolean mWfdEnabling;
     private NetworkInfo mNetworkInfo;
+	
+	private WifiP2pDevice mP2pDeviceInfo;
+      private WifiP2pGroup mP2pGroupInfo;
+	private boolean mWifiWFDServicerOn=false;
+	private boolean mWfdHavePort;
+	private boolean mWfdState;
+	private PowerManager.WakeLock mWakeLock;
 
     private final ArrayList<WifiP2pDevice> mAvailableWifiDisplayPeers =
             new ArrayList<WifiP2pDevice>();
@@ -164,6 +194,7 @@ final class WifiDisplayController implements DumpUtils.Dump {
         mContext = context;
         mHandler = handler;
         mListener = listener;
+
 
         mWifiP2pManager = (WifiP2pManager)context.getSystemService(Context.WIFI_P2P_SERVICE);
         mWifiP2pChannel = mWifiP2pManager.initialize(context, handler.getLooper(), null);
@@ -284,7 +315,16 @@ final class WifiDisplayController implements DumpUtils.Dump {
 
                 WifiP2pWfdInfo wfdInfo = new WifiP2pWfdInfo();
                 wfdInfo.setWfdEnabled(true);
-                wfdInfo.setDeviceType(WifiP2pWfdInfo.WFD_SOURCE);
+		//String boxString = android.os.SystemProperties.get("ro.target.product");
+		//boolean isBox = "box".equals(boxString);
+		if ("box".equals(SystemProperties.get("ro.target.product","tablet"))) {
+			Slog.d(TAG, "ro.target.product ======= box");
+                	wfdInfo.setDeviceType(WifiP2pWfdInfo.PRIMARY_SINK);
+		} else {
+			Slog.d(TAG, "ro.target.product ======= tablet");
+			wfdInfo.setDeviceType(WifiP2pWfdInfo.WFD_SOURCE);
+		}
+
                 wfdInfo.setSessionAvailable(true);
                 wfdInfo.setControlPort(DEFAULT_CONTROL_PORT);
                 wfdInfo.setMaxThroughput(MAX_THROUGHPUT);
@@ -444,7 +484,7 @@ final class WifiDisplayController implements DumpUtils.Dump {
                         Slog.d(TAG, "  " + describeWifiP2pDevice(device));
                     }
 
-                    if (isWifiDisplay(device)) {
+                    if (isWifiDisplay(device)  || isWifiDisplaySource(device)) {
                         mAvailableWifiDisplayPeers.add(device);
                     }
                 }
@@ -814,9 +854,112 @@ final class WifiDisplayController implements DumpUtils.Dump {
         requestPeers();
     }
 
+    // gwl
+       private void setScreenLock(boolean on) {
+        if(mWakeLock == null) {
+            PowerManager pm = (PowerManager) mContext.getSystemService(mContext.POWER_SERVICE);
+            mWakeLock = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK, TAG);
+        }
+        if (on) {
+                       Slog.i(TAG," mWakeLock.acquire()");
+               mWakeLock.acquire();
+        } else {
+            if(mWakeLock.isHeld()) {
+                               Slog.i(TAG," mWakeLock.release()");
+                mWakeLock.release();
+            }
+               mWakeLock = null;
+        }
+    }
+
+       private void handleWFDConnectionChanged(NetworkInfo networkInfo,WifiP2pDevice P2pDeviceInfo) {
+                       mNetworkInfo = networkInfo;
+                       mP2pDeviceInfo =P2pDeviceInfo;
+                       Slog.d(TAG, "####onConnectionInfoAvailable(), mWfdEnabled networkInfo.isConnected() "+ mWfdEnabled + ", networkInfo.isConnected() " + networkInfo.isConnected());
+                       if (mWfdEnabled && networkInfo.isConnected()) {
+
+                               mWifiP2pManager.requestConnectionInfo(mWifiP2pChannel, new ConnectionInfoListener(){
+                                               @Override
+                                               public void onConnectionInfoAvailable(WifiP2pInfo info)
+                                               {
+                                                       Slog.d(TAG,"####onConnectionInfoAvailable(),info = "+ info + ", mDesiredDevice=" + mDesiredDevice);
+
+                                                       String command = "wfd:-s "+mP2pDeviceInfo.deviceAddress+":";
+                                                       mWfdHavePort =false;
+                                                       Slog.d(TAG,"####mP2pDeviceInfo.deviceAddress = "+mP2pDeviceInfo.deviceAddress);
+                                                       for (WifiP2pDevice device : mAvailableWifiDisplayPeers) {
+                                                               Slog.d(TAG,"####device = "+device);
+                                                               if(device.deviceAddress.equals(mP2pDeviceInfo.deviceAddress))
+                                                               {
+                                                                       mWfdHavePort =true;
+                                                                       command +=device.wfdInfo.getControlPort();
+                                                                       break;
+                                                               }
+                                                       }
+
+                                                       if(mWfdHavePort ==false)
+                                                       {
+                                                               Slog.d(TAG,"######inited error mWfdHavePort is false" );
+							       command += "7236";
+                                                               //return ;
+                                                       }
+                                                       Slog.d(TAG,"###### inited setprop command "+command);
+                                                       //szc
+                                                       //wmLockRotation();
+
+                                                       SystemProperties.set("ctl.start",command);
+                                                       mWifiWFDServicerOn =true;
+								
+                                                       if (mDiscoverPeersInProgress) {
+		                                               mHandler.removeCallbacks(mDiscoverPeers);
+		                                               if (mDesiredDevice == null || mDesiredDevice == mConnectedDevice) {
+		                                                   Slog.i(TAG, "Stopping Wifi display scan.");
+		                                                   mDiscoverPeersInProgress = false;
+		                                                   stopPeerDiscovery();
+		                                                   handleScanFinished();
+		                                               }
+		                                       }
+                                               }
+                                       });
+                               }
+                       else{
+                               Slog.d(TAG,"######mWifiWFDServicerOn =mWfdEnabled networkInfo.isConnected()"+mWifiWFDServicerOn + mWfdEnabled + networkInfo.isConnected());
+                               if(mWifiWFDServicerOn==true)
+                               {
+                                       // szc
+                                       //wmFreeRotation();
+
+                                       mWifiWFDServicerOn =false;
+                                       SystemProperties.set("ctl.stop","wfd");
+                                       if (mScanRequested && mWfdEnabled && mDesiredDevice == null) {
+                                       if (!mDiscoverPeersInProgress) {
+                                               Slog.i(TAG, "Starting Wifi display scan.");
+                                               mDiscoverPeersInProgress = true;
+                                               handleScanStarted();
+                                               tryDiscoverPeers();
+                                       }
+                                       }
+
+                               mHandler.postDelayed(new Runnable() {
+                                   @Override
+                                   public void run() {
+                                       Slog.d(TAG,"######mWifiWFDServicerOn restart####");
+                                       updateSettings();
+                                   }},2000);
+                               }
+        }
+    }
+    
+    // szc :judge the wfd connect state
+    public boolean isWfdConnect() {
+       return mWifiWFDServicerOn;
+    }
+
+
     private void handleConnectionChanged(NetworkInfo networkInfo) {
         mNetworkInfo = networkInfo;
         if (mWfdEnabled && networkInfo.isConnected()) {
+		setScreenLock(true);
             if (mDesiredDevice != null || mWifiDisplayCertMode) {
                 mWifiP2pManager.requestGroupInfo(mWifiP2pChannel, new GroupInfoListener() {
                     @Override
@@ -876,6 +1019,7 @@ final class WifiDisplayController implements DumpUtils.Dump {
 
             // Disconnect if we lost the network while connecting or connected to a display.
             if (mConnectingDevice != null || mConnectedDevice != null) {
+		    setScreenLock(false);
                 disconnect();
             }
 
@@ -1027,6 +1171,18 @@ final class WifiDisplayController implements DumpUtils.Dump {
         return DEFAULT_CONTROL_PORT;
     }
 
+	private static boolean isWifiDisplaySource(WifiP2pDevice device) {
+			return device.wfdInfo != null
+							&& device.wfdInfo.isWfdEnabled()
+							&& isSourceDeviceType(device.wfdInfo.getDeviceType());
+	}
+	
+	private static boolean isSourceDeviceType(int deviceType) {
+			return deviceType == WifiP2pWfdInfo.WFD_SOURCE
+							|| deviceType == WifiP2pWfdInfo.SOURCE_OR_PRIMARY_SINK;
+	}
+
+
     private static boolean isWifiDisplay(WifiP2pDevice device) {
         return device.wfdInfo != null
                 && device.wfdInfo.isWfdEnabled()
@@ -1076,12 +1232,20 @@ final class WifiDisplayController implements DumpUtils.Dump {
             } else if (action.equals(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION)) {
                 NetworkInfo networkInfo = (NetworkInfo)intent.getParcelableExtra(
                         WifiP2pManager.EXTRA_NETWORK_INFO);
+		    WifiP2pDevice connectDevice = (WifiP2pDevice) intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);
                 if (DEBUG) {
                     Slog.d(TAG, "Received WIFI_P2P_CONNECTION_CHANGED_ACTION: networkInfo="
                             + networkInfo);
                 }
 
                 handleConnectionChanged(networkInfo);
+			if (mDesiredDevice == null) {
+				Slog.d(TAG, "mDesiredDevice == NULL, So it is a sink device");
+				handleWFDConnectionChanged(networkInfo, connectDevice);
+			} else {
+				Slog.d(TAG, "mDesiredDevice != NULL, So it is a source device");
+			}
+		   	
             } else if (action.equals(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION)) {
                 mThisDevice = (WifiP2pDevice) intent.getParcelableExtra(
                         WifiP2pManager.EXTRA_WIFI_P2P_DEVICE);

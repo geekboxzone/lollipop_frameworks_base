@@ -62,7 +62,7 @@ import libcore.util.Objects;
 final class WifiDisplayAdapter extends DisplayAdapter {
     private static final String TAG = "WifiDisplayAdapter";
 
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     private static final int MSG_SEND_STATUS_CHANGE_BROADCAST = 1;
 
@@ -99,6 +99,12 @@ final class WifiDisplayAdapter extends DisplayAdapter {
         mPersistentDataStore = persistentDataStore;
         mSupportsProtectedBuffers = context.getResources().getBoolean(
                 com.android.internal.R.bool.config_wifiDisplaySupportsProtectedBuffers);
+    }
+
+    public boolean isWfdConnect() {
+       if (mDisplayController != null)
+           return mDisplayController.isWfdConnect();
+       return false;
     }
 
     @Override

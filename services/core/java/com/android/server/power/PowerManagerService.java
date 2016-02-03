@@ -81,6 +81,8 @@ import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 //--------end----------------
 
+import android.hardware.display.DisplayManager;
+import android.net.wifi.WifiManager;
 
 import static android.os.PowerManagerInternal.WAKEFULNESS_ASLEEP;
 import static android.os.PowerManagerInternal.WAKEFULNESS_AWAKE;
@@ -104,6 +106,7 @@ public final class PowerManagerService extends SystemService
     private static final int MSG_SANDMAN = 2;
     // Message: Sent when the screen brightness boost expires.
     private static final int MSG_SCREEN_BRIGHTNESS_BOOST_TIMEOUT = 3;
+	private static final int MSG_DISABLE_WIFI_FOR_WIFIP2P = 5;
 
     // Dirty bit: mWakeLocks changed
     private static final int DIRTY_WAKE_LOCKS = 1 << 0;
@@ -462,6 +465,9 @@ public final class PowerManagerService extends SystemService
     private static native void nativeCpuBoost(int duration);
     private static native void nativeSetPerformanceMode(int mode);
 
+	private DisplayManager mDisplayManager;
+	private WifiManager mWifiManager;
+
     public PowerManagerService(Context context) {
         super(context);
         mContext = context;
@@ -469,6 +475,7 @@ public final class PowerManagerService extends SystemService
                 Process.THREAD_PRIORITY_DISPLAY, false /*allowIo*/);
         mHandlerThread.start();
         mHandler = new PowerManagerHandler(mHandlerThread.getLooper());
+	mDisplayManager = (DisplayManager) mContext.getSystemService(Context.DISPLAY_SERVICE);
 
         synchronized (mLock) {
             mWakeLockSuspendBlocker = createSuspendBlockerLocked("PowerManagerService.WakeLocks");
@@ -2844,6 +2851,11 @@ public final class PowerManagerService extends SystemService
                 case MSG_SCREEN_BRIGHTNESS_BOOST_TIMEOUT:
                     handleScreenBrightnessBoostTimeout();
                     break;
+		   case MSG_DISABLE_WIFI_FOR_WIFIP2P:
+		   	mWifiManager = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+			mWifiManager.setWifiEnabled(false);
+			mWifiManager.setWifiEnabled(true);
+		   	break;
             }
         }
     }
@@ -3204,6 +3216,12 @@ public final class PowerManagerService extends SystemService
             final int uid = Binder.getCallingUid();
             final long ident = Binder.clearCallingIdentity();
             try {
+			if (reason != PowerManager.GO_TO_SLEEP_REASON_DEVICE_ADMIN && reason != PowerManager.GO_TO_SLEEP_REASON_TIMEOUT) { 
+		           if (mDisplayManager.isWfdConnect()) {
+		               mHandler.sendEmptyMessage(MSG_DISABLE_WIFI_FOR_WIFIP2P);
+		               return;
+		           }
+	      		}
                 goToSleepInternal(eventTime, reason, flags, uid);
             } finally {
                 Binder.restoreCallingIdentity(ident);

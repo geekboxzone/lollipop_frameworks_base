@@ -75,6 +75,7 @@
        <item>@drawable/btn_default_disabled_holo_dark</item>
        <item>@drawable/btn_default_disabled_focused_holo_light</item>
        <item>@drawable/btn_default_disabled_focused_holo_dark</item>
+       <item>@drawable/btn_default</item>	<!-- wgh -->
        <item>@drawable/btn_default_holo_dark</item>
        <item>@drawable/btn_default_holo_light</item>
        <item>@drawable/btn_star_off_normal_holo_light</item>

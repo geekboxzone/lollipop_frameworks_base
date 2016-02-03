@@ -321,6 +321,10 @@ public final class SystemServer {
         mActivityManagerService.setSystemServiceManager(mSystemServiceManager);
         mActivityManagerService.setInstaller(installer);
 
+        // Display manager is needed to provide display metrics before package manager
+        // starts up.
+        mDisplayManagerService = mSystemServiceManager.startService(DisplayManagerService.class);
+
         // Power manager needs to be started early because other services need it.
         // Native daemons may be watching for it to be registered so it must be ready
         // to handle incoming binder calls immediately (including being able to verify
@@ -330,10 +334,6 @@ public final class SystemServer {
         // Now that the power manager has been started, let the activity manager
         // initialize power management features.
         mActivityManagerService.initPowerManagement();
-
-        // Display manager is needed to provide display metrics before package manager
-        // starts up.
-        mDisplayManagerService = mSystemServiceManager.startService(DisplayManagerService.class);
 
         // We need the default display before we can initialize the package manager.
         mSystemServiceManager.startBootPhase(SystemService.PHASE_WAIT_FOR_DEFAULT_DISPLAY);

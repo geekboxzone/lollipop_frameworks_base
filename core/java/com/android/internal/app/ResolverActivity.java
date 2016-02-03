@@ -74,6 +74,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import android.view.View.OnFocusChangeListener;
+
+
 import static android.view.WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR;
 import static android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;
 
@@ -103,6 +106,8 @@ public class ResolverActivity extends Activity implements AdapterView.OnItemClic
     private boolean mResolvingHome = false;
     private int mProfileSwitchMessageId = -1;
     private Intent mIntent;
+	
+	private Context mAppContext;
 
     private UsageStatsManager mUsm;
     private Map<String, UsageStats> mStats;
@@ -187,6 +192,7 @@ public class ResolverActivity extends Activity implements AdapterView.OnItemClic
         }
 
         setSafeForwardingMode(true);
+	 mAppContext = getApplication().getBaseContext();
 
         onCreate(savedInstanceState, intent, null, 0, null, null, true);
     }
@@ -259,6 +265,7 @@ public class ResolverActivity extends Activity implements AdapterView.OnItemClic
             setContentView(layoutId);
             mListView = (ListView) findViewById(R.id.resolver_list);
             mListView.setAdapter(mAdapter);
+		mListView.setSelector(this.getDrawable(com.android.internal.R.drawable.list_selector_background));
             mListView.setOnItemClickListener(this);
             mListView.setOnItemLongClickListener(new ItemLongClickListener());
 
@@ -322,6 +329,31 @@ public class ResolverActivity extends Activity implements AdapterView.OnItemClic
                 buttonLayout.setVisibility(View.VISIBLE);
                 mAlwaysButton = (Button) buttonLayout.findViewById(R.id.button_always);
                 mOnceButton = (Button) buttonLayout.findViewById(R.id.button_once);
+
+		mAlwaysButton.setOnFocusChangeListener(new OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View arg0, boolean hasFocus) {
+				// TODO Auto-generated method stub
+				if (hasFocus) {
+					mAlwaysButton.setBackground(mAppContext.getDrawable(com.android.internal.R.drawable.btn_default));
+				} else {
+					mAlwaysButton.setBackground(null);
+				}
+			}
+		});
+
+		mOnceButton.setOnFocusChangeListener(new OnFocusChangeListener() {
+			@Override
+			public void onFocusChange(View arg0, boolean hasFocus) {
+				// TODO Auto-generated method stub
+				if (hasFocus) {
+					mOnceButton.setBackground(mAppContext.getDrawable(com.android.internal.R.drawable.btn_default));
+				} else {
+					mOnceButton.setBackground(null);
+				}
+			}
+		});
+				
             } else {
                 mAlwaysUseOption = false;
             }

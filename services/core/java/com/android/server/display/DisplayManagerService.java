@@ -1239,6 +1239,13 @@ public final class DisplayManagerService extends SystemService {
             }
         }
 
+	public boolean isWfdConnect() {
+       if (mWifiDisplayAdapter != null) {
+           return mWifiDisplayAdapter.isWfdConnect();
+       }
+       return false;
+    }
+
         @Override // Binder call
         public void pauseWifiDisplay() {
             mContext.enforceCallingOrSelfPermission(Manifest.permission.CONFIGURE_WIFI_DISPLAY,
