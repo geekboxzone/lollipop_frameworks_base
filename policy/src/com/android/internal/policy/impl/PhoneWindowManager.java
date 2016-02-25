@@ -63,6 +63,7 @@ import android.os.SystemProperties;
 import android.os.UEventObserver;
 import android.os.UserHandle;
 import android.os.Vibrator;
+import android.os.Parcel;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.service.dreams.DreamManagerInternal;
@@ -5114,7 +5115,25 @@ public class PhoneWindowManager implements WindowManagerPolicy {
         }
     }
 
-	private long lastTime=0;
+	private long lastTimeForKeyVolumeUp=0;
+	private long lastTimeForKeyVolumeDown=0;
+
+	public void repaintEverything(){
+		try {
+	            IBinder flinger = ServiceManager.getService("SurfaceFlinger");
+	            if (flinger != null) {
+	                Parcel data = Parcel.obtain();
+	                data.writeInterfaceToken("android.ui.ISurfaceComposer");
+	                final int repaintSignal = 1;
+	                data.writeInt(repaintSignal);
+	                flinger.transact(1004, data, null, 0);
+	                data.recycle();
+
+	                //updateFlingerOptions();
+	            }
+	        } catch (RemoteException ex) {
+	        }
+	}
 
     /** {@inheritDoc} */
     @Override
@@ -5150,26 +5169,26 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 		//djw:add for 3d functions
 		if(DEBUG_3D_FUNCTIONS){
 			if(event.getKeyCode()==KeyEvent.KEYCODE_VOLUME_UP && event.isDown()){
-	              if((System.currentTimeMillis()-lastTime) < 400){
-				  	SystemProperties.set("sys.hwc.force3d.primary", "1");
-					SystemProperties.set("sys.game.3d", "1");
-					SystemProperties.set("sys.hwc.compose_policy", "0");
-					SystemProperties.set("sys.3d.vr", "vr");
-	             }
-	          lastTime=System.currentTimeMillis();
+	        	if((System.currentTimeMillis()-lastTimeForKeyVolumeUp) < 400){
+					lastTimeForKeyVolumeUp=System.currentTimeMillis();
+				  	SystemProperties.set("sys.hwc.force3d.primary", "2");
+					repaintEverything();
+	        	}
+				else
+	           		lastTimeForKeyVolumeUp=System.currentTimeMillis();
 			}
 
 			if(event.getKeyCode()==KeyEvent.KEYCODE_VOLUME_DOWN && event.isDown()){
-	              if((System.currentTimeMillis()-lastTime) < 400){
-				  	SystemProperties.set("sys.hwc.force3d.primary", "0");
-					SystemProperties.set("sys.game.3d", "0");
-					SystemProperties.set("sys.hwc.compose_policy", "6");
-					SystemProperties.set("sys.3d.vr", "0");
-	             }
-	          lastTime=System.currentTimeMillis();
+              	if((System.currentTimeMillis()-lastTimeForKeyVolumeDown) < 400){
+					lastTimeForKeyVolumeDown=System.currentTimeMillis();
+					SystemProperties.set("sys.hwc.force3d.primary", "0");
+					repaintEverything();
+            	}
+				else
+        			lastTimeForKeyVolumeDown=System.currentTimeMillis();
 			}
 		}
-		//add end
+		//djw add end
 
         if (DEBUG_INPUT) {
             Log.d(TAG, "interceptKeyTq keycode=" + keyCode
