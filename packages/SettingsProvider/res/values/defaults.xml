@@ -18,7 +18,7 @@
 -->
 <resources>
     <!-- should show the screenshot button default -->
-    <bool name="def_screenshot_button_show">false</bool>
+    <bool name="def_screenshot_button_show">true</bool>
     <bool name="def_multi_window_button_show">false</bool>
     <bool name="def_multi_window_used">false</bool>
     <bool name="def_multi_window_config">false</bool>
