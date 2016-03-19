@@ -558,7 +558,7 @@
            <string name="usb_storage_unmount">usb storage is unmount</string> 
 
        <!-- $_rbox_$_modify_$_chenxiao begin,hide bar msg -->
-        <string name="hidebar_msg">"System Bar has hidden\nyou can swipe from the bottom of screen to show it again. "</string>
+        <string name="hidebar_msg">"Statusbar has been hidden.\nSlide from the bottom of screen to show it. "</string>
         
         <string name="cleartasks_msg">"Already clear background tasks"</string>
 
